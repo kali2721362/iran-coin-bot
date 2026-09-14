@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 set -e
 
-# Run API in background
-uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000} &
+# Start bot فقط اگر متغیرها ست شده باشند
+if [ -n "${BOT_TOKEN:-}" ] && [ -n "${MINI_APP_URL:-}" ]; then
+  python bot/bot.py &
+else
+  echo "⚠️ BOT_TOKEN or MINI_APP_URL not set, bot will not start"
+fi
 
-# Run Telegram bot in foreground
-python bot/bot.py
+# API در foreground (سرویس خاموش نشود)
+exec uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000}
