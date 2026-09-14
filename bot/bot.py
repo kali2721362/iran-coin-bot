@@ -2,7 +2,7 @@ import os
 import asyncio
 import logging
 from dotenv import load_dotenv
-
+from aiogram.client.default import DefaultBotProperties
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
@@ -19,7 +19,7 @@ if not BOT_TOKEN:
 if not MINI_APP_URL:
     raise RuntimeError("MINI_APP_URL is missing (set Netlify URL in Railway Variables).")
 
-bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
+bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 
 @dp.message(CommandStart())
@@ -49,3 +49,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+from aiogram.client.default import DefaultBotProperties
