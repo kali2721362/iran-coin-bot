@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-cd backend
-exec uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}
+# Run API in background
+uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000} &
+
+# Run Telegram bot in foreground
+python bot/bot.py
