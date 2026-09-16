@@ -100,7 +100,15 @@ async def ensure_tables():
         updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
     """)
-
+    await db_exec("""
+    CREATE TABLE IF NOT EXISTS miner_state (
+        telegram_id BIGINT PRIMARY KEY,
+        is_active BOOLEAN NOT NULL DEFAULT FALSE,
+        started_at TIMESTAMPTZ,
+        last_claim_at TIMESTAMPTZ,
+        total_mined DOUBLE PRECISION NOT NULL DEFAULT 0
+    );
+    """)
     await db_exec("""
     CREATE TABLE IF NOT EXISTS transactions (
         id BIGSERIAL PRIMARY KEY,
