@@ -5,7 +5,7 @@ import ssl
 from datetime import datetime, timezone
 
 import asyncpg
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request, Header
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
@@ -46,7 +46,7 @@ IRAN_TO_TON_RATE = env_float("IRAN_TO_TON_RATE", 0.000002)
 REF_REWARD = env_float("REF_REWARD", 50)
 
 # =========================
-# ✅ MINER SETTINGS (ADDED)
+# MINER
 # =========================
 MINER_RATE_PER_HOUR = env_float("MINER_RATE_PER_HOUR", 30)
 MINER_MAX_ACCUM_HOURS = env_float("MINER_MAX_ACCUM_HOURS", 8)
@@ -60,21 +60,44 @@ AD_REWARD_MAP = {
     5: 15.0,
 }
 
+# =========================
+# OFFERWALL (CPA)
+# =========================
+# Example template:
+# OFFERWALL_URL_TEMPLATE="https://provider.com/wall?sub_id={telegram_id}"
+OFFERWALL_URL_TEMPLATE = os.getenv("OFFERWALL_URL_TEMPLATE", "").strip()
+
+# Must be secret. Offerwall postback should send it as:
+#   - query param: secret=...
+# or - header: X-Postback-Secret: ...
+OFFERWALL_POSTBACK_SECRET = os.getenv("OFFERWALL_POSTBACK_SECRET", "").strip()
+
+# Convert payout unit to IRAN points (internal points)
+# If provider sends payout in USD, set something like 1000..5000 depending on your economy.
+OFFERWALL_PAYOUT_TO_IRAN = env_float("OFFERWALL_PAYOUT_TO_IRAN", 2000)
+
+# =========================
+# TREASURY (TON safety)
+# =========================
+# withdraw mode:
+#   - "off": withdraw disabled
+#   - "treasury": allow withdraw only if ton_available >= ton_amount (reserve ton)
+WITHDRAW_MODE = os.getenv("WITHDRAW_MODE", "treasury").strip().lower()
+
+# Admin key for manual treasury/withdraw management (do NOT expose)
+ADMIN_KEY = os.getenv("ADMIN_KEY", "").strip()
+
 
 def get_database_url() -> str:
     db_url = os.getenv("DATABASE_URL", "").strip()
-
-    # If mistakenly set in sqlalchemy style:
     if db_url.startswith("postgresql+asyncpg://"):
         db_url = db_url.replace("postgresql+asyncpg://", "postgresql://", 1)
-
-    # Remove a param that sometimes breaks parsing
+    # Remove param that can break some parsers
     db_url = db_url.replace("&channel_binding=require", "")
-
     return db_url
 
 
-app = FastAPI(title="IRAN Coin API", version="1.0.0")
+app = FastAPI(title="IRAN Coin API", version="1.2.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -110,6 +133,13 @@ async def db_fetch(sql: str, *args):
 
 def gen_ref_code(n=8):
     return "".join(random.choices(string.ascii_uppercase + string.digits, k=n))
+
+
+def require_admin(x_admin_key: str | None):
+    if not ADMIN_KEY:
+        raise HTTPException(503, "ADMIN_KEY not configured")
+    if not x_admin_key or x_admin_key != ADMIN_KEY:
+        raise HTTPException(401, "Unauthorized")
 
 
 async def ensure_tables():
@@ -187,9 +217,7 @@ async def ensure_tables():
     );
     """)
 
-    # =========================
-    # ✅ MINER TABLE (ADDED)
-    # =========================
+    # Miner
     await db_exec("""
     CREATE TABLE IF NOT EXISTS miner_state (
         telegram_id BIGINT PRIMARY KEY,
@@ -198,6 +226,35 @@ async def ensure_tables():
         last_claim_at TIMESTAMPTZ,
         total_mined DOUBLE PRECISION NOT NULL DEFAULT 0
     );
+    """)
+
+    # Offerwall events (idempotency)
+    await db_exec("""
+    CREATE TABLE IF NOT EXISTS offerwall_events (
+        event_id TEXT PRIMARY KEY,
+        telegram_id BIGINT NOT NULL,
+        payout DOUBLE PRECISION NOT NULL DEFAULT 0,
+        reward_iran DOUBLE PRECISION NOT NULL DEFAULT 0,
+        currency TEXT,
+        raw TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+    """)
+
+    # Treasury (TON balance & reservation)
+    await db_exec("""
+    CREATE TABLE IF NOT EXISTS treasury_state (
+        id INT PRIMARY KEY,
+        ton_balance DOUBLE PRECISION NOT NULL DEFAULT 0,
+        ton_reserved DOUBLE PRECISION NOT NULL DEFAULT 0,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+    """)
+    # ensure single row
+    await db_exec("""
+    INSERT INTO treasury_state(id, ton_balance, ton_reserved)
+    VALUES(1, 0, 0)
+    ON CONFLICT (id) DO NOTHING;
     """)
 
 
@@ -262,7 +319,6 @@ async def upsert_user(user: dict, ref: str | None):
         row = await db_fetchrow("SELECT * FROM users WHERE telegram_id=$1;", telegram_id)
         return dict(row)
 
-    # create user
     ref_code = gen_ref_code()
     for _ in range(30):
         exists = await db_fetchrow("SELECT 1 FROM users WHERE referral_code=$1;", ref_code)
@@ -275,7 +331,6 @@ async def upsert_user(user: dict, ref: str | None):
         VALUES($1,$2,$3,$4,$5);
     """, telegram_id, username, first_name, last_name, ref_code)
 
-    # apply referral bonus
     if ref:
         referrer = await db_fetchrow("SELECT telegram_id FROM users WHERE referral_code=$1;", ref)
         if referrer and int(referrer["telegram_id"]) != telegram_id:
@@ -374,42 +429,6 @@ async def user_txs(telegram_id: int, limit: int = 20):
     }
 
 
-@app.get("/api/v1/ads/status/{telegram_id}")
-async def ads_status(telegram_id: int):
-    u = await db_fetchrow("SELECT * FROM users WHERE telegram_id=$1;", telegram_id)
-    if not u:
-        raise HTTPException(404, "User not found")
-
-    today = now_utc().date()
-    last_reset = u["last_ad_reset"]
-    ads_today = int(u["ads_watched_today"] or 0)
-
-    if last_reset is None or last_reset != today:
-        ads_today = 0
-
-    can_watch = True
-    remaining = 0
-
-    last_watch = u["last_ad_watch"]
-    if last_watch:
-        elapsed = (now_utc() - last_watch).total_seconds()
-        if elapsed < AD_COOLDOWN:
-            can_watch = False
-            remaining = int(AD_COOLDOWN - elapsed)
-
-    if ads_today >= MAX_ADS_PER_DAY:
-        can_watch = False
-
-    return {
-        "can_watch": can_watch,
-        "remaining_seconds": remaining,
-        "ads_watched_today": ads_today,
-        "max_ads_per_day": MAX_ADS_PER_DAY,
-        "reward_per_ad": AD_REWARD,
-        "total_ads_watched": int(u["total_ads_watched"] or 0),
-    }
-
-
 @app.post("/api/v1/ads/watch")
 async def ads_watch(payload: dict):
     telegram_id = int(payload.get("telegram_id") or 0)
@@ -425,8 +444,8 @@ async def ads_watch(payload: dict):
     ads_today = int(u["ads_watched_today"] or 0)
 
     if last_reset is None or last_reset != today:
-        ads_today = 0
         await db_exec("UPDATE users SET ads_watched_today=0, last_ad_reset=$1 WHERE telegram_id=$2;", today, telegram_id)
+        ads_today = 0
 
     if ads_today >= MAX_ADS_PER_DAY:
         return {"success": False, "message": f"Daily limit {MAX_ADS_PER_DAY} reached"}
@@ -519,8 +538,123 @@ async def tasks_complete(payload: dict):
     return {"success": True, "reward": reward, "new_balance": u2["balance"]}
 
 
+# =========================
+# OFFERWALL
+# =========================
+@app.get("/api/v1/offerwall/link/{telegram_id}")
+async def offerwall_link(telegram_id: int):
+    # Ensure user exists
+    u = await db_fetchrow("SELECT telegram_id FROM users WHERE telegram_id=$1;", telegram_id)
+    if not u:
+        raise HTTPException(404, "User not found")
+
+    if not OFFERWALL_URL_TEMPLATE:
+        return {"success": False, "message": "Offerwall not configured"}
+
+    url = OFFERWALL_URL_TEMPLATE.replace("{telegram_id}", str(telegram_id)).replace("{sub_id}", str(telegram_id))
+    return {"success": True, "url": url}
+
+
+@app.api_route("/api/v1/offerwall/postback", methods=["GET", "POST"])
+async def offerwall_postback(
+    request: Request,
+    x_postback_secret: str | None = Header(default=None),
+):
+    # Accept params from query OR json body
+    if request.method == "GET":
+        params = dict(request.query_params)
+    else:
+        try:
+            params = await request.json()
+        except:
+            params = dict(request.query_params)
+
+    # Secret check
+    secret = (params.get("secret") or x_postback_secret or "").strip()
+    if OFFERWALL_POSTBACK_SECRET and secret != OFFERWALL_POSTBACK_SECRET:
+        raise HTTPException(401, "Invalid secret")
+
+    event_id = str(params.get("event_id") or params.get("click_id") or params.get("conversion_id") or "")
+    if not event_id:
+        raise HTTPException(400, "event_id required")
+
+    telegram_id = int(params.get("telegram_id") or params.get("sub_id") or params.get("sub") or 0)
+    if not telegram_id:
+        raise HTTPException(400, "telegram_id/sub_id required")
+
+    payout = float(params.get("payout") or params.get("amount") or 0)
+    currency = str(params.get("currency") or "USD")
+
+    # idempotency: ignore if already processed
+    exists = await db_fetchrow("SELECT event_id FROM offerwall_events WHERE event_id=$1;", event_id)
+    if exists:
+        return {"success": True, "message": "Already processed"}
+
+    # user must exist
+    u = await db_fetchrow("SELECT telegram_id FROM users WHERE telegram_id=$1;", telegram_id)
+    if not u:
+        raise HTTPException(404, "User not found")
+
+    reward_iran = max(0.0, payout * OFFERWALL_PAYOUT_TO_IRAN)
+
+    # store event
+    await db_exec("""
+        INSERT INTO offerwall_events(event_id, telegram_id, payout, reward_iran, currency, raw)
+        VALUES($1,$2,$3,$4,$5,$6);
+    """, event_id, telegram_id, payout, reward_iran, currency, str(params)[:5000])
+
+    # reward user
+    await db_exec("""
+        UPDATE users
+        SET balance = balance + $1,
+            total_earned = total_earned + $1,
+            updated_at = now()
+        WHERE telegram_id=$2;
+    """, reward_iran, telegram_id)
+
+    await db_exec("""
+        INSERT INTO transactions(telegram_id, type, amount, status, description)
+        VALUES($1,'offerwall',$2,'completed',$3);
+    """, telegram_id, reward_iran, f"Offerwall reward (+{reward_iran:.2f} IRAN)")
+
+    return {"success": True, "telegram_id": telegram_id, "reward_iran": reward_iran}
+
+
+# =========================
+# TREASURY ADMIN
+# =========================
+@app.get("/api/v1/admin/treasury")
+async def admin_treasury(x_admin_key: str | None = Header(default=None)):
+    require_admin(x_admin_key)
+    t = await db_fetchrow("SELECT * FROM treasury_state WHERE id=1;")
+    return {"success": True, "ton_balance": float(t["ton_balance"]), "ton_reserved": float(t["ton_reserved"])}
+
+
+@app.post("/api/v1/admin/treasury/set")
+async def admin_treasury_set(payload: dict, x_admin_key: str | None = Header(default=None)):
+    require_admin(x_admin_key)
+    ton_balance = float(payload.get("ton_balance") or 0)
+    ton_reserved = float(payload.get("ton_reserved") or 0)
+    if ton_balance < 0 or ton_reserved < 0:
+        raise HTTPException(400, "Invalid values")
+
+    await db_exec("""
+        UPDATE treasury_state
+        SET ton_balance=$1, ton_reserved=$2, updated_at=now()
+        WHERE id=1;
+    """, ton_balance, ton_reserved)
+
+    return {"success": True}
+
+
+# =========================
+# WITHDRAW (safe)
+# =========================
 @app.post("/api/v1/withdraw/request")
 async def withdraw_request(payload: dict):
+    if WITHDRAW_MODE == "off":
+        return {"success": False, "message": "Withdraw is disabled"}
+
     telegram_id = int(payload.get("telegram_id") or 0)
     amount = float(payload.get("amount") or 0)
     ton_address = (payload.get("ton_address") or "").strip()
@@ -542,8 +676,28 @@ async def withdraw_request(payload: dict):
     net = amount - fee
     ton_amount = net * IRAN_TO_TON_RATE
 
-    await db_exec("UPDATE users SET balance = balance - $1, ton_wallet=$2, updated_at=now() WHERE telegram_id=$3;",
-                  amount, ton_address, telegram_id)
+    if WITHDRAW_MODE == "treasury":
+        t = await db_fetchrow("SELECT * FROM treasury_state WHERE id=1;")
+        ton_balance = float(t["ton_balance"])
+        ton_reserved = float(t["ton_reserved"])
+        if (ton_balance - ton_reserved) < ton_amount:
+            return {"success": False, "message": "Treasury not funded yet. Try later."}
+
+        # reserve TON to avoid over-commitment
+        await db_exec("""
+            UPDATE treasury_state
+            SET ton_reserved = ton_reserved + $1, updated_at=now()
+            WHERE id=1;
+        """, ton_amount)
+
+    # deduct user balance
+    await db_exec("""
+        UPDATE users
+        SET balance = balance - $1,
+            ton_wallet=$2,
+            updated_at=now()
+        WHERE telegram_id=$3;
+    """, amount, ton_address, telegram_id)
 
     await db_exec("""
         INSERT INTO withdraw_requests(telegram_id, iran_amount, ton_amount, ton_address, fee, status)
@@ -560,7 +714,7 @@ async def withdraw_request(payload: dict):
 
 
 # =========================
-# ✅ MINER ENDPOINTS (ADDED AT END)
+# MINER ENDPOINTS
 # =========================
 def _pending_miner(now, last_ts):
     if not last_ts:
