@@ -1,8 +1,8 @@
 import os
-import json
 import random
 import string
-from datetime import datetime, timezone, timedelta
+import ssl
+from datetime import datetime, timezone
 
 import asyncpg
 from fastapi import FastAPI, HTTPException
@@ -13,8 +13,10 @@ load_dotenv()
 
 APP_TZ = timezone.utc
 
+
 def now_utc():
     return datetime.now(APP_TZ)
+
 
 def env_float(name: str, default: float) -> float:
     try:
@@ -22,12 +24,17 @@ def env_float(name: str, default: float) -> float:
     except:
         return default
 
+
 def env_int(name: str, default: int) -> int:
     try:
         return int(os.getenv(name, str(default)))
     except:
         return default
 
+
+# =========================
+# CONFIG
+# =========================
 AD_REWARD = env_float("AD_REWARD", 10)
 AD_COOLDOWN = env_int("AD_COOLDOWN", 3600)
 MAX_ADS_PER_DAY = env_int("MAX_ADS_PER_DAY", 10)
@@ -38,16 +45,36 @@ IRAN_TO_TON_RATE = env_float("IRAN_TO_TON_RATE", 0.000002)
 
 REF_REWARD = env_float("REF_REWARD", 50)
 
-DATABASE_URL = os.getenv("DATABASE_URL", "")
-if not DATABASE_URL:
-    # Railway will provide DATABASE_URL; locally you can set it
-    pass
+# =========================
+# ✅ MINER SETTINGS (ADDED)
+# =========================
+MINER_RATE_PER_HOUR = env_float("MINER_RATE_PER_HOUR", 30)
+MINER_MAX_ACCUM_HOURS = env_float("MINER_MAX_ACCUM_HOURS", 8)
 
-# asyncpg expects postgresql:// (not sqlalchemy's postgresql+asyncpg://)
-if DATABASE_URL.startswith("postgresql+asyncpg://"):
-    DATABASE_URL = DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://", 1)
+# Optional: different reward by ad_id (UI-like)
+AD_REWARD_MAP = {
+    1: 15.0,
+    2: 20.0,
+    3: 25.0,
+    4: 20.0,
+    5: 15.0,
+}
 
-app = FastAPI(title="IRAN Coin API", version="0.1.0")
+
+def get_database_url() -> str:
+    db_url = os.getenv("DATABASE_URL", "").strip()
+
+    # If mistakenly set in sqlalchemy style:
+    if db_url.startswith("postgresql+asyncpg://"):
+        db_url = db_url.replace("postgresql+asyncpg://", "postgresql://", 1)
+
+    # Remove a param that sometimes breaks parsing
+    db_url = db_url.replace("&channel_binding=require", "")
+
+    return db_url
+
+
+app = FastAPI(title="IRAN Coin API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -59,23 +86,31 @@ app.add_middleware(
 
 pool: asyncpg.Pool | None = None
 
-def gen_ref_code(n=8):
-    return "".join(random.choices(string.ascii_uppercase + string.digits, k=n))
 
 async def db_exec(sql: str, *args):
-    assert pool is not None
+    if pool is None:
+        raise HTTPException(status_code=503, detail="DB not ready")
     async with pool.acquire() as conn:
         return await conn.execute(sql, *args)
 
+
 async def db_fetchrow(sql: str, *args):
-    assert pool is not None
+    if pool is None:
+        raise HTTPException(status_code=503, detail="DB not ready")
     async with pool.acquire() as conn:
         return await conn.fetchrow(sql, *args)
 
+
 async def db_fetch(sql: str, *args):
-    assert pool is not None
+    if pool is None:
+        raise HTTPException(status_code=503, detail="DB not ready")
     async with pool.acquire() as conn:
         return await conn.fetch(sql, *args)
+
+
+def gen_ref_code(n=8):
+    return "".join(random.choices(string.ascii_uppercase + string.digits, k=n))
+
 
 async def ensure_tables():
     await db_exec("""
@@ -100,15 +135,7 @@ async def ensure_tables():
         updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
     """)
-    await db_exec("""
-    CREATE TABLE IF NOT EXISTS miner_state (
-        telegram_id BIGINT PRIMARY KEY,
-        is_active BOOLEAN NOT NULL DEFAULT FALSE,
-        started_at TIMESTAMPTZ,
-        last_claim_at TIMESTAMPTZ,
-        total_mined DOUBLE PRECISION NOT NULL DEFAULT 0
-    );
-    """)
+
     await db_exec("""
     CREATE TABLE IF NOT EXISTS transactions (
         id BIGSERIAL PRIMARY KEY,
@@ -160,10 +187,25 @@ async def ensure_tables():
     );
     """)
 
+    # =========================
+    # ✅ MINER TABLE (ADDED)
+    # =========================
+    await db_exec("""
+    CREATE TABLE IF NOT EXISTS miner_state (
+        telegram_id BIGINT PRIMARY KEY,
+        is_active BOOLEAN NOT NULL DEFAULT FALSE,
+        started_at TIMESTAMPTZ,
+        last_claim_at TIMESTAMPTZ,
+        total_mined DOUBLE PRECISION NOT NULL DEFAULT 0
+    );
+    """)
+
+
 async def seed_tasks():
     rows = await db_fetch("SELECT id FROM tasks LIMIT 1;")
     if rows:
         return
+
     tasks = [
         ("Join our Telegram channel", 50, "join_channel", "https://t.me/IranCoinChannel"),
         ("Follow on X (Twitter)", 50, "follow", "https://twitter.com/IranCoin"),
@@ -174,20 +216,36 @@ async def seed_tasks():
     for t in tasks:
         await db_exec("INSERT INTO tasks(title, reward, task_type, url) VALUES($1,$2,$3,$4);", *t)
 
+
 @app.on_event("startup")
 async def startup():
     global pool
-    if not DATABASE_URL:
+
+    db_url = get_database_url()
+    if not db_url:
         print("❌ DATABASE_URL is not set")
         return
-    pool = await asyncpg.create_pool(DATABASE_URL, min_size=1, max_size=5)
+
+    ssl_ctx = None
+    if os.getenv("DB_SSL", "").lower() in ("1", "true", "yes"):
+        ssl_ctx = ssl.create_default_context()
+
+    try:
+        pool = await asyncpg.create_pool(db_url, min_size=1, max_size=5, ssl=ssl_ctx)
+    except Exception as e:
+        pool = None
+        print(f"❌ DB connect failed: {e}")
+        return
+
     await ensure_tables()
     await seed_tasks()
     print("✅ API started + tables ensured")
 
+
 @app.get("/health")
 async def health():
     return {"status": "ok", "service": "IRAN Coin API"}
+
 
 async def upsert_user(user: dict, ref: str | None):
     telegram_id = int(user["id"])
@@ -204,9 +262,9 @@ async def upsert_user(user: dict, ref: str | None):
         row = await db_fetchrow("SELECT * FROM users WHERE telegram_id=$1;", telegram_id)
         return dict(row)
 
-    # create new with unique referral_code
+    # create user
     ref_code = gen_ref_code()
-    for _ in range(20):
+    for _ in range(30):
         exists = await db_fetchrow("SELECT 1 FROM users WHERE referral_code=$1;", ref_code)
         if not exists:
             break
@@ -217,7 +275,7 @@ async def upsert_user(user: dict, ref: str | None):
         VALUES($1,$2,$3,$4,$5);
     """, telegram_id, username, first_name, last_name, ref_code)
 
-    # apply referral if provided
+    # apply referral bonus
     if ref:
         referrer = await db_fetchrow("SELECT telegram_id FROM users WHERE referral_code=$1;", ref)
         if referrer and int(referrer["telegram_id"]) != telegram_id:
@@ -236,39 +294,39 @@ async def upsert_user(user: dict, ref: str | None):
                 VALUES($1,'earn_referral',$2,'completed',$3);
             """, ref_tid, REF_REWARD, f"Referral bonus (+{REF_REWARD} IRAN)")
 
-            await db_exec("""
-                UPDATE users SET referred_by_telegram_id=$1 WHERE telegram_id=$2;
-            """, ref_tid, telegram_id)
+            await db_exec("UPDATE users SET referred_by_telegram_id=$1 WHERE telegram_id=$2;", ref_tid, telegram_id)
 
     row = await db_fetchrow("SELECT * FROM users WHERE telegram_id=$1;", telegram_id)
     return dict(row)
 
+
 @app.post("/api/v1/user/init")
 async def user_init(payload: dict):
-    if not pool:
-        raise HTTPException(500, "DB not ready (DATABASE_URL missing?)")
-
-    user = payload.get("user")
-    if not user or not user.get("id"):
+    u = payload.get("user")
+    if not u or not u.get("id"):
         raise HTTPException(400, "user.id required")
 
-    ref = payload.get("ref")  # optional
-    u = await upsert_user(user, ref)
+    ref = payload.get("ref")
+    user_row = await upsert_user(u, ref)
 
-    return {"success": True, "user": {
-        "telegram_id": u["telegram_id"],
-        "username": u["username"],
-        "first_name": u["first_name"],
-        "last_name": u["last_name"],
-        "balance": u["balance"],
-        "total_earned": u["total_earned"],
-        "referral_code": u["referral_code"],
-        "referral_count": u["referral_count"],
-        "referral_earnings": u["referral_earnings"],
-        "ton_wallet": u["ton_wallet"],
-        "total_ads_watched": u["total_ads_watched"],
-        "ads_watched_today": u["ads_watched_today"],
-    }}
+    return {
+        "success": True,
+        "user": {
+            "telegram_id": user_row["telegram_id"],
+            "username": user_row["username"],
+            "first_name": user_row["first_name"],
+            "last_name": user_row["last_name"],
+            "balance": user_row["balance"],
+            "total_earned": user_row["total_earned"],
+            "referral_code": user_row["referral_code"],
+            "referral_count": user_row["referral_count"],
+            "referral_earnings": user_row["referral_earnings"],
+            "ton_wallet": user_row["ton_wallet"],
+            "total_ads_watched": user_row["total_ads_watched"],
+            "ads_watched_today": user_row["ads_watched_today"],
+        }
+    }
+
 
 @app.get("/api/v1/user/{telegram_id}")
 async def user_get(telegram_id: int):
@@ -290,6 +348,7 @@ async def user_get(telegram_id: int):
         "ads_watched_today": u["ads_watched_today"],
     }
 
+
 @app.get("/api/v1/user/{telegram_id}/transactions")
 async def user_txs(telegram_id: int, limit: int = 20):
     rows = await db_fetch("""
@@ -298,16 +357,22 @@ async def user_txs(telegram_id: int, limit: int = 20):
         ORDER BY created_at DESC
         LIMIT $2;
     """, telegram_id, limit)
-    return {"transactions": [{
-        "id": r["id"],
-        "type": r["type"],
-        "amount": r["amount"],
-        "status": r["status"],
-        "description": r["description"],
-        "created_at": r["created_at"].isoformat() if r["created_at"] else None,
-        "ton_amount": r["ton_amount"],
-        "ton_tx_hash": r["tx_hash"],
-    } for r in rows]}
+
+    return {
+        "transactions": [
+            {
+                "id": r["id"],
+                "type": r["type"],
+                "amount": r["amount"],
+                "status": r["status"],
+                "description": r["description"],
+                "created_at": r["created_at"].isoformat() if r["created_at"] else None,
+                "ton_amount": r["ton_amount"],
+                "ton_tx_hash": r["tx_hash"],
+            } for r in rows
+        ]
+    }
+
 
 @app.get("/api/v1/ads/status/{telegram_id}")
 async def ads_status(telegram_id: int):
@@ -344,6 +409,7 @@ async def ads_status(telegram_id: int):
         "total_ads_watched": int(u["total_ads_watched"] or 0),
     }
 
+
 @app.post("/api/v1/ads/watch")
 async def ads_watch(payload: dict):
     telegram_id = int(payload.get("telegram_id") or 0)
@@ -371,7 +437,9 @@ async def ads_watch(payload: dict):
         if elapsed < AD_COOLDOWN:
             return {"success": False, "message": "Cooldown", "remaining_seconds": int(AD_COOLDOWN - elapsed)}
 
-    reward = AD_REWARD
+    ad_id = payload.get("ad_id")
+    reward = AD_REWARD_MAP.get(int(ad_id), AD_REWARD) if ad_id else AD_REWARD
+
     await db_exec("""
         UPDATE users
         SET balance = balance + $1,
@@ -391,19 +459,26 @@ async def ads_watch(payload: dict):
     u2 = await db_fetchrow("SELECT balance, ads_watched_today FROM users WHERE telegram_id=$1;", telegram_id)
     return {"success": True, "reward": reward, "new_balance": u2["balance"], "ads_watched_today": u2["ads_watched_today"]}
 
+
 @app.get("/api/v1/tasks/{telegram_id}")
 async def tasks_for_user(telegram_id: int):
     tasks = await db_fetch("SELECT * FROM tasks WHERE active=true ORDER BY id ASC;")
     completed = await db_fetch("SELECT task_id FROM user_tasks WHERE telegram_id=$1;", telegram_id)
     done = {int(r["task_id"]) for r in completed}
-    return {"tasks": [{
-        "id": t["id"],
-        "title": t["title"],
-        "reward": t["reward"],
-        "task_type": t["task_type"],
-        "task_url": t["url"],
-        "completed": int(t["id"]) in done
-    } for t in tasks]}
+
+    return {
+        "tasks": [
+            {
+                "id": t["id"],
+                "title": t["title"],
+                "reward": t["reward"],
+                "task_type": t["task_type"],
+                "task_url": t["url"],
+                "completed": int(t["id"]) in done,
+            } for t in tasks
+        ]
+    }
+
 
 @app.post("/api/v1/tasks/complete")
 async def tasks_complete(payload: dict):
@@ -443,6 +518,7 @@ async def tasks_complete(payload: dict):
     u2 = await db_fetchrow("SELECT balance FROM users WHERE telegram_id=$1;", telegram_id)
     return {"success": True, "reward": reward, "new_balance": u2["balance"]}
 
+
 @app.post("/api/v1/withdraw/request")
 async def withdraw_request(payload: dict):
     telegram_id = int(payload.get("telegram_id") or 0)
@@ -466,7 +542,6 @@ async def withdraw_request(payload: dict):
     net = amount - fee
     ton_amount = net * IRAN_TO_TON_RATE
 
-    # deduct balance
     await db_exec("UPDATE users SET balance = balance - $1, ton_wallet=$2, updated_at=now() WHERE telegram_id=$3;",
                   amount, ton_address, telegram_id)
 
@@ -481,9 +556,98 @@ async def withdraw_request(payload: dict):
     """, telegram_id, -amount, f"Withdraw request ({amount} IRAN)", ton_amount, ton_address, fee)
 
     u2 = await db_fetchrow("SELECT balance FROM users WHERE telegram_id=$1;", telegram_id)
-    return {
-        "success": True,
-        "message": "Withdraw request submitted (pending)",
-        "ton_amount": ton_amount,
-        "new_balance": u2["balance"]
-    }
+    return {"success": True, "message": "Withdraw request submitted (pending)", "ton_amount": ton_amount, "new_balance": u2["balance"]}
+
+
+# =========================
+# ✅ MINER ENDPOINTS (ADDED AT END)
+# =========================
+def _pending_miner(now, last_ts):
+    if not last_ts:
+        return 0.0
+    elapsed = (now - last_ts).total_seconds()
+    hours = max(0.0, elapsed / 3600.0)
+    hours = min(hours, MINER_MAX_ACCUM_HOURS)
+    return hours * MINER_RATE_PER_HOUR
+
+
+@app.get("/api/v1/miner/status/{telegram_id}")
+async def miner_status(telegram_id: int):
+    m = await db_fetchrow("SELECT * FROM miner_state WHERE telegram_id=$1;", telegram_id)
+    now = now_utc()
+
+    if not m:
+        return {"success": True, "active": False, "pending": 0.0, "rate_per_hour": MINER_RATE_PER_HOUR}
+
+    last_ts = m["last_claim_at"] or m["started_at"]
+    pending = _pending_miner(now, last_ts) if m["is_active"] else 0.0
+
+    return {"success": True, "active": bool(m["is_active"]), "pending": pending, "rate_per_hour": MINER_RATE_PER_HOUR}
+
+
+@app.post("/api/v1/miner/start")
+async def miner_start(payload: dict):
+    telegram_id = int(payload.get("telegram_id") or 0)
+    if not telegram_id:
+        raise HTTPException(400, "telegram_id required")
+
+    u = await db_fetchrow("SELECT telegram_id FROM users WHERE telegram_id=$1;", telegram_id)
+    if not u:
+        raise HTTPException(404, "User not found")
+
+    now = now_utc()
+    await db_exec("""
+        INSERT INTO miner_state(telegram_id, is_active, started_at, last_claim_at)
+        VALUES($1, TRUE, $2, $2)
+        ON CONFLICT (telegram_id)
+        DO UPDATE SET is_active=TRUE,
+                      started_at=COALESCE(miner_state.started_at, $2),
+                      last_claim_at=$2;
+    """, telegram_id, now)
+
+    return {"success": True, "message": "Mining started"}
+
+
+@app.post("/api/v1/miner/claim")
+async def miner_claim(payload: dict):
+    telegram_id = int(payload.get("telegram_id") or 0)
+    if not telegram_id:
+        raise HTTPException(400, "telegram_id required")
+
+    u = await db_fetchrow("SELECT * FROM users WHERE telegram_id=$1;", telegram_id)
+    if not u:
+        raise HTTPException(404, "User not found")
+
+    m = await db_fetchrow("SELECT * FROM miner_state WHERE telegram_id=$1;", telegram_id)
+    if not m or not m["is_active"]:
+        return {"success": False, "message": "Miner is not active"}
+
+    now = now_utc()
+    last_ts = m["last_claim_at"] or m["started_at"]
+    pending = _pending_miner(now, last_ts)
+
+    if pending <= 0.0:
+        return {"success": False, "message": "Nothing to claim yet"}
+
+    await db_exec("""
+        UPDATE users
+        SET balance = balance + $1,
+            total_earned = total_earned + $1,
+            updated_at = now()
+        WHERE telegram_id=$2;
+    """, pending, telegram_id)
+
+    await db_exec("""
+        UPDATE miner_state
+        SET last_claim_at=$1,
+            total_mined = total_mined + $2
+        WHERE telegram_id=$3;
+    """, now, pending, telegram_id)
+
+    await db_exec("""
+        INSERT INTO transactions(telegram_id, type, amount, status, description)
+        VALUES($1,'miner',$2,'completed',$3);
+    """, telegram_id, pending, f"Miner claim (+{pending:.2f} IRAN)")
+
+    u2 = await db_fetchrow("SELECT balance FROM users WHERE telegram_id=$1;", telegram_id)
+    return {"success": True, "claimed": pending, "new_balance": u2["balance"]}
