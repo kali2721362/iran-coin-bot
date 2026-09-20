@@ -560,7 +560,7 @@ async def offerwall_postback(
     request: Request,
     x_postback_secret: str | None = Header(default=None),
 ):
-    # Accept params from query OR json body
+    # Read params from query (GET) or JSON body (POST)
     if request.method == "GET":
         params = dict(request.query_params)
     else:
@@ -569,26 +569,82 @@ async def offerwall_postback(
         except:
             params = dict(request.query_params)
 
-    # Secret check
+    # Secret check (query ?secret=... OR header X-Postback-Secret)
     secret = (params.get("secret") or x_postback_secret or "").strip()
     if OFFERWALL_POSTBACK_SECRET and secret != OFFERWALL_POSTBACK_SECRET:
         raise HTTPException(401, "Invalid secret")
 
-    event_id = str(params.get("event_id") or params.get("click_id") or params.get("conversion_id") or "")
+    # CPX compatibility:
+    # event id can be trans_id, click_id, conversion_id...
+    event_id = str(
+        params.get("event_id")
+        or params.get("trans_id")
+        or params.get("click_id")
+        or params.get("conversion_id")
+        or ""
+    ).strip()
     if not event_id:
-        raise HTTPException(400, "event_id required")
+        raise HTTPException(400, "event_id/trans_id required")
 
-    telegram_id = int(params.get("telegram_id") or params.get("sub_id") or params.get("sub") or 0)
+    # user id can be user_id or sub_id etc.
+    telegram_id = int(
+        params.get("telegram_id")
+        or params.get("user_id")
+        or params.get("sub_id")
+        or params.get("subid")
+        or params.get("sub")
+        or 0
+    )
     if not telegram_id:
-        raise HTTPException(400, "telegram_id/sub_id required")
+        raise HTTPException(400, "telegram_id/user_id/sub_id required")
 
-    payout = float(params.get("payout") or params.get("amount") or 0)
+    # payout can be amount_usd (CPX) or payout/amount
+    payout = float(
+        params.get("amount_usd")
+        or params.get("payout")
+        or params.get("amount")
+        or 0
+    )
+
     currency = str(params.get("currency") or "USD")
+    status = str(params.get("status") or "1")  # CPX: 1=pending/approved, 2=reversed
 
-    # idempotency: ignore if already processed
+    # Ensure user exists
+    u = await db_fetchrow("SELECT telegram_id FROM users WHERE telegram_id=$1;", telegram_id)
+    if not u:
+        raise HTTPException(404, "User not found")
+
+    # If reversed -> (مرحله بعدی) می‌تونیم برگشت امتیاز هم اضافه کنیم
+    if status == "2":
+        # For now, ignore reversals safely (no extra reward)
+        return {"success": True, "message": "Reversal received, ignored (not implemented)"}
+
+    # Idempotency: if already processed, ignore
     exists = await db_fetchrow("SELECT event_id FROM offerwall_events WHERE event_id=$1;", event_id)
     if exists:
         return {"success": True, "message": "Already processed"}
+
+    reward_iran = max(0.0, payout * OFFERWALL_PAYOUT_TO_IRAN)
+
+    await db_exec("""
+        INSERT INTO offerwall_events(event_id, telegram_id, payout, reward_iran, currency, raw)
+        VALUES($1,$2,$3,$4,$5,$6);
+    """, event_id, telegram_id, payout, reward_iran, currency, str(params)[:5000])
+
+    await db_exec("""
+        UPDATE users
+        SET balance = balance + $1,
+            total_earned = total_earned + $1,
+            updated_at = now()
+        WHERE telegram_id=$2;
+    """, reward_iran, telegram_id)
+
+    await db_exec("""
+        INSERT INTO transactions(telegram_id, type, amount, status, description)
+        VALUES($1,'offerwall',$2,'completed',$3);
+    """, telegram_id, reward_iran, f"Offerwall reward (+{reward_iran:.2f} IRAN)")
+
+    return {"success": True, "telegram_id": telegram_id, "reward_iran": reward_iran, "status": status}
 
     # user must exist
     u = await db_fetchrow("SELECT telegram_id FROM users WHERE telegram_id=$1;", telegram_id)
