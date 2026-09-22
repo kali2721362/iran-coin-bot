@@ -1,28 +1,19 @@
 import os
+import json
 import random
 import logging
-import json
-import asyncio
 import urllib.request
 from datetime import datetime
 from typing import Optional
 import asyncpg
-import httpx
 from fastapi import FastAPI, Request, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-# Aiogram 3 برای ربات تلگرام
-from aiogram import Bot, Dispatcher, types, F
-from aiogram.filters import CommandStart, Command
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
-from aiogram.enums import ParseMode
-from aiogram.client.default import DefaultBotProperties
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("backend")
 
-app = FastAPI(title="IRAN Coin Backend & Bot")
+app = FastAPI(title="IRAN Coin Backend")
 
 app.add_middleware(
     CORSMiddleware,
@@ -36,7 +27,9 @@ app.add_middleware(
 DATABASE_URL = os.getenv("DATABASE_URL", "")
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 MINI_APP_URL = os.getenv("MINI_APP_URL", "https://loquacious-frangollo-386374.netlify.app")
-ADMIN_ID = int(os.getenv("ADMIN_ID", "979411415"))
+ADMIN_ID = str(os.getenv("ADMIN_ID", "979411415")).strip()
+SERVER_URL = "https://iran-coin-bot-production.up.railway.app"
+
 OFFERWALL_POSTBACK_SECRET = os.getenv("OFFERWALL_POSTBACK_SECRET", "")
 OFFERWALL_URL_TEMPLATE = os.getenv(
     "OFFERWALL_URL_TEMPLATE",
@@ -63,107 +56,19 @@ REAL_TASKS = [
     }
 ]
 
-# --------------------------------------------------
-# راه‌اندازی ربات تلگرام (Aiogram)
-# --------------------------------------------------
-bot = None
-dp = Dispatcher()
-
-if BOT_TOKEN:
-    bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-
-@dp.message(CommandStart())
-async def bot_start(m: types.Message):
-    user_id = m.from_user.id
-    ref = None
-
-    if m.text and len(m.text.split()) > 1:
-        raw_ref = m.text.split()[1]
-        if raw_ref.startswith("ref_"):
-            ref = raw_ref.replace("ref_", "").strip()
-        else:
-            ref = raw_ref.strip()
-
-        if ref == str(user_id):
-            ref = None
-
-    url = MINI_APP_URL
-    if ref:
-        joiner = "&" if "?" in url else "?"
-        url = f"{url}{joiner}ref={ref}"
-
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🚀 Open IRAN Coin", web_app=WebAppInfo(url=url))]
-    ])
-
-    await m.answer(
-        "🇮🇷 <b>Welcome to IRAN Coin!</b>\n\n"
-        "Earn by watching ads, completing tasks, daily lucky spin, and inviting friends.\n"
-        "Withdraw to your TON wallet inside the Mini App.",
-        reply_markup=kb
-    )
-
-@dp.message(Command("admin"))
-async def bot_admin(m: types.Message):
-    if m.from_user.id != ADMIN_ID:
-        return await m.answer(f"❌ شما ادمین نیستید. آیدی شما: <code>{m.from_user.id}</code>")
-
-    total_users = 0
-    total_balance = 0.0
-    pending_wd = 0
-
-    if db_pool:
-        try:
-            u_row = await db_fetchrow("SELECT COUNT(*) as count, SUM(balance) as total FROM users;")
-            if u_row:
-                total_users = int(u_row.get("count") or 0)
-                total_balance = float(u_row.get("total") or 0.0)
-
-            w_row = await db_fetchrow("SELECT COUNT(*) as count FROM withdrawals WHERE status='pending';")
-            if w_row:
-                pending_wd = int(w_row.get("count") or 0)
-        except Exception as e:
-            logger.error(f"Admin stats error: {e}")
-
-    text = (
-        "📊 <b>پنل مدیریت اختصاصی IRAN Coin</b>\n\n"
-        f"👥 تعداد کل کاربران: <b>{total_users} نفر</b>\n"
-        f"💰 کل سکه‌های در گردش: <b>{total_balance:,.0f} IRAN</b>\n"
-        f"⏳ درخواست‌های برداشت در انتظار: <b>{pending_wd} عدد</b>"
-    )
-    await m.answer(text)
-
-@dp.callback_query(F.data.startswith("wd_"))
-async def handle_withdraw_callback(call: types.CallbackQuery):
-    if call.from_user.id != ADMIN_ID:
-        return await call.answer("دسترسی غیرمجاز", show_alert=True)
-
-    data = call.data.split("_")
-    action = data[1]
-    wd_id = data[2]
-    user_id = data[3]
-
-    if action == "approve":
-        await db_exec("UPDATE withdrawals SET status='approved' WHERE id=$1;", int(wd_id))
-        await call.message.edit_text(call.message.text + "\n\n✅ <b>این درخواست تایید و واریز شد.</b>")
-        if bot:
-            try:
-                await bot.send_message(user_id, "🎉 <b>درخواست برداشت شما با موفقیت تایید و به کیف پول TON شما واریز شد!</b>")
-            except:
-                pass
-        await call.answer("تایید شد!")
-
-    elif action == "reject":
-        refund_amount = float(data[4]) if len(data) > 4 else 0.0
-        await db_exec("UPDATE withdrawals SET status='rejected' WHERE id=$1;", int(wd_id))
-        await db_exec("UPDATE users SET balance = balance + $1 WHERE telegram_id::text=$2;", refund_amount, str(user_id))
-        await call.message.edit_text(call.message.text + "\n\n❌ <b>این درخواست رد شد و سکه‌ها عودت داده شد.</b>")
-        if bot:
-            try:
-                await bot.send_message(user_id, f"❌ درخواست برداشت شما رد شد و {refund_amount} سکه به حساب شما بازگشت.")
-            except:
-                pass
-        await call.answer("رد شد!")
+# تابع عمومی ارسال درخواست به Telegram API بدون نیاز به کتابخانه اضافی
+def send_telegram_api(method: str, payload: dict):
+    if not BOT_TOKEN:
+        return None
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/{method}"
+    try:
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except Exception as e:
+        logger.error(f"Telegram API Error ({method}): {e}")
+        return None
 
 # --------------------------------------------------
 # مدیریت استارت‌آپ FastAPI و دیتابیس
@@ -196,10 +101,11 @@ async def startup():
         except Exception as e:
             logger.error(f"❌ Database Connection Error: {e}")
 
-    # بیدار کردن و روشن ساختن ربات تلگرام همراه با سرور
-    if bot:
-        asyncio.create_task(dp.start_polling(bot))
-        logger.info("🤖 Telegram Bot Polling Started!")
+    # ست کردن اتوماتیک Webhook تلگرام هنگام روشن شدن سرور
+    if BOT_TOKEN:
+        webhook_url = f"{SERVER_URL}/api/v1/telegram/webhook"
+        res = send_telegram_api("setWebhook", {"url": webhook_url})
+        logger.info(f"🤖 Telegram Webhook auto-configured: {res}")
 
 @app.on_event("shutdown")
 async def shutdown():
@@ -240,6 +146,154 @@ def check_telegram_membership_sync(chat_id: str, user_id: int) -> bool:
         logger.error(f"Error checking membership: {e}")
     return False
 
+# --------------------------------------------------
+# دریافت مستقیم دستورات ربات (Webhook Endpoint)
+# --------------------------------------------------
+@app.post("/api/v1/telegram/webhook")
+async def telegram_webhook(request: Request):
+    try:
+        update = await request.json()
+    except Exception:
+        return {"status": "ok"}
+
+    # ۱. مدیریت پیام‌های متنی (Start و Admin)
+    if "message" in update:
+        msg = update["message"]
+        chat_id = msg.get("chat", {}).get("id")
+        user_id = str(msg.get("from", {}).get("id", ""))
+        text = msg.get("text", "").strip()
+
+        if text.startswith("/start"):
+            ref = None
+            parts = text.split()
+            if len(parts) > 1:
+                raw_ref = parts[1]
+                if raw_ref.startswith("ref_"):
+                    ref = raw_ref.replace("ref_", "").strip()
+                else:
+                    ref = raw_ref.strip()
+                if ref == user_id:
+                    ref = None
+
+            app_url = MINI_APP_URL
+            if ref:
+                joiner = "&" if "?" in app_url else "?"
+                app_url = f"{app_url}{joiner}ref={ref}"
+
+            reply_markup = {
+                "inline_keyboard": [
+                    [{"text": "🚀 Open IRAN Coin", "web_app": {"url": app_url}}]
+                ]
+            }
+
+            welcome_text = (
+                "🇮🇷 <b>Welcome to IRAN Coin!</b>\n\n"
+                "Earn by watching ads, completing tasks, daily lucky spin, and inviting friends.\n"
+                "Withdraw to your TON wallet inside the Mini App."
+            )
+            send_telegram_api("sendMessage", {
+                "chat_id": chat_id,
+                "text": welcome_text,
+                "parse_mode": "HTML",
+                "reply_markup": reply_markup
+            })
+
+        elif text == "/admin":
+            if user_id != ADMIN_ID:
+                send_telegram_api("sendMessage", {
+                    "chat_id": chat_id,
+                    "text": f"❌ شما ادمین نیستید.\nآیدی شما: <code>{user_id}</code>\nآیدی ادمین تنظیم‌شده: <code>{ADMIN_ID}</code>",
+                    "parse_mode": "HTML"
+                })
+            else:
+                total_users = 0
+                total_balance = 0.0
+                pending_wd = 0
+
+                if db_pool:
+                    try:
+                        u_row = await db_fetchrow("SELECT COUNT(*) as count, SUM(balance) as total FROM users;")
+                        if u_row:
+                            total_users = int(u_row.get("count") or 0)
+                            total_balance = float(u_row.get("total") or 0.0)
+
+                        w_row = await db_fetchrow("SELECT COUNT(*) as count FROM withdrawals WHERE status='pending';")
+                        if w_row:
+                            pending_wd = int(w_row.get("count") or 0)
+                    except Exception as e:
+                        logger.error(f"Admin stats error: {e}")
+
+                admin_text = (
+                    "📊 <b>پنل مدیریت اختصاصی IRAN Coin</b>\n\n"
+                    f"👥 تعداد کل کاربران: <b>{total_users} نفر</b>\n"
+                    f"💰 کل سکه‌های در گردش: <b>{total_balance:,.0f} IRAN</b>\n"
+                    f"⏳ درخواست‌های برداشت در انتظار: <b>{pending_wd} عدد</b>"
+                )
+                send_telegram_api("sendMessage", {
+                    "chat_id": chat_id,
+                    "text": admin_text,
+                    "parse_mode": "HTML"
+                })
+
+    # ۲. مدیریت کلیک روی دکمه‌ها (تایید/رد برداشت)
+    elif "callback_query" in update:
+        cb = update["callback_query"]
+        cb_id = cb.get("id")
+        user_id = str(cb.get("from", {}).get("id", ""))
+        data = cb.get("data", "")
+        msg = cb.get("message", {})
+        chat_id = msg.get("chat", {}).get("id")
+        msg_id = msg.get("message_id")
+        old_text = msg.get("text", "")
+
+        if data.startswith("wd_"):
+            if user_id != ADMIN_ID:
+                send_telegram_api("answerCallbackQuery", {
+                    "callback_query_id": cb_id,
+                    "text": "دسترسی غیرمجاز",
+                    "show_alert": True
+                })
+                return {"status": "ok"}
+
+            parts = data.split("_")
+            action = parts[1]
+            wd_id = parts[2]
+            target_user_id = parts[3]
+
+            if action == "approve":
+                await db_exec("UPDATE withdrawals SET status='approved' WHERE id=$1;", int(wd_id))
+                send_telegram_api("editMessageText", {
+                    "chat_id": chat_id,
+                    "message_id": msg_id,
+                    "text": old_text + "\n\n✅ <b>این درخواست تایید و واریز شد.</b>",
+                    "parse_mode": "HTML"
+                })
+                send_telegram_api("sendMessage", {
+                    "chat_id": target_user_id,
+                    "text": "🎉 <b>درخواست برداشت شما با موفقیت تایید و به کیف پول TON شما واریز شد!</b>",
+                    "parse_mode": "HTML"
+                })
+                send_telegram_api("answerCallbackQuery", {"callback_query_id": cb_id, "text": "تایید شد!"})
+
+            elif action == "reject":
+                refund_amount = float(parts[4]) if len(parts) > 4 else 0.0
+                await db_exec("UPDATE withdrawals SET status='rejected' WHERE id=$1;", int(wd_id))
+                await db_exec("UPDATE users SET balance = balance + $1 WHERE telegram_id::text=$2;", refund_amount, str(target_user_id))
+                send_telegram_api("editMessageText", {
+                    "chat_id": chat_id,
+                    "message_id": msg_id,
+                    "text": old_text + "\n\n❌ <b>این درخواست رد شد و سکه‌ها عودت داده شد.</b>",
+                    "parse_mode": "HTML"
+                })
+                send_telegram_api("sendMessage", {
+                    "chat_id": target_user_id,
+                    "text": f"❌ درخواست برداشت شما رد شد و {refund_amount} سکه به حساب شما بازگشت.",
+                    "parse_mode": "HTML"
+                })
+                send_telegram_api("answerCallbackQuery", {"callback_query_id": cb_id, "text": "رد شد!"})
+
+    return {"status": "ok"}
+
 SPIN_REWARDS_LIST = [
     {"index": 0, "amount": 10,  "label": "10",  "chance": 500},
     {"index": 1, "amount": 20,  "label": "20",  "chance": 300},
@@ -251,7 +305,7 @@ SPIN_REWARDS_LIST = [
 
 @app.get("/")
 async def root():
-    return {"status": "ok", "message": "IRAN Coin Backend & Bot is running!"}
+    return {"status": "ok", "message": "IRAN Coin Backend is running!"}
 
 class InitPayload(BaseModel):
     initData: Optional[str] = ""
@@ -279,9 +333,11 @@ async def init_user(payload: InitPayload):
                 if possible_ref != str(tg_id):
                     referred_by = possible_ref
                     await db_exec("UPDATE users SET balance = balance + 500 WHERE telegram_id::text=$1;", possible_ref)
-                    if bot:
-                        try: await bot.send_message(possible_ref, "🎉 <b>کاربر جدیدی با لینک شما وارد شد!</b>\n🎁 ۵۰۰ سکه پاداش گرفتید.")
-                        except: pass
+                    send_telegram_api("sendMessage", {
+                        "chat_id": possible_ref,
+                        "text": "🎉 <b>کاربر جدیدی با لینک شما وارد شد!</b>\n🎁 ۵۰۰ سکه پاداش گرفتید.",
+                        "parse_mode": "HTML"
+                    })
             except:
                 pass
 
@@ -509,23 +565,26 @@ async def request_withdraw(payload: WithdrawPayload):
         except Exception as e:
             logger.error(f"Withdraw insert error: {e}")
 
-    if bot:
-        try:
-            msg = (
-                f"🚨 <b>درخواست برداشت جدید!</b>\n\n"
-                f"👤 کاربر: <code>{payload.telegram_id}</code>\n"
-                f"💰 مقدار: <b>{amount} IRAN</b>\n"
-                f"👛 آدرس ولت:\n<code>{addr}</code>"
-            )
-            markup = InlineKeyboardMarkup(inline_keyboard=[
-                [
-                    InlineKeyboardButton(text="✅ تایید و واریز شد", callback_data=f"wd_approve_{wd_id}_{payload.telegram_id}"),
-                    InlineKeyboardButton(text="❌ رد درخواست", callback_data=f"wd_reject_{wd_id}_{payload.telegram_id}_{amount}")
-                ]
-            ])
-            await bot.send_message(ADMIN_ID, msg, reply_markup=markup)
-        except Exception as e:
-            logger.error(f"Error sending admin withdraw notify: {e}")
+    msg = (
+        f"🚨 <b>درخواست برداشت جدید!</b>\n\n"
+        f"👤 کاربر: <code>{payload.telegram_id}</code>\n"
+        f"💰 مقدار: <b>{amount} IRAN</b>\n"
+        f"👛 آدرس ولت:\n<code>{addr}</code>"
+    )
+    markup = {
+        "inline_keyboard": [
+            [
+                {"text": "✅ تایید و واریز شد", "callback_data": f"wd_approve_{wd_id}_{payload.telegram_id}"},
+                {"text": "❌ رد درخواست", "callback_data": f"wd_reject_{wd_id}_{payload.telegram_id}_{amount}"}
+            ]
+        ]
+    }
+    send_telegram_api("sendMessage", {
+        "chat_id": ADMIN_ID,
+        "text": msg,
+        "parse_mode": "HTML",
+        "reply_markup": markup
+    })
 
     return {"success": True, "message": "درخواست برداشت ثبت شد.", "new_balance": new_bal}
 
