@@ -3,7 +3,7 @@ import json
 import random
 import logging
 import urllib.request
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 import asyncpg
 from fastapi import FastAPI, Request, Header, HTTPException
@@ -23,7 +23,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# متغیرهای محیطی
 DATABASE_URL = os.getenv("DATABASE_URL", "")
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 MINI_APP_URL = os.getenv("MINI_APP_URL", "https://loquacious-frangollo-386374.netlify.app")
@@ -39,19 +38,21 @@ OFFERWALL_PAYOUT_TO_IRAN = float(os.getenv("OFFERWALL_PAYOUT_TO_IRAN", "1000.0")
 
 db_pool: Optional[asyncpg.Pool] = None
 
-# تسک‌های پیش‌فرض
+# جدول پاداش‌های ورود متوالی (Daily Streak)
+STREAK_REWARDS = [10, 20, 30, 50, 80, 100, 250]
+
 DEFAULT_TASKS = [
     {
         "id": 1,
         "title": "عضویت در کانال رسمی",
-        "reward": 100,
+        "reward": 50,
         "chat_id": "@IRANCoinChannel",
         "task_url": "https://t.me/IRANCoinChannel"
     },
     {
         "id": 2,
         "title": "عضویت در گروه چت",
-        "reward": 100,
+        "reward": 50,
         "chat_id": "@IRANCoinGroup",
         "task_url": "https://t.me/IRANCoinGroup"
     }
@@ -70,9 +71,6 @@ def send_telegram_api(method: str, payload: dict):
         logger.error(f"Telegram API Error ({method}): {e}")
         return None
 
-# --------------------------------------------------
-# مدیریت دیتابیس
-# --------------------------------------------------
 @app.on_event("startup")
 async def startup():
     global db_pool
@@ -86,6 +84,8 @@ async def startup():
                 await db_exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_spin TEXT;")
                 await db_exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_by TEXT;")
                 await db_exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS completed_tasks TEXT;")
+                await db_exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS streak_count INT DEFAULT 0;")
+                await db_exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_streak_date TEXT;")
                 await db_exec("""
                     CREATE TABLE IF NOT EXISTS withdrawals (
                         id SERIAL PRIMARY KEY,
@@ -162,9 +162,6 @@ def check_telegram_membership_sync(chat_id: str, user_id: int) -> bool:
         logger.error(f"Error checking membership: {e}")
     return False
 
-# --------------------------------------------------
-# Webhook تلگرام (دستورات Start, Admin, Broadcast, AddTask)
-# --------------------------------------------------
 @app.post("/api/v1/telegram/webhook")
 async def telegram_webhook(request: Request):
     try:
@@ -213,7 +210,6 @@ async def telegram_webhook(request: Request):
                 "reply_markup": reply_markup
             })
 
-        # --- پنل ادمین ---
         elif text == "/admin":
             if user_id != ADMIN_ID:
                 send_telegram_api("sendMessage", {
@@ -246,7 +242,7 @@ async def telegram_webhook(request: Request):
                     f"⏳ درخواست‌های برداشت در انتظار: <b>{pending_wd} عدد</b>\n\n"
                     "📌 <b>دستورات ادمین:</b>\n"
                     "<code>/broadcast متن_پیام</code> - ارسال پیام همگانی\n"
-                    "<code>/addtask @آیدی_کانال ۱۰۰ عنوان لینک</code> - افزودن تسک اسپانسری"
+                    "<code>/addtask @آیدی_کانال ۵0 عنوان لینک</code> - افزودن تسک اسپانسری"
                 )
                 send_telegram_api("sendMessage", {
                     "chat_id": chat_id,
@@ -254,7 +250,6 @@ async def telegram_webhook(request: Request):
                     "parse_mode": "HTML"
                 })
 
-        # --- ارسال پیام همگانی (Broadcast) ---
         elif text.startswith("/broadcast "):
             if user_id == ADMIN_ID:
                 bc_text = text.replace("/broadcast ", "").strip()
@@ -277,12 +272,10 @@ async def telegram_webhook(request: Request):
                         "parse_mode": "HTML"
                     })
 
-        # --- افزودن تسک اسپانسری متحرک ---
         elif text.startswith("/addtask "):
             if user_id == ADMIN_ID:
                 try:
                     parts = text.split(maxsplit=4)
-                    # فرمت: /addtask @channel 100 عنوان_تسک https://t.me/channel
                     chat_target = parts[1]
                     reward_val = float(parts[2])
                     task_title = parts[3]
@@ -301,11 +294,10 @@ async def telegram_webhook(request: Request):
                 except Exception as e:
                     send_telegram_api("sendMessage", {
                         "chat_id": chat_id,
-                        "text": f"❌ فرمت دستور نادرست است.\nفرمت صحیح:\n<code>/addtask @Channel 100 عنوان لینک</code>",
+                        "text": f"❌ فرمت دستور نادرست است.\nفرمت صحیح:\n<code>/addtask @Channel 50 عنوان لینک</code>",
                         "parse_mode": "HTML"
                     })
 
-    # دکمه‌های تایید/رد برداشت
     elif "callback_query" in update:
         cb = update["callback_query"]
         cb_id = cb.get("id")
@@ -398,10 +390,11 @@ async def init_user(payload: InitPayload):
                 possible_ref = str(ref.replace("ref_", "").strip())
                 if possible_ref != str(tg_id):
                     referred_by = possible_ref
-                    await db_exec("UPDATE users SET balance = balance + 500 WHERE telegram_id::text=$1;", possible_ref)
+                    # پاداش دعوت اقتصادی: ۵۰ سکه به جای ۵۰۰ سکه
+                    await db_exec("UPDATE users SET balance = balance + 50 WHERE telegram_id::text=$1;", possible_ref)
                     send_telegram_api("sendMessage", {
                         "chat_id": possible_ref,
-                        "text": "🎉 <b>کاربر جدیدی با لینک شما وارد شد!</b>\n🎁 ۵۰۰ سکه پاداش گرفتید.",
+                        "text": "🎉 <b>کاربر جدیدی با لینک شما وارد شد!</b>\n🎁 ۵۰ سکه پاداش گرفتید.",
                         "parse_mode": "HTML"
                     })
             except:
@@ -427,19 +420,67 @@ async def init_user(payload: InitPayload):
         }
     }
 
+# --- پاداش ورودی متوالی روزانه (Daily Streak Claim) ---
+@app.post("/api/v1/streak/claim/{telegram_id}")
+async def claim_streak(telegram_id: str):
+    tg_str = str(telegram_id).strip()
+    today_str = datetime.utcnow().strftime("%Y-%m-%d")
+
+    row = await db_fetchrow("SELECT balance, streak_count, last_streak_date FROM users WHERE telegram_id::text=$1;", tg_str)
+    if not row:
+        raise HTTPException(400, "User not found")
+
+    last_date = row.get("last_streak_date")
+    streak_count = int(row.get("streak_count") or 0)
+    curr_balance = float(row.get("balance") or 0.0)
+
+    if last_date == today_str:
+        return {"success": False, "message": "پاداش امروز را قبلاً دریافت کرده‌اید."}
+
+    yesterday_str = (datetime.utcnow() - timedelta(days=1)).strftime("%Y-%m-%d")
+    if last_date == yesterday_str:
+        streak_count = (streak_count % 7) + 1
+    else:
+        streak_count = 1
+
+    reward = STREAK_REWARDS[streak_count - 1]
+    new_balance = curr_balance + reward
+
+    await db_exec("""
+        UPDATE users 
+        SET balance = balance + $1, 
+            streak_count = $2, 
+            last_streak_date = $3 
+        WHERE telegram_id::text=$4;
+    """, reward, streak_count, today_str, tg_str)
+
+    return {
+        "success": True, 
+        "reward": reward, 
+        "streak_day": streak_count, 
+        "new_balance": new_balance
+    }
+
 @app.get("/api/v1/user/stats/{telegram_id}")
 async def get_user_stats(telegram_id: str):
     tg_str = str(telegram_id).strip()
+    today_str = datetime.utcnow().strftime("%Y-%m-%d")
+
     coins = 0.0
     ref_count = 0
     last_spin_str = None
+    streak_count = 0
+    can_claim_streak = True
 
     if db_pool:
         try:
-            row = await db_fetchrow("SELECT balance, last_spin FROM users WHERE telegram_id::text=$1;", tg_str)
+            row = await db_fetchrow("SELECT balance, last_spin, streak_count, last_streak_date FROM users WHERE telegram_id::text=$1;", tg_str)
             if row:
                 coins = float(row.get("balance") or 0.0)
                 last_spin_str = row.get("last_spin")
+                streak_count = int(row.get("streak_count") or 0)
+                if row.get("last_streak_date") == today_str:
+                    can_claim_streak = False
         except Exception:
             pass
 
@@ -471,7 +512,9 @@ async def get_user_stats(telegram_id: str):
         "coins": coins,
         "referrals_count": ref_count,
         "can_spin": can_spin,
-        "seconds_to_next_spin": seconds_left
+        "seconds_to_next_spin": seconds_left,
+        "streak_day": streak_count,
+        "can_claim_streak": can_claim_streak
     }
 
 @app.post("/api/v1/spin/{telegram_id}")
@@ -527,7 +570,6 @@ async def process_spin(telegram_id: str):
         "new_balance": new_coins
     }
 
-# --- ترکیبی از تسک‌های اصلی + تسک‌های اسپانسری افزوده شده ---
 @app.get("/api/v1/tasks/{telegram_id}")
 async def get_tasks(telegram_id: str):
     tg_str = str(telegram_id).strip()
@@ -547,7 +589,7 @@ async def get_tasks(telegram_id: str):
             c_rows = await db_fetch("SELECT * FROM custom_tasks;")
             for cr in c_rows:
                 all_tasks.append({
-                    "id": int(cr["id"]) + 100, # شناسه مجزا برای تسک‌های سفارشی
+                    "id": int(cr["id"]) + 100,
                     "title": cr["title"],
                     "reward": float(cr["reward"]),
                     "chat_id": cr["chat_id"],
@@ -640,8 +682,9 @@ async def request_withdraw(payload: WithdrawPayload):
     amount = float(payload.amount)
     addr = payload.ton_address.strip()
 
-    if amount < 500:
-        return {"success": False, "message": "حداقل میزان برداشت ۵۰۰ سکه است."}
+    # اصلاح امنیتی: حداقل ۱۰,۰۰۰ سکه برای برداشت جهت تضمین سود ادمین
+    if amount < 10000:
+        return {"success": False, "message": "حداقل میزان برداشت ۱۰,۰۰۰ سکه است."}
 
     user = await db_fetchrow("SELECT balance FROM users WHERE telegram_id::text=$1;", tg_str)
     curr_bal = float(user.get("balance", 0.0)) if user else 0.0
