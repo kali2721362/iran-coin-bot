@@ -41,20 +41,21 @@ db_pool: Optional[asyncpg.Pool] = None
 # جدول پاداش‌های ورود متوالی (Daily Streak)
 STREAK_REWARDS = [10, 20, 30, 50, 80, 100, 250]
 
-DEFAULT_TASKS = [
+# تسک‌های واقعی با آیدی جدید شما
+REAL_TASKS = [
     {
         "id": 1,
         "title": "عضویت در کانال رسمی",
         "reward": 50,
-        "chat_id": "@IRANCoinChannel",
-        "task_url": "https://t.me/IRANCoinChannel"
+        "chat_id": "@IRANCoin_Official",
+        "task_url": "https://t.me/IRANCoin_Official"
     },
     {
         "id": 2,
         "title": "عضویت در گروه چت",
         "reward": 50,
-        "chat_id": "@IRANCoinGroup",
-        "task_url": "https://t.me/IRANCoinGroup"
+        "chat_id": "@IRANCoin_Chat", # 👈 اگر آیدی گروهتان فرق می‌کند، این را هم مثل کانال اصلاح کنید
+        "task_url": "https://t.me/IRANCoin_Chat"
     }
 ]
 
