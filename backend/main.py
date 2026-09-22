@@ -3,6 +3,7 @@ import json
 import random
 import logging
 import urllib.request
+import urllib.error
 from datetime import datetime, timedelta
 from typing import Optional
 import asyncpg
@@ -38,11 +39,10 @@ OFFERWALL_PAYOUT_TO_IRAN = float(os.getenv("OFFERWALL_PAYOUT_TO_IRAN", "1000.0")
 
 db_pool: Optional[asyncpg.Pool] = None
 
-# جدول پاداش‌های ورود متوالی (Daily Streak)
 STREAK_REWARDS = [10, 20, 30, 50, 80, 100, 250]
 
-# تسک‌های واقعی با آیدی جدید شما
-REAL_TASKS = [
+# تسک‌های واقعی با آیدی جدید کانال
+DEFAULT_TASKS = [
     {
         "id": 1,
         "title": "عضویت در کانال رسمی",
@@ -54,8 +54,8 @@ REAL_TASKS = [
         "id": 2,
         "title": "عضویت در گروه چت",
         "reward": 50,
-        "chat_id": "@IRANCoin_Chat", # 👈 اگر آیدی گروهتان فرق می‌کند، این را هم مثل کانال اصلاح کنید
-        "task_url": "https://t.me/IRANCoin_Chat"
+        "chat_id": "@IRANCoinGroup",
+        "task_url": "https://t.me/IRANCoinGroup"
     }
 ]
 
@@ -148,9 +148,10 @@ async def db_exec(query, *args):
             logger.error(f"db_exec error: {e}")
     return None
 
-def check_telegram_membership_sync(chat_id: str, user_id: int) -> bool:
+# تابع هوشمند بررسی عضویت با گزارش خطای دقیق
+def check_telegram_membership_sync(chat_id: str, user_id: int):
     if not BOT_TOKEN or not chat_id:
-        return True
+        return True, "ok"
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/getChatMember?chat_id={chat_id}&user_id={user_id}"
     try:
         req = urllib.request.Request(url)
@@ -158,10 +159,26 @@ def check_telegram_membership_sync(chat_id: str, user_id: int) -> bool:
             if response.status == 200:
                 data = json.loads(response.read().decode('utf-8'))
                 status = data.get("result", {}).get("status", "")
-                return status in ["member", "administrator", "creator"]
+                if status in ["member", "administrator", "creator"]:
+                    return True, "ok"
+                else:
+                    return False, "ابتدا باید عضو کانال/گروه شوید!"
+    except urllib.error.HTTPError as e:
+        try:
+            err_body = e.read().decode('utf-8')
+        except:
+            err_body = str(e)
+        logger.error(f"Telegram error for {chat_id}: {err_body}")
+        if "chat not found" in err_body.lower():
+            return False, f"خطا: کانال یا گروه در تلگرام یافت نشد."
+        elif "bot is not a member" in err_body.lower() or "administrator" in err_body.lower():
+            return False, "ربات هنوز در کانال/گروه ادمین نشده است."
+        elif "member list is inaccessible" in err_body.lower():
+             return False, "ربات باید در کانال/گروه ادمین شود."
     except Exception as e:
         logger.error(f"Error checking membership: {e}")
-    return False
+    
+    return False, "خطا در بررسی عضویت. لطفاً کمی صبر و دوباره تلاش کنید."
 
 @app.post("/api/v1/telegram/webhook")
 async def telegram_webhook(request: Request):
@@ -243,7 +260,7 @@ async def telegram_webhook(request: Request):
                     f"⏳ درخواست‌های برداشت در انتظار: <b>{pending_wd} عدد</b>\n\n"
                     "📌 <b>دستورات ادمین:</b>\n"
                     "<code>/broadcast متن_پیام</code> - ارسال پیام همگانی\n"
-                    "<code>/addtask @آیدی_کانال ۵0 عنوان لینک</code> - افزودن تسک اسپانسری"
+                    "<code>/addtask @آیدی_کانال 50 عنوان لینک</code> - افزودن تسک اسپانسری"
                 )
                 send_telegram_api("sendMessage", {
                     "chat_id": chat_id,
@@ -391,7 +408,6 @@ async def init_user(payload: InitPayload):
                 possible_ref = str(ref.replace("ref_", "").strip())
                 if possible_ref != str(tg_id):
                     referred_by = possible_ref
-                    # پاداش دعوت اقتصادی: ۵۰ سکه به جای ۵۰۰ سکه
                     await db_exec("UPDATE users SET balance = balance + 50 WHERE telegram_id::text=$1;", possible_ref)
                     send_telegram_api("sendMessage", {
                         "chat_id": possible_ref,
@@ -421,7 +437,6 @@ async def init_user(payload: InitPayload):
         }
     }
 
-# --- پاداش ورودی متوالی روزانه (Daily Streak Claim) ---
 @app.post("/api/v1/streak/claim/{telegram_id}")
 async def claim_streak(telegram_id: str):
     tg_str = str(telegram_id).strip()
@@ -575,13 +590,14 @@ async def process_spin(telegram_id: str):
 async def get_tasks(telegram_id: str):
     tg_str = str(telegram_id).strip()
     completed_ids = []
-    if db_pool:
+    
+    if db_pool and tg_str not in ["undefined", "0", ""]:
         try:
             row = await db_fetchrow("SELECT completed_tasks FROM users WHERE telegram_id::text=$1;", tg_str)
             if row and row.get("completed_tasks"):
-                completed_ids = [int(x) for x in str(row["completed_tasks"]).split(",") if x.strip()]
-        except Exception:
-            pass
+                completed_ids = [int(x) for x in str(row["completed_tasks"]).split(",") if x.strip() and x.strip().isdigit()]
+        except Exception as e:
+            logger.error(f"Error fetching completed tasks: {e}")
 
     all_tasks = list(DEFAULT_TASKS)
 
@@ -639,9 +655,9 @@ async def complete_task(payload: TaskPayload):
     if not task:
         raise HTTPException(400, "تسک یافت نشد")
 
-    is_member = check_telegram_membership_sync(task["chat_id"], payload.telegram_id)
+    is_member, msg = check_telegram_membership_sync(task["chat_id"], payload.telegram_id)
     if not is_member:
-        return {"success": False, "message": "ابتدا باید عضو کانال/گروه شوید!"}
+        return {"success": False, "message": msg}
 
     reward = float(task["reward"])
     new_bal = 0.0
@@ -650,7 +666,7 @@ async def complete_task(payload: TaskPayload):
         try:
             row = await db_fetchrow("SELECT completed_tasks, balance FROM users WHERE telegram_id::text=$1;", tg_str)
             completed_str = row.get("completed_tasks") or "" if row else ""
-            completed_list = [int(x) for x in completed_str.split(",") if x.strip()]
+            completed_list = [int(x) for x in completed_str.split(",") if x.strip() and x.strip().isdigit()]
 
             if payload.task_id in completed_list:
                 return {"success": False, "message": "این تسک قبلاً انجام شده است."}
@@ -683,7 +699,6 @@ async def request_withdraw(payload: WithdrawPayload):
     amount = float(payload.amount)
     addr = payload.ton_address.strip()
 
-    # اصلاح امنیتی: حداقل ۱۰,۰۰۰ سکه برای برداشت جهت تضمین سود ادمین
     if amount < 10000:
         return {"success": False, "message": "حداقل میزان برداشت ۱۰,۰۰۰ سکه است."}
 
