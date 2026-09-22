@@ -1,4 +1,4 @@
-@@ -560,7 +560,7 @@ async def offerwall_postback(
+
     request: Request,
     x_postback_secret: str | None = Header(default=None),
 ):
