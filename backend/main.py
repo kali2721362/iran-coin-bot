@@ -73,15 +73,13 @@ async def db_exec(query, *args):
             logger.error(f"db_exec error: {e}")
     return None
 
-# تنظیمات چرخونه شانس کم‌پاداش (اقتصادی)
 SPIN_REWARDS_LIST = [
-    {"index": 0, "amount": 10,  "label": "10",  "chance": 50},   # ۵۰٪ شانس (بیشترین احتمال)
-    {"index": 1, "amount": 20,  "label": "20",  "chance": 30},   # ۳۰٪ شانس
-    {"index": 2, "amount": 50,  "label": "50",  "chance": 12},   # ۱۲٪ شانس
-    {"index": 3, "amount": 100, "label": "100", "chance": 5},    # ۵٪ شانس
-    {"index": 4, "amount": 200, "label": "200", "chance": 2.5},  # ۲.۵٪ شانس
-    {"index": 5, "amount": 500, "label": "500", "chance": 0.5},  # ۰.۵٪ شانس (بسیار نایاب!)
-]
+    {"index": 0, "amount": 10,  "label": "10",  "chance": 500},
+    {"index": 1, "amount": 20,  "label": "20",  "chance": 300},
+    {"index": 2, "amount": 50,  "label": "50",  "chance": 120},
+    {"index": 3, "amount": 100, "label": "100", "chance": 50},
+    {"index": 4, "amount": 200, "label": "200", "chance": 25},
+    {"index": 5, "amount": 500, "label": "500", "chance": 5},
 ]
 
 @app.get("/")
