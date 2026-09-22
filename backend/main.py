@@ -39,7 +39,8 @@ OFFERWALL_PAYOUT_TO_IRAN = float(os.getenv("OFFERWALL_PAYOUT_TO_IRAN", "1000.0")
 
 db_pool: Optional[asyncpg.Pool] = None
 
-REAL_TASKS = [
+# تسک‌های پیش‌فرض
+DEFAULT_TASKS = [
     {
         "id": 1,
         "title": "عضویت در کانال رسمی",
@@ -56,7 +57,6 @@ REAL_TASKS = [
     }
 ]
 
-# تابع عمومی ارسال درخواست به Telegram API بدون نیاز به کتابخانه اضافی
 def send_telegram_api(method: str, payload: dict):
     if not BOT_TOKEN:
         return None
@@ -71,7 +71,7 @@ def send_telegram_api(method: str, payload: dict):
         return None
 
 # --------------------------------------------------
-# مدیریت استارت‌آپ FastAPI و دیتابیس
+# مدیریت دیتابیس
 # --------------------------------------------------
 @app.on_event("startup")
 async def startup():
@@ -96,16 +96,23 @@ async def startup():
                         created_at TIMESTAMP DEFAULT NOW()
                     );
                 """)
+                await db_exec("""
+                    CREATE TABLE IF NOT EXISTS custom_tasks (
+                        id SERIAL PRIMARY KEY,
+                        title TEXT NOT NULL,
+                        reward FLOAT NOT NULL,
+                        chat_id TEXT NOT NULL,
+                        task_url TEXT NOT NULL
+                    );
+                """)
             except Exception as e:
                 logger.warning(f"Note on DB Migration: {e}")
         except Exception as e:
             logger.error(f"❌ Database Connection Error: {e}")
 
-    # ست کردن اتوماتیک Webhook تلگرام هنگام روشن شدن سرور
     if BOT_TOKEN:
         webhook_url = f"{SERVER_URL}/api/v1/telegram/webhook"
-        res = send_telegram_api("setWebhook", {"url": webhook_url})
-        logger.info(f"🤖 Telegram Webhook auto-configured: {res}")
+        send_telegram_api("setWebhook", {"url": webhook_url})
 
 @app.on_event("shutdown")
 async def shutdown():
@@ -121,6 +128,15 @@ async def db_fetchrow(query, *args):
         except Exception as e:
             logger.error(f"db_fetchrow error: {e}")
     return None
+
+async def db_fetch(query, *args):
+    if db_pool:
+        try:
+            async with db_pool.acquire() as conn:
+                return await conn.fetch(query, *args)
+        except Exception as e:
+            logger.error(f"db_fetch error: {e}")
+    return []
 
 async def db_exec(query, *args):
     if db_pool:
@@ -147,7 +163,7 @@ def check_telegram_membership_sync(chat_id: str, user_id: int) -> bool:
     return False
 
 # --------------------------------------------------
-# دریافت مستقیم دستورات ربات (Webhook Endpoint)
+# Webhook تلگرام (دستورات Start, Admin, Broadcast, AddTask)
 # --------------------------------------------------
 @app.post("/api/v1/telegram/webhook")
 async def telegram_webhook(request: Request):
@@ -156,7 +172,6 @@ async def telegram_webhook(request: Request):
     except Exception:
         return {"status": "ok"}
 
-    # ۱. مدیریت پیام‌های متنی (Start و Admin)
     if "message" in update:
         msg = update["message"]
         chat_id = msg.get("chat", {}).get("id")
@@ -198,11 +213,12 @@ async def telegram_webhook(request: Request):
                 "reply_markup": reply_markup
             })
 
+        # --- پنل ادمین ---
         elif text == "/admin":
             if user_id != ADMIN_ID:
                 send_telegram_api("sendMessage", {
                     "chat_id": chat_id,
-                    "text": f"❌ شما ادمین نیستید.\nآیدی شما: <code>{user_id}</code>\nآیدی ادمین تنظیم‌شده: <code>{ADMIN_ID}</code>",
+                    "text": f"❌ شما ادمین نیستید.\nآیدی شما: <code>{user_id}</code>",
                     "parse_mode": "HTML"
                 })
             else:
@@ -227,7 +243,10 @@ async def telegram_webhook(request: Request):
                     "📊 <b>پنل مدیریت اختصاصی IRAN Coin</b>\n\n"
                     f"👥 تعداد کل کاربران: <b>{total_users} نفر</b>\n"
                     f"💰 کل سکه‌های در گردش: <b>{total_balance:,.0f} IRAN</b>\n"
-                    f"⏳ درخواست‌های برداشت در انتظار: <b>{pending_wd} عدد</b>"
+                    f"⏳ درخواست‌های برداشت در انتظار: <b>{pending_wd} عدد</b>\n\n"
+                    "📌 <b>دستورات ادمین:</b>\n"
+                    "<code>/broadcast متن_پیام</code> - ارسال پیام همگانی\n"
+                    "<code>/addtask @آیدی_کانال ۱۰۰ عنوان لینک</code> - افزودن تسک اسپانسری"
                 )
                 send_telegram_api("sendMessage", {
                     "chat_id": chat_id,
@@ -235,7 +254,58 @@ async def telegram_webhook(request: Request):
                     "parse_mode": "HTML"
                 })
 
-    # ۲. مدیریت کلیک روی دکمه‌ها (تایید/رد برداشت)
+        # --- ارسال پیام همگانی (Broadcast) ---
+        elif text.startswith("/broadcast "):
+            if user_id == ADMIN_ID:
+                bc_text = text.replace("/broadcast ", "").strip()
+                if bc_text and db_pool:
+                    users = await db_fetch("SELECT telegram_id FROM users;")
+                    sent_count = 0
+                    for u in users:
+                        tid = u.get("telegram_id")
+                        if tid:
+                            res = send_telegram_api("sendMessage", {
+                                "chat_id": str(tid),
+                                "text": bc_text,
+                                "parse_mode": "HTML"
+                            })
+                            if res and res.get("ok"):
+                                sent_count += 1
+                    send_telegram_api("sendMessage", {
+                        "chat_id": chat_id,
+                        "text": f"✅ پیام همگانی با موفقیت به <b>{sent_count}</b> کاربر ارسال شد.",
+                        "parse_mode": "HTML"
+                    })
+
+        # --- افزودن تسک اسپانسری متحرک ---
+        elif text.startswith("/addtask "):
+            if user_id == ADMIN_ID:
+                try:
+                    parts = text.split(maxsplit=4)
+                    # فرمت: /addtask @channel 100 عنوان_تسک https://t.me/channel
+                    chat_target = parts[1]
+                    reward_val = float(parts[2])
+                    task_title = parts[3]
+                    task_url = parts[4]
+
+                    if db_pool:
+                        await db_exec("""
+                            INSERT INTO custom_tasks(title, reward, chat_id, task_url)
+                            VALUES($1, $2, $3, $4);
+                        """, task_title, reward_val, chat_target, task_url)
+                        send_telegram_api("sendMessage", {
+                            "chat_id": chat_id,
+                            "text": f"✅ تسک جدید با موفقیت اضافه شد:\n<b>{task_title}</b> (+{reward_val} سکه)",
+                            "parse_mode": "HTML"
+                        })
+                except Exception as e:
+                    send_telegram_api("sendMessage", {
+                        "chat_id": chat_id,
+                        "text": f"❌ فرمت دستور نادرست است.\nفرمت صحیح:\n<code>/addtask @Channel 100 عنوان لینک</code>",
+                        "parse_mode": "HTML"
+                    })
+
+    # دکمه‌های تایید/رد برداشت
     elif "callback_query" in update:
         cb = update["callback_query"]
         cb_id = cb.get("id")
@@ -248,11 +318,7 @@ async def telegram_webhook(request: Request):
 
         if data.startswith("wd_"):
             if user_id != ADMIN_ID:
-                send_telegram_api("answerCallbackQuery", {
-                    "callback_query_id": cb_id,
-                    "text": "دسترسی غیرمجاز",
-                    "show_alert": True
-                })
+                send_telegram_api("answerCallbackQuery", {"callback_query_id": cb_id, "text": "دسترسی غیرمجاز", "show_alert": True})
                 return {"status": "ok"}
 
             parts = data.split("_")
@@ -461,6 +527,7 @@ async def process_spin(telegram_id: str):
         "new_balance": new_coins
     }
 
+# --- ترکیبی از تسک‌های اصلی + تسک‌های اسپانسری افزوده شده ---
 @app.get("/api/v1/tasks/{telegram_id}")
 async def get_tasks(telegram_id: str):
     tg_str = str(telegram_id).strip()
@@ -473,8 +540,24 @@ async def get_tasks(telegram_id: str):
         except Exception:
             pass
 
+    all_tasks = list(DEFAULT_TASKS)
+
+    if db_pool:
+        try:
+            c_rows = await db_fetch("SELECT * FROM custom_tasks;")
+            for cr in c_rows:
+                all_tasks.append({
+                    "id": int(cr["id"]) + 100, # شناسه مجزا برای تسک‌های سفارشی
+                    "title": cr["title"],
+                    "reward": float(cr["reward"]),
+                    "chat_id": cr["chat_id"],
+                    "task_url": cr["task_url"]
+                })
+        except Exception:
+            pass
+
     task_list = []
-    for t in REAL_TASKS:
+    for t in all_tasks:
         task_list.append({
             "id": t["id"],
             "title": t["title"],
@@ -492,7 +575,23 @@ class TaskPayload(BaseModel):
 @app.post("/api/v1/tasks/complete")
 async def complete_task(payload: TaskPayload):
     tg_str = str(payload.telegram_id)
-    task = next((t for t in REAL_TASKS if t["id"] == payload.task_id), None)
+
+    all_tasks = list(DEFAULT_TASKS)
+    if db_pool:
+        try:
+            c_rows = await db_fetch("SELECT * FROM custom_tasks;")
+            for cr in c_rows:
+                all_tasks.append({
+                    "id": int(cr["id"]) + 100,
+                    "title": cr["title"],
+                    "reward": float(cr["reward"]),
+                    "chat_id": cr["chat_id"],
+                    "task_url": cr["task_url"]
+                })
+        except Exception:
+            pass
+
+    task = next((t for t in all_tasks if t["id"] == payload.task_id), None)
 
     if not task:
         raise HTTPException(400, "تسک یافت نشد")
