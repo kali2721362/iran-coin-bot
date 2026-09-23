@@ -26,7 +26,7 @@ app.add_middleware(
 
 DATABASE_URL = os.getenv("DATABASE_URL", "")
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
-MINI_APP_URL = os.getenv("MINI_APP_URL", "https://loquacious-frangollo-386374.netlify.app")
+MINI_APP_URL = os.getenv("MINI_APP_URL", "https://kali2721362.github.io/iran-coin-bot/")
 ADMIN_ID = str(os.getenv("ADMIN_ID", "979411415")).strip()
 SERVER_URL = "https://iran-coin-bot-production.up.railway.app"
 
@@ -41,18 +41,17 @@ db_pool: Optional[asyncpg.Pool] = None
 
 STREAK_REWARDS = [10, 20, 30, 50, 80, 100, 250]
 
-# تسک‌های واقعی با آیدی جدید کانال
 DEFAULT_TASKS = [
     {
         "id": 1,
-        "title": "عضویت در کانال رسمی",
+        "title": "Join Official Channel",
         "reward": 50,
         "chat_id": "@IRANCoin_Official",
         "task_url": "https://t.me/IRANCoin_Official"
     },
     {
         "id": 2,
-        "title": "عضویت در گروه چت",
+        "title": "Join Chat Group",
         "reward": 50,
         "chat_id": "@IRANCoinGroup",
         "task_url": "https://t.me/IRANCoinGroup"
@@ -148,7 +147,6 @@ async def db_exec(query, *args):
             logger.error(f"db_exec error: {e}")
     return None
 
-# تابع هوشمند بررسی عضویت با گزارش خطای دقیق
 def check_telegram_membership_sync(chat_id: str, user_id: int):
     if not BOT_TOKEN or not chat_id:
         return True, "ok"
@@ -162,23 +160,19 @@ def check_telegram_membership_sync(chat_id: str, user_id: int):
                 if status in ["member", "administrator", "creator"]:
                     return True, "ok"
                 else:
-                    return False, "ابتدا باید عضو کانال/گروه شوید!"
+                    return False, "Please join the channel/group first!"
     except urllib.error.HTTPError as e:
-        try:
-            err_body = e.read().decode('utf-8')
-        except:
-            err_body = str(e)
+        try: err_body = e.read().decode('utf-8')
+        except: err_body = str(e)
         logger.error(f"Telegram error for {chat_id}: {err_body}")
         if "chat not found" in err_body.lower():
-            return False, f"خطا: کانال یا گروه در تلگرام یافت نشد."
+            return False, "Channel or group not found."
         elif "bot is not a member" in err_body.lower() or "administrator" in err_body.lower():
-            return False, "ربات هنوز در کانال/گروه ادمین نشده است."
-        elif "member list is inaccessible" in err_body.lower():
-             return False, "ربات باید در کانال/گروه ادمین شود."
+            return False, "Bot is not an administrator in the channel/group."
     except Exception as e:
         logger.error(f"Error checking membership: {e}")
     
-    return False, "خطا در بررسی عضویت. لطفاً کمی صبر و دوباره تلاش کنید."
+    return False, "Membership verification error. Please try again."
 
 @app.post("/api/v1/telegram/webhook")
 async def telegram_webhook(request: Request):
@@ -212,7 +206,7 @@ async def telegram_webhook(request: Request):
 
             reply_markup = {
                 "inline_keyboard": [
-                    [{"text": "🚀 Open IRAN Coin", "web_app": {"url": app_url}}]
+                    [{"text": "🚀 Open IRAN Coin App", "web_app": {"url": app_url}}]
                 ]
             }
 
@@ -232,7 +226,7 @@ async def telegram_webhook(request: Request):
             if user_id != ADMIN_ID:
                 send_telegram_api("sendMessage", {
                     "chat_id": chat_id,
-                    "text": f"❌ شما ادمین نیستید.\nآیدی شما: <code>{user_id}</code>",
+                    "text": f"❌ Access denied. Your User ID: <code>{user_id}</code>",
                     "parse_mode": "HTML"
                 })
             else:
@@ -254,13 +248,13 @@ async def telegram_webhook(request: Request):
                         logger.error(f"Admin stats error: {e}")
 
                 admin_text = (
-                    "📊 <b>پنل مدیریت اختصاصی IRAN Coin</b>\n\n"
-                    f"👥 تعداد کل کاربران: <b>{total_users} نفر</b>\n"
-                    f"💰 کل سکه‌های در گردش: <b>{total_balance:,.0f} IRAN</b>\n"
-                    f"⏳ درخواست‌های برداشت در انتظار: <b>{pending_wd} عدد</b>\n\n"
-                    "📌 <b>دستورات ادمین:</b>\n"
-                    "<code>/broadcast متن_پیام</code> - ارسال پیام همگانی\n"
-                    "<code>/addtask @آیدی_کانال 50 عنوان لینک</code> - افزودن تسک اسپانسری"
+                    "📊 <b>IRAN Coin Admin Dashboard</b>\n\n"
+                    f"👥 Total Users: <b>{total_users}</b>\n"
+                    f"💰 Total Coins: <b>{total_balance:,.0f} IRAN</b>\n"
+                    f"⏳ Pending Withdrawals: <b>{pending_wd}</b>\n\n"
+                    "📌 <b>Admin Commands:</b>\n"
+                    "<code>/broadcast Your message</code> - Broadcast message\n"
+                    "<code>/addtask @channel 50 Title Link</code> - Add sponsor task"
                 )
                 send_telegram_api("sendMessage", {
                     "chat_id": chat_id,
@@ -286,7 +280,7 @@ async def telegram_webhook(request: Request):
                                 sent_count += 1
                     send_telegram_api("sendMessage", {
                         "chat_id": chat_id,
-                        "text": f"✅ پیام همگانی با موفقیت به <b>{sent_count}</b> کاربر ارسال شد.",
+                        "text": f"✅ Broadcast sent successfully to <b>{sent_count}</b> users.",
                         "parse_mode": "HTML"
                     })
 
@@ -306,13 +300,13 @@ async def telegram_webhook(request: Request):
                         """, task_title, reward_val, chat_target, task_url)
                         send_telegram_api("sendMessage", {
                             "chat_id": chat_id,
-                            "text": f"✅ تسک جدید با موفقیت اضافه شد:\n<b>{task_title}</b> (+{reward_val} سکه)",
+                            "text": f"✅ Task added successfully:\n<b>{task_title}</b> (+{reward_val} IRAN)",
                             "parse_mode": "HTML"
                         })
-                except Exception as e:
+                except Exception:
                     send_telegram_api("sendMessage", {
                         "chat_id": chat_id,
-                        "text": f"❌ فرمت دستور نادرست است.\nفرمت صحیح:\n<code>/addtask @Channel 50 عنوان لینک</code>",
+                        "text": "❌ Invalid format. Use:\n<code>/addtask @Channel 50 Title Link</code>",
                         "parse_mode": "HTML"
                     })
 
@@ -328,7 +322,7 @@ async def telegram_webhook(request: Request):
 
         if data.startswith("wd_"):
             if user_id != ADMIN_ID:
-                send_telegram_api("answerCallbackQuery", {"callback_query_id": cb_id, "text": "دسترسی غیرمجاز", "show_alert": True})
+                send_telegram_api("answerCallbackQuery", {"callback_query_id": cb_id, "text": "Unauthorized", "show_alert": True})
                 return {"status": "ok"}
 
             parts = data.split("_")
@@ -341,15 +335,15 @@ async def telegram_webhook(request: Request):
                 send_telegram_api("editMessageText", {
                     "chat_id": chat_id,
                     "message_id": msg_id,
-                    "text": old_text + "\n\n✅ <b>این درخواست تایید و واریز شد.</b>",
+                    "text": old_text + "\n\n✅ <b>Withdrawal approved & sent.</b>",
                     "parse_mode": "HTML"
                 })
                 send_telegram_api("sendMessage", {
                     "chat_id": target_user_id,
-                    "text": "🎉 <b>درخواست برداشت شما با موفقیت تایید و به کیف پول TON شما واریز شد!</b>",
+                    "text": "🎉 <b>Your withdrawal has been approved and sent to your TON Wallet!</b>",
                     "parse_mode": "HTML"
                 })
-                send_telegram_api("answerCallbackQuery", {"callback_query_id": cb_id, "text": "تایید شد!"})
+                send_telegram_api("answerCallbackQuery", {"callback_query_id": cb_id, "text": "Approved!"})
 
             elif action == "reject":
                 refund_amount = float(parts[4]) if len(parts) > 4 else 0.0
@@ -358,15 +352,15 @@ async def telegram_webhook(request: Request):
                 send_telegram_api("editMessageText", {
                     "chat_id": chat_id,
                     "message_id": msg_id,
-                    "text": old_text + "\n\n❌ <b>این درخواست رد شد و سکه‌ها عودت داده شد.</b>",
+                    "text": old_text + "\n\n❌ <b>Withdrawal rejected. Coins refunded.</b>",
                     "parse_mode": "HTML"
                 })
                 send_telegram_api("sendMessage", {
                     "chat_id": target_user_id,
-                    "text": f"❌ درخواست برداشت شما رد شد و {refund_amount} سکه به حساب شما بازگشت.",
+                    "text": f"❌ Your withdrawal request was rejected. {refund_amount} IRAN coins refunded to your balance.",
                     "parse_mode": "HTML"
                 })
-                send_telegram_api("answerCallbackQuery", {"callback_query_id": cb_id, "text": "رد شد!"})
+                send_telegram_api("answerCallbackQuery", {"callback_query_id": cb_id, "text": "Rejected!"})
 
     return {"status": "ok"}
 
@@ -411,7 +405,7 @@ async def init_user(payload: InitPayload):
                     await db_exec("UPDATE users SET balance = balance + 50 WHERE telegram_id::text=$1;", possible_ref)
                     send_telegram_api("sendMessage", {
                         "chat_id": possible_ref,
-                        "text": "🎉 <b>کاربر جدیدی با لینک شما وارد شد!</b>\n🎁 ۵۰ سکه پاداش گرفتید.",
+                        "text": "🎉 <b>New user joined with your link!</b>\n🎁 You earned +50 IRAN bonus.",
                         "parse_mode": "HTML"
                     })
             except:
@@ -451,7 +445,7 @@ async def claim_streak(telegram_id: str):
     curr_balance = float(row.get("balance") or 0.0)
 
     if last_date == today_str:
-        return {"success": False, "message": "پاداش امروز را قبلاً دریافت کرده‌اید."}
+        return {"success": False, "message": "Daily reward already claimed today."}
 
     yesterday_str = (datetime.utcnow() - timedelta(days=1)).strftime("%Y-%m-%d")
     if last_date == yesterday_str:
@@ -555,7 +549,7 @@ async def process_spin(telegram_id: str):
             else:
                 last_spin = last_spin_str
             if (datetime.utcnow() - last_spin).total_seconds() < 86400:
-                raise HTTPException(status_code=400, detail="باید ۲۴ ساعت از چرخش قبلی بگذرد.")
+                raise HTTPException(status_code=400, detail="You must wait 24 hours between spins.")
         except HTTPException as e:
             raise e
         except Exception:
@@ -653,7 +647,7 @@ async def complete_task(payload: TaskPayload):
     task = next((t for t in all_tasks if t["id"] == payload.task_id), None)
 
     if not task:
-        raise HTTPException(400, "تسک یافت نشد")
+        raise HTTPException(400, "Task not found")
 
     is_member, msg = check_telegram_membership_sync(task["chat_id"], payload.telegram_id)
     if not is_member:
@@ -669,7 +663,7 @@ async def complete_task(payload: TaskPayload):
             completed_list = [int(x) for x in completed_str.split(",") if x.strip() and x.strip().isdigit()]
 
             if payload.task_id in completed_list:
-                return {"success": False, "message": "این تسک قبلاً انجام شده است."}
+                return {"success": False, "message": "Task already completed."}
 
             completed_list.append(payload.task_id)
             new_completed_str = ",".join(map(str, completed_list))
@@ -700,13 +694,13 @@ async def request_withdraw(payload: WithdrawPayload):
     addr = payload.ton_address.strip()
 
     if amount < 10000:
-        return {"success": False, "message": "حداقل میزان برداشت ۱۰,۰۰۰ سکه است."}
+        return {"success": False, "message": "Minimum withdrawal is 10,000 IRAN."}
 
     user = await db_fetchrow("SELECT balance FROM users WHERE telegram_id::text=$1;", tg_str)
     curr_bal = float(user.get("balance", 0.0)) if user else 0.0
 
     if curr_bal < amount:
-        return {"success": False, "message": "موجودی شما کافی نیست."}
+        return {"success": False, "message": "Insufficient balance."}
 
     new_bal = curr_bal - amount
     await db_exec("UPDATE users SET balance=$1 WHERE telegram_id::text=$2;", new_bal, tg_str)
@@ -724,16 +718,16 @@ async def request_withdraw(payload: WithdrawPayload):
             logger.error(f"Withdraw insert error: {e}")
 
     msg = (
-        f"🚨 <b>درخواست برداشت جدید!</b>\n\n"
-        f"👤 کاربر: <code>{payload.telegram_id}</code>\n"
-        f"💰 مقدار: <b>{amount} IRAN</b>\n"
-        f"👛 آدرس ولت:\n<code>{addr}</code>"
+        f"🚨 <b>New Withdrawal Request!</b>\n\n"
+        f"👤 User: <code>{payload.telegram_id}</code>\n"
+        f"💰 Amount: <b>{amount} IRAN</b>\n"
+        f"👛 Wallet Address:\n<code>{addr}</code>"
     )
     markup = {
         "inline_keyboard": [
             [
-                {"text": "✅ تایید و واریز شد", "callback_data": f"wd_approve_{wd_id}_{payload.telegram_id}"},
-                {"text": "❌ رد درخواست", "callback_data": f"wd_reject_{wd_id}_{payload.telegram_id}_{amount}"}
+                {"text": "✅ Approve & Sent", "callback_data": f"wd_approve_{wd_id}_{payload.telegram_id}"},
+                {"text": "❌ Reject Request", "callback_data": f"wd_reject_{wd_id}_{payload.telegram_id}_{amount}"}
             ]
         ]
     }
@@ -744,7 +738,7 @@ async def request_withdraw(payload: WithdrawPayload):
         "reply_markup": markup
     })
 
-    return {"success": True, "message": "درخواست برداشت ثبت شد.", "new_balance": new_bal}
+    return {"success": True, "message": "Withdrawal request submitted.", "new_balance": new_bal}
 
 @app.get("/api/v1/offerwall/link/{user_id}")
 async def get_offerwall_link(user_id: str):
