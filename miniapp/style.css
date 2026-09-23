@@ -10,72 +10,77 @@
 }
 
 body {
-  background: radial-gradient(circle at top, #0f2b3c 0%, #040911 100%);
+  background-color: #040911;
   color: #ffffff;
   overflow-x: hidden;
   min-height: 100vh;
 }
 
-/* --- Splash Screen (صفحه ورودی با بنر اختصاصی برج میلاد و پرچم) --- */
+/* --- Splash Screen با تصویر پس‌زمینه برج میلاد و میدان آزادی --- */
 .splash {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: radial-gradient(circle at top, #113348 0%, #040810 100%);
+  background: linear-gradient(180deg, rgba(4, 9, 17, 0.3) 0%, rgba(4, 9, 17, 0.95) 75%, #040911 100%),
+              url('https://i.postimg.cc/mD36C8kX/iran-tehran-flag-bg.jpg') center center / cover no-repeat;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  padding: 24px 20px 30px;
+  justify-content: flex-end;
+  padding: 24px 20px 35px;
   text-align: center;
 }
 
 .splash.hidden { display: none; }
 
-.splash-banner {
-  width: 100%;
-  max-width: 340px;
-  margin: 10px auto 0;
-  border-radius: 20px;
-  overflow: hidden;
-  background: linear-gradient(180deg, rgba(16,185,129,0.15) 0%, rgba(15,23,42,0.8) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 15px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+.splash-hero {
+  margin-bottom: auto;
+  padding-top: 40px;
 }
 
 .hero-title {
-  font-size: 30px;
+  font-size: 34px;
   font-weight: 900;
   letter-spacing: 2px;
   color: #ffffff;
-  margin-top: 10px;
+  text-shadow: 0 4px 15px rgba(0,0,0,0.9);
+  margin-bottom: 4px;
 }
 
 .hero-sub {
-  font-size: 14px;
+  font-size: 15px;
   color: #10b981;
   font-weight: 700;
-  margin-bottom: 15px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.9);
+  margin-bottom: 20px;
+}
+
+.hero-card {
+  background: rgba(13, 26, 38, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 18px;
+  backdrop-filter: blur(12px);
+  margin-bottom: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
 }
 
 .hero-text {
-  font-size: 12px;
-  color: #cbd5e1;
-  line-height: 1.5;
-  margin-bottom: 20px;
+  font-size: 13px;
+  color: #e2e8f0;
+  line-height: 1.6;
+  margin-bottom: 16px;
 }
 
 .hero-actions {
   display: flex;
   justify-content: center;
   gap: 8px;
-  margin-bottom: 20px;
 }
 
 .mini-action {
   flex: 1;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   padding: 10px 4px;
   color: #fff;
@@ -84,6 +89,7 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 4px;
+  cursor: pointer;
 }
 
 .start-btn {
@@ -91,8 +97,8 @@ body {
   background: linear-gradient(135deg, #10b981, #059669);
   color: #ffffff;
   border: none;
-  padding: 16px;
-  border-radius: 16px;
+  padding: 18px;
+  border-radius: 18px;
   font-size: 18px;
   font-weight: 800;
   cursor: pointer;
@@ -100,7 +106,12 @@ body {
 }
 
 /* --- App Main Layout --- */
-.app { padding-bottom: 85px; }
+.app {
+  padding-bottom: 85px;
+  background: linear-gradient(180deg, rgba(4, 9, 17, 0.85) 0%, #040911 100%),
+              url('https://i.postimg.cc/mD36C8kX/iran-tehran-flag-bg.jpg') center top / cover fixed no-repeat;
+  min-height: 100vh;
+}
 .app.hidden { display: none; }
 
 .topbar {
@@ -108,11 +119,12 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 14px 20px;
-  background: #040911;
+  background: rgba(4, 9, 17, 0.9);
+  backdrop-filter: blur(10px);
   position: sticky;
   top: 0;
   z-index: 50;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 
 .brand {
@@ -122,8 +134,8 @@ body {
 }
 
 .brand-badge {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: linear-gradient(135deg, #10b981, #047857);
   display: flex;
@@ -131,19 +143,20 @@ body {
   justify-content: center;
   font-weight: 900;
   font-size: 16px;
-  box-shadow: 0 0 10px rgba(16,185,129,0.3);
+  box-shadow: 0 0 12px rgba(16,185,129,0.4);
 }
 
 .brand-title { font-size: 16px; font-weight: 800; }
 .brand-sub { font-size: 10px; color: #94a3b8; }
 
 .card {
-  background: #0d1a26;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(13, 26, 38, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
   padding: 18px;
-  margin: 0 16px 12px;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+  margin: 12px 16px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.4);
 }
 
 .row {
@@ -160,14 +173,20 @@ body {
   align-items: center;
   gap: 14px;
   margin: 16px 0;
-  background: rgba(255,255,255,0.02);
+  background: rgba(255,255,255,0.03);
   padding: 12px 16px;
   border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.05);
 }
 
 .coin-sm {
-  width: 48px;
-  height: 48px;
+  width: 50px;
+  height: 50px;
+}
+.coin-sm img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .blabel { font-size: 11px; color: #94a3b8; margin-bottom: 2px; }
@@ -182,8 +201,8 @@ body {
 }
 
 .tile {
-  background: #122434;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(18, 36, 52, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 16px;
   padding: 14px 10px;
   text-align: center;
@@ -191,18 +210,20 @@ body {
   flex-direction: column;
   align-items: center;
   cursor: pointer;
+  transition: transform 0.1s;
 }
+.tile:active { transform: scale(0.96); }
 
 .tico { 
-  width: 40px; 
-  height: 40px; 
+  width: 42px; 
+  height: 42px; 
   background: rgba(16,185,129,0.12); 
   color: #10b981; 
   border-radius: 50%; 
   display: flex; 
   align-items: center; 
   justify-content: center; 
-  font-size: 18px; 
+  font-size: 20px; 
   margin-bottom: 8px; 
 }
 .tile:nth-child(2) .tico { background: rgba(59,130,246,0.12); color: #3b82f6; }
@@ -212,35 +233,40 @@ body {
 .tname { font-size: 13px; font-weight: 700; color: #f1f5f9; }
 .tsub { font-size: 10px; color: #10b981; font-weight: 600; margin-top: 2px; }
 
-/* --- Tap-Tap Miner (نقشه طلایی و سه‌بعدی ایران) --- */
+/* --- Tap-Tap Miner با تصویر اختصاصی شما (نقشه ۳ بعدی و کلنگ) --- */
 .tap-area {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 15px 0;
+  padding: 20px 0;
   position: relative;
 }
 
-.tap-iran-map {
+.tap-miner-btn {
   width: 250px;
-  height: 230px;
+  height: 250px;
+  border-radius: 50%;
+  background: url('https://i.postimg.cc/pT3Y09k9/iran-3d-map-miner-btn.jpg') center center / cover no-repeat;
   cursor: pointer;
   transition: transform 0.05s ease;
-  filter: drop-shadow(0 0 25px rgba(245, 158, 11, 0.5));
+  box-shadow: 0 0 35px rgba(59, 130, 246, 0.5), inset 0 0 15px rgba(255,255,255,0.2);
+  border: 4px solid #00d2ff;
 }
 
-.tap-iran-map:active {
-  transform: scale(0.93);
+.tap-miner-btn:active {
+  transform: scale(0.92);
+  box-shadow: 0 0 50px rgba(0, 210, 255, 0.8);
 }
 
 .energy-bar {
   width: 100%;
-  height: 10px;
-  background: #1e293b;
-  border-radius: 5px;
+  height: 12px;
+  background: rgba(30, 41, 59, 0.8);
+  border-radius: 6px;
   overflow: hidden;
-  margin-top: 15px;
+  margin-top: 18px;
+  border: 1px solid rgba(255,255,255,0.08);
 }
 
 .energy-fill {
@@ -252,17 +278,17 @@ body {
 
 .floating-num {
   position: absolute;
-  color: #ffffff;
-  font-size: 32px;
+  color: #00f0ff;
+  font-size: 34px;
   font-weight: 900;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
   pointer-events: none;
   animation: floatUp 0.8s ease-out forwards;
 }
 
 @keyframes floatUp {
   0% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-70px); }
+  100% { opacity: 0; transform: translateY(-75px); }
 }
 
 /* Bottom Nav */
@@ -272,8 +298,9 @@ body {
   left: 0;
   right: 0;
   height: 65px;
-  background: #040911;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(4, 9, 17, 0.95);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -317,11 +344,11 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #122434;
+  background: rgba(18, 36, 52, 0.8);
   padding: 12px 14px;
   border-radius: 14px;
   margin-bottom: 8px;
-  border: 1px solid rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.04);
 }
 
 .list-item-left { display: flex; align-items: center; gap: 10px; }
