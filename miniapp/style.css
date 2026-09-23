@@ -16,13 +16,13 @@ body {
   min-height: 100vh;
 }
 
-/* --- Splash Screen با تصویر پس‌زمینه برج میلاد و میدان آزادی --- */
+/* Splash Screen (عکس پس‌زمینه برج میلاد و آزادی از خودِ پوشه miniapp) */
 .splash {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: linear-gradient(180deg, rgba(4, 9, 17, 0.3) 0%, rgba(4, 9, 17, 0.95) 75%, #040911 100%),
-              url('https://i.postimg.cc/mD36C8kX/iran-tehran-flag-bg.jpg') center center / cover no-repeat;
+  background: linear-gradient(180deg, rgba(4, 9, 17, 0.2) 0%, rgba(4, 9, 17, 0.95) 75%, #040911 100%),
+              url('bg.jpg') center center / cover no-repeat;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -105,11 +105,11 @@ body {
   box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
 }
 
-/* --- App Main Layout --- */
+/* App Main Layout */
 .app {
   padding-bottom: 85px;
   background: linear-gradient(180deg, rgba(4, 9, 17, 0.85) 0%, #040911 100%),
-              url('https://i.postimg.cc/mD36C8kX/iran-tehran-flag-bg.jpg') center top / cover fixed no-repeat;
+              url('bg.jpg') center top / cover fixed no-repeat;
   min-height: 100vh;
 }
 .app.hidden { display: none; }
@@ -182,11 +182,13 @@ body {
 .coin-sm {
   width: 50px;
   height: 50px;
+  border-radius: 50%;
+  overflow: hidden;
 }
 .coin-sm img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
 }
 
 .blabel { font-size: 11px; color: #94a3b8; margin-bottom: 2px; }
@@ -233,7 +235,7 @@ body {
 .tname { font-size: 13px; font-weight: 700; color: #f1f5f9; }
 .tsub { font-size: 10px; color: #10b981; font-weight: 600; margin-top: 2px; }
 
-/* --- Tap-Tap Miner با تصویر اختصاصی شما (نقشه ۳ بعدی و کلنگ) --- */
+/* Tap-Tap Miner با عکس miner.jpg مستقیم از پوشه miniapp */
 .tap-area {
   display: flex;
   flex-direction: column;
@@ -244,19 +246,19 @@ body {
 }
 
 .tap-miner-btn {
-  width: 250px;
-  height: 250px;
+  width: 240px;
+  height: 240px;
   border-radius: 50%;
-  background: url('https://i.postimg.cc/pT3Y09k9/iran-3d-map-miner-btn.jpg') center center / cover no-repeat;
+  background: url('miner.jpg') center center / cover no-repeat;
   cursor: pointer;
   transition: transform 0.05s ease;
-  box-shadow: 0 0 35px rgba(59, 130, 246, 0.5), inset 0 0 15px rgba(255,255,255,0.2);
+  box-shadow: 0 0 35px rgba(0, 210, 255, 0.6);
   border: 4px solid #00d2ff;
 }
 
 .tap-miner-btn:active {
   transform: scale(0.92);
-  box-shadow: 0 0 50px rgba(0, 210, 255, 0.8);
+  box-shadow: 0 0 50px rgba(0, 210, 255, 0.9);
 }
 
 .energy-bar {
@@ -291,7 +293,6 @@ body {
   100% { opacity: 0; transform: translateY(-75px); }
 }
 
-/* Bottom Nav */
 .nav {
   position: fixed;
   bottom: 0;
