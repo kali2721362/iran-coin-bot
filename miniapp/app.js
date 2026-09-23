@@ -86,6 +86,7 @@ function navTo(page){
 
 function goBack(){ navTo(state.prev || 'home'); }
 
+/* Home Page با دکمه ماینر در گرید اصلی */
 function renderHome(root){
   const u = state.user || {};
   const ton = (Number(u.balance||0) * CONFIG.IRAN_TO_TON_RATE).toFixed(4);
@@ -110,14 +111,14 @@ function renderHome(root){
       </div>
 
       <div class="grid">
+        <div class="tile" onclick="navTo('miner')">
+          <div class="tico">⛏</div><div class="tname">Tap Miner</div><div class="tsub">تب‌تب و استخراج</div>
+        </div>
         <div class="tile" onclick="navTo('ads')">
           <div class="tico">▶</div><div class="tname">Watch Ads</div><div class="tsub">+5-20 IRAN</div>
         </div>
         <div class="tile" onclick="navTo('tasks')">
           <div class="tico">✓</div><div class="tname">Tasks</div><div class="tsub">+10-100 IRAN</div>
-        </div>
-        <div class="tile" onclick="shareReferral()">
-          <div class="tico">👥</div><div class="tname">Invite Friends</div><div class="tsub">+50 IRAN</div>
         </div>
         <div class="tile" onclick="claimStreak()">
           <div class="tico">🎁</div><div class="tname">Daily Bonus</div><div class="tsub">+10 IRAN</div>
