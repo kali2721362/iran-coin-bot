@@ -6,42 +6,19 @@
   <title>IRAN Coin Bot</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
-  <link rel="stylesheet" href="style.css?v=3000" />
+  <link rel="stylesheet" href="style.css?v=7000" />
 </head>
 <body>
-  <!-- Splash Screen با بنر داخلی پرچم و برج میلاد (SVG بدون نیاز به عکس بیرونی) -->
+  <!-- Splash Screen (پس‌زمینه اصلی برج میلاد و آزادي) -->
   <section id="splash" class="splash">
-    <div class="splash-banner">
-      <!-- گرافیک ترکیبی پرچم و برج میلاد -->
-      <svg viewBox="0 0 300 180" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto;">
-        <defs>
-          <linearGradient id="flagG" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#22c55e" stop-opacity="0.8"/>
-            <stop offset="50%" stop-color="#ffffff" stop-opacity="0.9"/>
-            <stop offset="100%" stop-color="#ef4444" stop-opacity="0.8"/>
-          </linearGradient>
-          <radialGradient id="coinG" cx="35%" cy="30%" r="70%">
-            <stop offset="0%" stop-color="#fef08a"/>
-            <stop offset="50%" stop-color="#f59e0b"/>
-            <stop offset="100%" stop-color="#b45309"/>
-          </radialGradient>
-        </defs>
-        <!-- زمینه پرچم -->
-        <rect width="300" height="180" rx="15" fill="url(#flagG)"/>
-        <!-- سیلوئت برج میلاد -->
-        <path d="M230 180 L232 110 L225 105 L225 90 L233 85 L231 30 L234 10 L236 30 L234 85 L242 90 L242 105 L235 110 L237 180 Z" fill="#0f172a" opacity="0.85"/>
-        <!-- سکه مرکزی طلایی -->
-        <circle cx="150" cy="90" r="45" fill="url(#coinG)" stroke="#fef08a" stroke-width="3"/>
-        <text x="150" y="98" font-family="sans-serif" font-weight="900" font-size="16" fill="#78350f" text-anchor="middle">IRAN</text>
-      </svg>
-
+    <div class="splash-hero">
       <div class="hero-title">IRAN COIN</div>
       <div class="hero-sub">Earn • Play • Withdraw</div>
     </div>
 
-    <div>
+    <div class="hero-card">
       <div class="hero-text">
-        Welcome to IRAN Coin! Watch ads, complete tasks, tap the Iran map miner, and invite friends.
+        Welcome to IRAN Coin! Watch ads, complete tasks, tap the Iran map miner, and invite friends to earn IRAN coins.
       </div>
 
       <div class="hero-actions">
@@ -80,6 +57,6 @@
     </nav>
   </section>
 
-  <script src="app.js?v=3000"></script>
+  <script src="app.js?v=7000"></script>
 </body>
 </html>
