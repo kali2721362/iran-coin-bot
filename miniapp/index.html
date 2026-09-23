@@ -1,10 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta n<!DOCTYPE html>
-<html lang="en">
-<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>IRAN Coin - Mine & Earn</title>
@@ -21,15 +17,13 @@
     <style>
         :root {
             --bg-color: #0b111e;
-            --card-bg: rgba(22, 33, 56, 0.85);
+            --card-bg: rgba(22, 33, 56, 0.9);
             --accent-gold: #f5b300;
             --accent-blue: #00d2ff;
-            --accent-green: #10b981;
-            --accent-red: #ef4444;
             --text-main: #ffffff;
             --text-muted: #8e9eb5;
             --btn-grad: linear-gradient(135deg, #f5b300, #ff8c00);
-            --card-border: 1px solid rgba(255, 255, 255, 0.08);
+            --card-border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         * {
@@ -37,13 +31,14 @@
             margin: 0;
             padding: 0;
             user-select: none;
+            -webkit-user-select: none;
             -webkit-tap-highlight-color: transparent;
             font-family: 'Poppins', sans-serif;
         }
 
         body {
             background-color: var(--bg-color);
-            background-image: radial-gradient(circle at top, #1c2b4a 0%, #0b111e 70%);
+            background-image: radial-gradient(circle at top, #1c2b4a 0%, #0b111e 80%);
             color: var(--text-main);
             min-height: 100vh;
             display: flex;
@@ -58,8 +53,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(11, 17, 30, 0.7);
-            backdrop-filter: blur(10px);
+            background: rgba(11, 17, 30, 0.85);
+            backdrop-filter: blur(12px);
             border-bottom: var(--card-border);
             position: sticky;
             top: 0;
@@ -82,7 +77,8 @@
             justify-content: center;
             font-weight: 700;
             font-size: 18px;
-            box-shadow: 0 0 10px rgba(245, 179, 0, 0.4);
+            color: #000;
+            box-shadow: 0 0 12px rgba(245, 179, 0, 0.4);
         }
 
         .user-info .username {
@@ -117,17 +113,23 @@
 
         /* Tabs Container */
         .tab-content {
-            display: none;
+            display: none !important;
             padding: 20px;
             flex-direction: column;
             align-items: center;
             width: 100%;
             max-width: 480px;
             margin: 0 auto;
+            animation: fadeIn 0.25s ease-in-out;
         }
 
         .tab-content.active {
-            display: flex;
+            display: flex !important;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* Miner Screen */
@@ -154,10 +156,11 @@
             cursor: pointer;
             transition: transform 0.08s ease;
             overflow: hidden;
+            touch-action: manipulation;
         }
 
         .miner-btn:active {
-            transform: scale(0.95);
+            transform: scale(0.94);
         }
 
         .miner-btn img {
@@ -217,9 +220,9 @@
         /* Tasks & Cards */
         .section-title {
             width: 100%;
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 700;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -245,7 +248,7 @@
         }
 
         .task-icon {
-            font-size: 26px;
+            font-size: 24px;
             background: rgba(255, 255, 255, 0.05);
             width: 44px;
             height: 44px;
@@ -276,11 +279,7 @@
             padding: 8px 16px;
             border-radius: 20px;
             cursor: pointer;
-            transition: opacity 0.2s;
-        }
-
-        .action-btn:active {
-            opacity: 0.8;
+            touch-action: manipulation;
         }
 
         .action-btn.completed {
@@ -315,7 +314,6 @@
             border-right: 15px solid transparent;
             border-top: 25px solid var(--accent-gold);
             z-index: 10;
-            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5));
         }
 
         /* Wallet Form */
@@ -340,10 +338,6 @@
             outline: none;
         }
 
-        .wallet-input:focus {
-            border-color: var(--accent-blue);
-        }
-
         .full-btn {
             width: 100%;
             padding: 14px;
@@ -358,7 +352,7 @@
             left: 0;
             width: 100%;
             height: 70px;
-            background: rgba(11, 17, 30, 0.92);
+            background: rgba(11, 17, 30, 0.95);
             backdrop-filter: blur(15px);
             border-top: var(--card-border);
             display: flex;
@@ -376,7 +370,14 @@
             font-size: 11px;
             font-weight: 600;
             cursor: pointer;
-            transition: color 0.2s;
+            padding: 8px;
+            flex: 1;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .nav-item * {
+            pointer-events: none; /* Prevents click issues on child icons/text */
         }
 
         .nav-item.active {
@@ -407,7 +408,7 @@
         </div>
     </header>
 
-    <!-- Tab 1: Mine (Tap Game) -->
+    <!-- Tab 1: Mine -->
     <div class="tab-content active" id="tab-mine">
         <div class="miner-area">
             <div class="miner-btn" id="tapBtn">
@@ -439,7 +440,7 @@
                     <span>+100 Coins</span>
                 </div>
             </div>
-            <button class="action-btn" onclick="watchVideoAd()">Watch</button>
+            <button class="action-btn" id="btnWatchAd">Watch</button>
         </div>
 
         <!-- CPX Research Offerwall -->
@@ -451,12 +452,11 @@
                     <span>Up to +5,000 Coins</span>
                 </div>
             </div>
-            <button class="action-btn" onclick="openCPX()">Start</button>
+            <button class="action-btn" id="btnOpenCPX">Start</button>
         </div>
 
         <div class="section-title" style="margin-top: 15px;">📢 Community Tasks</div>
 
-        <!-- Telegram Channel -->
         <div class="task-card">
             <div class="task-left">
                 <div class="task-icon">✈️</div>
@@ -465,10 +465,9 @@
                     <span>+50 Coins</span>
                 </div>
             </div>
-            <button class="action-btn" id="btnTaskChannel" onclick="handleTgTask('https://t.me/IRANCoin_Official', 'channel', 50)">Join</button>
+            <button class="action-btn" id="btnTaskChannel">Join</button>
         </div>
 
-        <!-- Telegram Group -->
         <div class="task-card">
             <div class="task-left">
                 <div class="task-icon">💬</div>
@@ -477,7 +476,7 @@
                     <span>+50 Coins</span>
                 </div>
             </div>
-            <button class="action-btn" id="btnTaskGroup" onclick="handleTgTask('https://t.me/IRANCoinGroup', 'group', 50)">Join</button>
+            <button class="action-btn" id="btnTaskGroup">Join</button>
         </div>
     </div>
 
@@ -493,24 +492,24 @@
             <canvas id="wheelCanvas" width="280" height="280"></canvas>
         </div>
 
-        <button class="action-btn full-btn" id="spinBtn" onclick="spinWheel()" style="margin-top: 20px;">SPIN NOW</button>
+        <button class="action-btn full-btn" id="spinBtn" style="margin-top: 20px;">SPIN NOW</button>
     </div>
 
-    <!-- Tab 4: Friends / Referral -->
+    <!-- Tab 4: Friends -->
     <div class="tab-content" id="tab-friends">
         <div class="section-title">👥 Invite Friends</div>
         <div class="task-card" style="flex-direction: column; align-items: flex-start; gap: 8px;">
             <h4>Invite Friends & Earn</h4>
             <p style="font-size: 12px; color: var(--text-muted);">
-                Receive <strong style="color: var(--accent-gold);">+50 IRAN Coins</strong> for every friend who joins using your unique link.
+                Receive <strong style="color: var(--accent-gold);">+50 IRAN Coins</strong> for every friend who joins using your link.
             </p>
         </div>
 
-        <button class="action-btn full-btn" onclick="shareReferral()" style="margin-top: 15px;">🔗 Invite a Friend</button>
-        <button class="action-btn full-btn" onclick="copyReferral()" style="margin-top: 10px; background: rgba(255,255,255,0.1); color: #fff;">📋 Copy Link</button>
+        <button class="action-btn full-btn" id="btnShareRef" style="margin-top: 15px;">🔗 Invite a Friend</button>
+        <button class="action-btn full-btn" id="btnCopyRef" style="margin-top: 10px; background: rgba(255,255,255,0.1); color: #fff;">📋 Copy Link</button>
     </div>
 
-    <!-- Tab 5: Wallet & Withdraw -->
+    <!-- Tab 5: Wallet -->
     <div class="tab-content" id="tab-wallet">
         <div class="section-title">💼 Withdrawal Hub</div>
 
@@ -523,29 +522,29 @@
             <label style="font-size: 12px; color: var(--text-muted);">Your TON Wallet Address:</label>
             <input type="text" id="tonWalletInput" class="wallet-input" placeholder="UQ... or EQ... address">
 
-            <button class="action-btn full-btn" onclick="requestWithdrawal()">Submit Withdrawal</button>
+            <button class="action-btn full-btn" id="btnSubmitWithdraw">Submit Withdrawal</button>
         </div>
     </div>
 
     <!-- Bottom Navigation Bar -->
     <nav class="bottom-nav">
-        <div class="nav-item active" onclick="switchTab('tab-mine', this)">
+        <div class="nav-item active" data-target="tab-mine">
             <span class="nav-icon">⛏</span>
             <span>Mine</span>
         </div>
-        <div class="nav-item" onclick="switchTab('tab-earn', this)">
+        <div class="nav-item" data-target="tab-earn">
             <span class="nav-icon">💰</span>
             <span>Earn</span>
         </div>
-        <div class="nav-item" onclick="switchTab('tab-spin', this)">
+        <div class="nav-item" data-target="tab-spin">
             <span class="nav-icon">🎡</span>
             <span>Spin</span>
         </div>
-        <div class="nav-item" onclick="switchTab('tab-friends', this)">
+        <div class="nav-item" data-target="tab-friends">
             <span class="nav-icon">👥</span>
             <span>Friends</span>
         </div>
-        <div class="nav-item" onclick="switchTab('tab-wallet', this)">
+        <div class="nav-item" data-target="tab-wallet">
             <span class="nav-icon">💼</span>
             <span>Wallet</span>
         </div>
@@ -553,17 +552,19 @@
 
     <!-- JavaScript Controller -->
     <script>
-        // --- Telegram App Init ---
+        // Telegram WebApp Config
         const tg = window.Telegram?.WebApp;
         if (tg) {
-            tg.ready();
-            tg.expand();
+            try {
+                tg.ready();
+                tg.expand();
+            } catch(e) {}
         }
 
         const telegramUser = tg?.initDataUnsafe?.user || { id: 979411415, first_name: "Player" };
         const BACKEND_URL = "https://iran-coin-bot-production.up.railway.app";
 
-        // UI Setup
+        // Setup User Info
         document.getElementById('userName').innerText = telegramUser.first_name || "Player";
         document.getElementById('userAvatar').innerText = (telegramUser.first_name || "P").charAt(0).toUpperCase();
 
@@ -579,7 +580,7 @@
         }
         updateBalanceUI();
 
-        // Energy Regeneration Loop
+        // Energy Bar
         setInterval(() => {
             if (energy < maxEnergy) {
                 energy = Math.min(maxEnergy, energy + 2);
@@ -592,6 +593,35 @@
             document.getElementById('energyFill').style.width = `${(energy / maxEnergy) * 100}%`;
         }
 
+        // --- Bulletproof Bottom Navigation Switcher ---
+        document.querySelectorAll('.nav-item').forEach(nav => {
+            nav.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                
+                // Hide all tabs
+                document.querySelectorAll('.tab-content').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+
+                // Remove active class from all nav items
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+
+                // Show targeted tab & set active nav
+                const targetTab = document.getElementById(targetId);
+                if (targetTab) {
+                    targetTab.classList.add('active');
+                }
+                this.classList.add('active');
+
+                // If Spin tab opened, draw wheel
+                if (targetId === 'tab-spin') {
+                    drawWheel();
+                }
+            });
+        });
+
         // Tap-Tap Miner Handler
         const tapBtn = document.getElementById('tapBtn');
         tapBtn.addEventListener('pointerdown', (e) => {
@@ -602,49 +632,36 @@
             updateBalanceUI();
             updateEnergyUI();
 
-            // Floating +1 Animation
             const num = document.createElement('div');
             num.className = 'tap-number';
             num.innerText = '+1';
             
             const rect = tapBtn.getBoundingClientRect();
-            num.style.left = `${e.clientX - rect.left + (Math.random() * 20 - 10)}px`;
+            num.style.left = `${e.clientX - rect.left}px`;
             num.style.top = `${e.clientY - rect.top}px`;
 
             tapBtn.parentElement.appendChild(num);
             setTimeout(() => num.remove(), 800);
 
             if (tg?.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('light');
+                try { tg.HapticFeedback.impactOccurred('light'); } catch(e){}
             }
         });
 
-        // Tab Switching
-        function switchTab(tabId, el) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-            
-            document.getElementById(tabId).classList.add('active');
-            el.classList.add('active');
-
-            if (tabId === 'tab-spin') {
-                drawWheel();
-            }
-        }
-
         // --- Adsgram Controller (Block ID: 49410) ---
         let AdController = null;
-        function initAdsgram() {
+        try {
             if (window.Adsgram) {
                 AdController = window.Adsgram.init({ blockId: "49410" });
             }
-        }
-        document.addEventListener("DOMContentLoaded", initAdsgram);
+        } catch(e) {}
 
-        async function watchVideoAd() {
-            if (!AdController) initAdsgram();
+        document.getElementById('btnWatchAd').addEventListener('click', async () => {
+            if (!AdController && window.Adsgram) {
+                AdController = window.Adsgram.init({ blockId: "49410" });
+            }
             if (!AdController) {
-                alert("Ads are loading, please try again in a few seconds.");
+                alert("Ad service is loading, please try again in a moment.");
                 return;
             }
 
@@ -653,60 +670,61 @@
                 if (res && res.done) {
                     balance += 100;
                     updateBalanceUI();
-                    
-                    // Report to Railway backend
-                    fetch(`${BACKEND_URL}/api/v1/ads/watch?telegram_id=${telegramUser.id}`);
+                    fetch(`${BACKEND_URL}/api/v1/ads/watch?telegram_id=${telegramUser.id}`).catch(()=>{});
                     alert("🎉 Reward Added! +100 IRAN Coins");
                 }
             } catch (err) {
-                alert("No ads available right now. Please try again later.");
+                alert("No ads available right now. Please try again shortly!");
             }
-        }
+        });
 
-        // --- CPX Research Offerwall ---
-        function openCPX() {
+        // CPX Research
+        document.getElementById('btnOpenCPX').addEventListener('click', () => {
             const url = `https://offers.cpx-research.com/index.html?app_id=24785&ext_user_id=${telegramUser.id}`;
             if (tg?.openLink) {
                 tg.openLink(url);
             } else {
                 window.open(url, '_blank');
             }
+        });
+
+        // Community Telegram Tasks
+        function bindTgTask(btnId, link, reward) {
+            const btn = document.getElementById(btnId);
+            btn.addEventListener('click', function handler() {
+                if (btn.innerText === "Join") {
+                    if (tg?.openTelegramLink) {
+                        tg.openTelegramLink(link);
+                    } else {
+                        window.open(link, '_blank');
+                    }
+                    btn.innerText = "Check";
+                } else if (btn.innerText === "Check") {
+                    btn.innerText = "Claimed ✓";
+                    btn.classList.add('completed');
+                    btn.removeEventListener('click', handler);
+                    balance += reward;
+                    updateBalanceUI();
+                    alert(`🎉 Task complete! +${reward} Coins added.`);
+                }
+            });
         }
+        bindTgTask('btnTaskChannel', 'https://t.me/IRANCoin_Official', 50);
+        bindTgTask('btnTaskGroup', 'https://t.me/IRANCoinGroup', 50);
 
-        // --- Telegram Channel & Group Verification ---
-        function handleTgTask(link, type, reward) {
-            if (tg?.openTelegramLink) {
-                tg.openTelegramLink(link);
-            } else {
-                window.open(link, '_blank');
-            }
-
-            const btn = type === 'channel' ? document.getElementById('btnTaskChannel') : document.getElementById('btnTaskGroup');
-            btn.innerText = "Check";
-            btn.onclick = () => {
-                btn.innerText = "Claimed ✓";
-                btn.classList.add('completed');
-                btn.onclick = null;
-                balance += reward;
-                updateBalanceUI();
-                alert(`🎉 Task complete! +${reward} IRAN Coins added.`);
-            };
-        }
-
-        // --- Lucky Spin Wheel System ---
+        // --- Lucky Spin Wheel ---
         const prizes = [10, 50, 100, 20, 500, 30, 200, 15];
         const colors = ['#1e293b', '#0f172a', '#1e293b', '#0f172a', '#f5b300', '#0f172a', '#1e293b', '#0f172a'];
-        let currentAngle = 0;
 
         function drawWheel() {
             const canvas = document.getElementById("wheelCanvas");
+            if (!canvas) return;
             const ctx = canvas.getContext("2d");
-            const numSegments = prizes.length;
-            const arcSize = (2 * Math.PI) / numSegments;
+            const arcSize = (2 * Math.PI) / prizes.length;
 
             ctx.clearRect(0, 0, 280, 280);
 
-            for (let i = 0; i < numSegments; i++) {
+            for (let i = 0; i < prizes.length; i++) {
                 const angle = i * arcSize;
                 ctx.beginPath();
                 ctx.fillStyle = colors[i];
@@ -714,9 +732,7 @@
                 ctx.arc(140, 140, 130, angle, angle + arcSize);
                 ctx.lineTo(140, 140);
                 ctx.fill();
-                ctx.stroke();
 
-                // Draw Text
                 ctx.save();
                 ctx.translate(140, 140);
                 ctx.rotate(angle + arcSize / 2);
@@ -728,12 +744,10 @@
             }
         }
 
-        function spinWheel() {
+        document.getElementById('spinBtn').addEventListener('click', function() {
             if (isSpinning) return;
             isSpinning = true;
-
-            const spinBtn = document.getElementById('spinBtn');
-            spinBtn.disabled = true;
+            this.disabled = true;
 
             const winningIndex = Math.floor(Math.random() * prizes.length);
             const degreesPerSegment = 360 / prizes.length;
@@ -750,31 +764,31 @@
                 alert(`🎉 Congratulations! You won ${prize} IRAN Coins!`);
 
                 isSpinning = false;
-                spinBtn.disabled = false;
+                document.getElementById('spinBtn').disabled = false;
                 canvas.style.transition = "none";
                 canvas.style.transform = `rotate(${targetRotation % 360}deg)`;
             }, 4100);
-        }
+        });
 
-        // --- Referral Share ---
-        function shareReferral() {
+        // Referral Buttons
+        document.getElementById('btnShareRef').addEventListener('click', () => {
             const refLink = `https://t.me/IranCoinEarnBot?start=ref_${telegramUser.id}`;
-            const shareText = `🚀 Join IRAN Coin and start mining today! Get a 50 coin bonus now: ${refLink}`;
+            const text = `🚀 Join IRAN Coin & earn tokens! Bonus link: ${refLink}`;
             if (tg?.openTelegramLink) {
-                tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(shareText)}`);
+                tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(text)}`);
             } else {
-                window.open(`https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(shareText)}`, '_blank');
+                window.open(`https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(text)}`, '_blank');
             }
-        }
+        });
 
-        function copyReferral() {
+        document.getElementById('btnCopyRef').addEventListener('click', () => {
             const refLink = `https://t.me/IranCoinEarnBot?start=ref_${telegramUser.id}`;
             navigator.clipboard.writeText(refLink);
             alert("📋 Referral link copied to clipboard!");
-        }
+        });
 
-        // --- Withdrawal Engine ---
-        function requestWithdrawal() {
+        // Withdraw Button
+        document.getElementById('btnSubmitWithdraw').addEventListener('click', () => {
             const wallet = document.getElementById('tonWalletInput').value.trim();
 
             if (!wallet || wallet.length < 24) {
@@ -795,76 +809,12 @@
                     wallet_address: wallet,
                     amount: balance
                 })
-            })
-            .then(res => res.json())
-            .then(data => {
-                alert("✅ Withdrawal request submitted! Admin will verify and transfer TON soon.");
-                balance = 0;
-                updateBalanceUI();
-            })
-            .catch(err => {
-                alert("Request submitted! Notification sent to server.");
+            }).finally(() => {
+                alert("✅ Withdrawal request submitted! Admin will verify and transfer TON.");
                 balance = 0;
                 updateBalanceUI();
             });
-        }
+        });
     </script>
-</body>
-</html>ame="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>IRAN Coin Bot</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
-  <link rel="stylesheet" href="style.css?v=100000" />
-</head>
-<body>
-  <!-- Splash Screen -->
-  <section id="splash" class="splash">
-    <div class="splash-hero">
-      <div class="hero-title">IRAN COIN</div>
-      <div class="hero-sub">Earn • Play • Withdraw</div>
-    </div>
-
-    <div class="hero-card">
-      <div class="hero-text">
-        Welcome to IRAN Coin! Watch ads, complete tasks, tap the Iran map miner, and invite friends to earn IRAN coins.
-      </div>
-
-      <div class="hero-actions">
-        <div class="mini-action" onclick="window.openApp('ads')">▶<span>Watch Ads</span></div>
-        <div class="mini-action" onclick="window.openApp('miner')">⛏<span>Miner</span></div>
-        <div class="mini-action" onclick="window.openApp('tasks')">✓<span>Tasks</span></div>
-        <div class="mini-action" onclick="window.openCPXOfferwall()">📋<span>Surveys</span></div>
-      </div>
-
-      <button class="start-btn" onclick="window.openApp('home')">🚀 Start Playing</button>
-    </div>
-  </section>
-
-  <!-- App Main Layout -->
-  <section id="app" class="app hidden">
-    <header class="topbar">
-      <div class="brand">
-        <div class="brand-badge">🇮🇷</div>
-        <div>
-          <div class="brand-title">IRAN Coin Bot</div>
-          <div class="brand-sub">mini app</div>
-        </div>
-      </div>
-      <button id="backBtn" class="hidden" onclick="window.goBack()" style="background:none; border:none; color:white; font-size:22px; cursor:pointer;">←</button>
-    </header>
-
-    <main id="page" class="page"></main>
-
-    <!-- Bottom Nav -->
-    <nav class="nav">
-      <button class="nav-btn active" data-page="home" onclick="window.navTo('home')"><span class="i">🏠</span><span>Home</span></button>
-      <button class="nav-btn" data-page="ads" onclick="window.navTo('ads')"><span class="i">▶</span><span>Ads</span></button>
-      <button class="nav-btn" data-page="miner" onclick="window.navTo('miner')"><span class="i">⛏</span><span>Miner</span></button>
-      <button class="nav-btn" data-page="tasks" onclick="window.navTo('tasks')"><span class="i">✓</span><span>Tasks</span></button>
-      <button class="nav-btn" data-page="wallet" onclick="window.navTo('wallet')"><span class="i">👛</span><span>Wallet</span></button>
-    </nav>
-  </section>
-
-  <script src="app.js?v=100000"></script>
 </body>
 </html>
