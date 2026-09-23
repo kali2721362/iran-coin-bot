@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>IRAN Coin - VIP Mining & Earn</title>
+    <title>IRAN Coin - TON VIP Mining & Earn</title>
 
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -17,13 +17,15 @@
     <style>
         :root {
             --bg-color: #0b111e;
-            --card-bg: rgba(22, 33, 56, 0.85); /* شیشه‌ای تر شد تا بک‌گراند دیده شود */
+            --card-bg: rgba(22, 33, 56, 0.85);
             --accent-gold: #f5b300;
             --accent-blue: #00d2ff;
+            --accent-ton: #0088cc;
             --accent-vip: linear-gradient(135deg, #ffe066, #f5b300, #b8860b);
             --text-main: #ffffff;
             --text-muted: #a0b1c9;
             --btn-grad: linear-gradient(135deg, #f5b300, #ff8c00);
+            --ton-grad: linear-gradient(135deg, #0088cc, #00d2ff);
             --vip-grad: linear-gradient(135deg, #ffd700 0%, #ff8c00 50%, #e65c00 100%);
             --card-border: 1px solid rgba(255, 255, 255, 0.15);
         }
@@ -38,7 +40,7 @@
             font-family: 'Poppins', sans-serif;
         }
 
-        /* اعمال عکس برج میلاد و آزادی به عنوان بک‌گراند ثابت تمام صفحات */
+        /* بک‌گراند ثابت برج میلاد و آزادی */
         body {
             background: linear-gradient(to bottom, rgba(11, 17, 30, 0.80), rgba(11, 17, 30, 0.95)), url('bg.jpg') no-repeat center center fixed;
             background-size: cover;
@@ -121,17 +123,19 @@
         }
 
         .action-btn { background: var(--btn-grad); color: #000; font-weight: 700; font-size: 13px; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; touch-action: manipulation; }
+        .ton-btn { background: var(--ton-grad); color: #fff; font-weight: 700; font-size: 13px; border: none; padding: 10px 18px; border-radius: 20px; cursor: pointer; }
 
-        /* VIP Special Styles */
-        .vip-card-banner {
-            width: 100%; background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 140, 0, 0.3));
-            border: 2px solid var(--accent-gold); border-radius: 20px; padding: 20px; text-align: center;
-            box-shadow: 0 0 25px rgba(245, 179, 0, 0.3); margin-bottom: 20px; backdrop-filter: blur(10px);
+        /* VIP Tier Cards Style */
+        .vip-tier-card {
+            width: 100%; background: rgba(15, 23, 42, 0.9);
+            border: 2px solid var(--accent-gold); border-radius: 18px;
+            padding: 16px; margin-bottom: 15px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            display: flex; flex-direction: column; gap: 10px; backdrop-filter: blur(10px);
         }
-        .vip-title { font-size: 22px; font-weight: 800; background: var(--accent-vip); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 5px; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
-        .vip-status-tag { display: inline-block; padding: 4px 12px; border-radius: 12px; background: rgba(0, 0, 0, 0.6); color: var(--accent-gold); font-size: 12px; font-weight: 700; margin-bottom: 12px; border: 1px solid var(--accent-gold); }
-        .vip-perks-list { text-align: left; margin: 15px 0; font-size: 13px; display: flex; flex-direction: column; gap: 8px; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
-        .vip-btn { background: var(--vip-grad); color: #000; font-weight: 800; padding: 14px; border-radius: 14px; border: none; width: 100%; font-size: 15px; box-shadow: 0 4px 15px rgba(255, 140, 0, 0.4); cursor: pointer; }
+        .vip-tier-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
+        .vip-tier-name { font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 6px; }
+        .vip-tier-price { font-size: 15px; font-weight: 800; color: #00d2ff; }
+        .vip-tier-perks { font-size: 12px; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px; }
 
         /* Lucky Spin Wheel */
         .wheel-container { position: relative; width: 260px; height: 260px; margin: 10px auto 20px auto; }
@@ -194,45 +198,67 @@
         </div>
     </div>
 
-    <!-- Tab 2: VIP & Boost Store -->
-    <div class="tab-section" id="tab-boost">
-        <!-- VIP Card -->
-        <div class="vip-card-banner">
-            <div class="vip-title">👑 VIP PASS ZONE</div>
-            <div class="vip-status-tag" id="vipStatusBadge">Status: Standard Member</div>
+    <!-- Tab 2: VIP Zone (Purchasable ONLY with TON) -->
+    <div class="tab-section" id="tab-vip">
+        <div class="section-title">👑 VIP Passes (TON Crypto)</div>
+        <p style="font-size: 12px; color: var(--text-muted); text-align: center; margin-bottom: 15px;">
+            Upgrade your membership using TON to unlock massive rewards & mining boosts!
+        </p>
 
-            <div class="vip-perks-list">
-                <div class="vip-perk-item">⚡ <strong>2x Tap Rate:</strong> Earn +2 Coins per tap!</div>
-                <div class="vip-perk-item">🔋 <strong>2x Energy Max:</strong> 2,000 Energy Capacity</div>
-                <div class="vip-perk-item">🎁 <strong>Daily VIP Reward:</strong> +1,000 Coins Daily</div>
-                <div class="vip-perk-item">🚀 <strong>Faster Energy Refill:</strong> 2x Speed</div>
+        <!-- Tier 1: Bronze -->
+        <div class="vip-tier-card">
+            <div class="vip-tier-header">
+                <div class="vip-tier-name">🥉 Bronze VIP</div>
+                <div class="vip-tier-price">0.1 TON</div>
             </div>
-
-            <button class="vip-btn" id="btnUnlockVip" onclick="buyVipPass()">Unlock VIP Pass (2,500 🪙)</button>
+            <div class="vip-tier-perks">
+                <span>⚡ <strong>Tap Speed:</strong> +2 Coins / Tap</span>
+                <span>🔋 <strong>Max Energy:</strong> 1,500 Energy</span>
+                <span>🎁 <strong>Daily Bonus:</strong> +500 Coins / 24h</span>
+            </div>
+            <button class="ton-btn" onclick="buyVipTon('Bronze', 0.1, 2, 1500, 500)">Buy for 0.1 TON 💎</button>
         </div>
 
-        <div class="section-title">🚀 Mining Upgrades</div>
-        
-        <div class="task-card">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <span style="font-size:24px;">🔋</span>
-                <div>
-                    <h4>Energy Limit Boost</h4>
-                    <span style="font-size:12px; color:var(--accent-gold);">+500 Max Energy</span>
-                </div>
+        <!-- Tier 2: Silver -->
+        <div class="vip-tier-card" style="border-color: #c0c0c0;">
+            <div class="vip-tier-header">
+                <div class="vip-tier-name">🥈 Silver VIP</div>
+                <div class="vip-tier-price">0.5 TON</div>
             </div>
-            <button class="action-btn" onclick="buyBoost('energy')">500 🪙</button>
+            <div class="vip-tier-perks">
+                <span>⚡ <strong>Tap Speed:</strong> +5 Coins / Tap</span>
+                <span>🔋 <strong>Max Energy:</strong> 3,000 Energy</span>
+                <span>🎁 <strong>Daily Bonus:</strong> +2,000 Coins / 24h</span>
+            </div>
+            <button class="ton-btn" onclick="buyVipTon('Silver', 0.5, 5, 3000, 2000)">Buy for 0.5 TON 💎</button>
         </div>
 
-        <div class="task-card">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <span style="font-size:24px;">⚡</span>
-                <div>
-                    <h4>Multi-Tap Boost</h4>
-                    <span style="font-size:12px; color:var(--accent-gold);">+1 Coin / Tap</span>
-                </div>
+        <!-- Tier 3: Gold -->
+        <div class="vip-tier-card" style="border-color: #ffd700; background: rgba(30, 25, 10, 0.9);">
+            <div class="vip-tier-header">
+                <div class="vip-tier-name">🥇 Gold VIP</div>
+                <div class="vip-tier-price">1.5 TON</div>
             </div>
-            <button class="action-btn" onclick="buyBoost('tap')">1,000 🪙</button>
+            <div class="vip-tier-perks">
+                <span>⚡ <strong>Tap Speed:</strong> +10 Coins / Tap</span>
+                <span>🔋 <strong>Max Energy:</strong> 5,000 Energy</span>
+                <span>🎁 <strong>Daily Bonus:</strong> +5,000 Coins / 24h</span>
+            </div>
+            <button class="ton-btn" style="background: var(--btn-grad); color: #000;" onclick="buyVipTon('Gold', 1.5, 10, 5000, 5000)">Buy for 1.5 TON 👑</button>
+        </div>
+
+        <!-- Tier 4: Diamond -->
+        <div class="vip-tier-card" style="border-color: #00d2ff; background: rgba(10, 30, 45, 0.9);">
+            <div class="vip-tier-header">
+                <div class="vip-tier-name">💎 Diamond VIP</div>
+                <div class="vip-tier-price">3.0 TON</div>
+            </div>
+            <div class="vip-tier-perks">
+                <span>⚡ <strong>Tap Speed:</strong> +25 Coins / Tap</span>
+                <span>🔋 <strong>Max Energy:</strong> 10,000 Energy</span>
+                <span>🎁 <strong>Daily Bonus:</strong> +15,000 Coins / 24h</span>
+            </div>
+            <button class="ton-btn" style="background: linear-gradient(135deg, #00d2ff, #0088cc); font-size:14px;" onclick="buyVipTon('Diamond', 3.0, 25, 10000, 15000)">Buy for 3.0 TON 💎</button>
         </div>
     </div>
 
@@ -250,14 +276,14 @@
             <button class="action-btn full-btn" id="spinBtn" onclick="spinWheel()" style="margin-top: 10px;">SPIN NOW</button>
         </div>
 
-        <!-- VIP Daily Reward -->
-        <div class="section-title">👑 VIP Exclusive</div>
+        <!-- VIP Daily Reward Claim -->
+        <div class="section-title">👑 Active VIP Daily Bonus</div>
         <div class="task-card">
             <div style="display:flex; align-items:center; gap:12px;">
                 <span style="font-size: 26px;">🎁</span>
                 <div>
-                    <h4 style="font-size: 14px;">Daily VIP Bonus</h4>
-                    <span style="font-size: 12px; color: var(--accent-gold);">+1,000 Coins (24h)</span>
+                    <h4 style="font-size: 14px;" id="vipDailyTitle">VIP Daily Reward</h4>
+                    <span style="font-size: 12px; color: var(--accent-gold);" id="vipDailyDesc">Claim active tier bonus</span>
                 </div>
             </div>
             <button class="action-btn" id="btnClaimVipDaily" onclick="claimVipDaily()">Claim</button>
@@ -311,7 +337,7 @@
         </div>
     </div>
 
-    <!-- Tab 4: Friends (Referral) -->
+    <!-- Tab 4: Friends -->
     <div class="tab-section" id="tab-friends">
         <div class="section-title">👥 Invite Friends</div>
         <div class="task-card" style="flex-direction: column; align-items: flex-start; gap: 8px;">
@@ -343,8 +369,8 @@
         <div class="nav-item active" onclick="switchTab('tab-mine', this)">
             <span class="nav-icon">⛏</span><span>Mine</span>
         </div>
-        <div class="nav-item" onclick="switchTab('tab-boost', this)">
-            <span class="nav-icon">🚀</span><span>Boost</span>
+        <div class="nav-item" onclick="switchTab('tab-vip', this)">
+            <span class="nav-icon">👑</span><span>VIP</span>
         </div>
         <div class="nav-item" onclick="switchTab('tab-earn', this)">
             <span class="nav-icon">💰</span><span>Earn</span>
@@ -359,6 +385,9 @@
 
     <!-- JavaScript Controller -->
     <script>
+        const ADMIN_TON_WALLET = "UQCcUO7XRuLyf46obnkSUrec5L00yng7sw8Jut04rlLKCSjB";
+        const BACKEND_URL = "https://iran-coin-bot-production.up.railway.app";
+
         // --- 1. Global Navigation ---
         function switchTab(tabId, el) {
             document.querySelectorAll('.tab-section').forEach(tab => {
@@ -386,19 +415,16 @@
         if (tg) { try { tg.ready(); tg.expand(); } catch (e) {} }
 
         const telegramUser = tg?.initDataUnsafe?.user || { id: 979411415, first_name: "Player" };
-        const BACKEND_URL = "https://iran-coin-bot-production.up.railway.app";
 
         document.getElementById('userName').innerText = telegramUser.first_name || "Player";
         document.getElementById('userAvatar').childNodes[0].nodeValue = (telegramUser.first_name || "P").charAt(0).toUpperCase();
 
-        // --- 3. Game State & Persistence ---
+        // --- 3. Game State & VIP Local Storage ---
         let balance = parseInt(localStorage.getItem('iran_coin_bal')) || 0;
-        let isVip = localStorage.getItem('iran_coin_vip') === 'true';
-        let customTap = parseInt(localStorage.getItem('iran_coin_tap')) || 0;
-        let customMaxEnergy = parseInt(localStorage.getItem('iran_coin_maxen')) || 0;
-        
-        let tapValue = (isVip ? 2 : 1) + customTap;
-        let maxEnergy = (isVip ? 2000 : 1000) + customMaxEnergy;
+        let vipTier = localStorage.getItem('iran_coin_vip_tier') || "Free";
+        let tapValue = parseInt(localStorage.getItem('iran_coin_tap')) || 1;
+        let maxEnergy = parseInt(localStorage.getItem('iran_coin_maxen')) || 1000;
+        let vipDailyBonus = parseInt(localStorage.getItem('iran_coin_vip_daily')) || 0;
         let energy = maxEnergy;
         let isSpinning = false;
 
@@ -407,24 +433,22 @@
             document.getElementById('energyText').innerText = `${energy} / ${maxEnergy}`;
             document.getElementById('energyFill').style.width = `${(energy / maxEnergy) * 100}%`;
             
-            if (isVip) {
+            if (vipTier !== "Free") {
                 document.getElementById('vipCrown').style.display = 'block';
-                document.getElementById('userLevelTag').innerText = "👑 VIP Member";
-                document.getElementById('vipStatusBadge').innerText = "Status: ACTIVE VIP MEMBER";
-                document.getElementById('btnUnlockVip').innerText = "VIP Activated ✓";
-                document.getElementById('btnUnlockVip').disabled = true;
-                document.getElementById('btnUnlockVip').style.opacity = "0.7";
+                document.getElementById('userLevelTag').innerText = `👑 ${vipTier} VIP`;
+                document.getElementById('vipDailyDesc').innerText = `+${vipDailyBonus.toLocaleString()} Coins / 24h`;
             }
             localStorage.setItem('iran_coin_bal', balance);
-            localStorage.setItem('iran_coin_vip', isVip);
-            localStorage.setItem('iran_coin_tap', customTap);
-            localStorage.setItem('iran_coin_maxen', customMaxEnergy);
+            localStorage.setItem('iran_coin_vip_tier', vipTier);
+            localStorage.setItem('iran_coin_tap', tapValue);
+            localStorage.setItem('iran_coin_maxen', maxEnergy);
+            localStorage.setItem('iran_coin_vip_daily', vipDailyBonus);
         }
         updateUI();
 
         setInterval(() => {
             if (energy < maxEnergy) {
-                energy = Math.min(maxEnergy, energy + (isVip ? 4 : 2));
+                energy = Math.min(maxEnergy, energy + (vipTier !== "Free" ? 4 : 2));
                 updateUI();
             }
         }, 1000);
@@ -462,38 +486,49 @@
             }
         });
 
-        // --- 5. VIP Engine & Boosts ---
-        function buyVipPass() {
-            if (isVip) return alert("You are already a VIP member!");
-            if (balance >= 2500) {
-                balance -= 2500; isVip = true;
-                tapValue = 2 + customTap; maxEnergy = 2000 + customMaxEnergy; energy = maxEnergy;
-                updateUI(); alert("🎉 VIP Membership Unlocked!");
+        // --- 5. TON VIP Purchase Engine ---
+        function buyVipTon(tierName, tonAmount, tapBonus, energyMax, dailyBonus) {
+            const nanoTon = Math.round(tonAmount * 1000000000);
+            const memo = `VIP_${tierName}_${telegramUser.id}`;
+            const tonLink = `ton://transfer/${ADMIN_TON_WALLET}?amount=${nanoTon}&text=${encodeURIComponent(memo)}`;
+            const webTonkeeper = `https://app.tonkeeper.com/transfer/${ADMIN_TON_WALLET}?amount=${nanoTon}&text=${encodeURIComponent(memo)}`;
+
+            // Open TON Wallet for Transfer
+            if (tg?.openTelegramLink) {
+                tg.openTelegramLink(`https://t.me/wallet?startattach=ton_transfer_${ADMIN_TON_WALLET}`);
             } else {
-                alert("⚠️ You need 2,500 IRAN Coins to unlock VIP Pass.");
+                window.open(webTonkeeper, '_blank');
             }
+
+            // Instantly activate or prompt transaction verification
+            setTimeout(() => {
+                const confirmed = confirm(`💎 Have you sent ${tonAmount} TON to activate ${tierName} VIP? Click OK to activate now!`);
+                if (confirmed) {
+                    vipTier = tierName;
+                    tapValue = tapBonus;
+                    maxEnergy = energyMax;
+                    energy = maxEnergy;
+                    vipDailyBonus = dailyBonus;
+                    updateUI();
+                    alert(`🎉 Welcome to ${tierName} VIP! Benefits & Perks activated!`);
+                }
+            }, 1000);
         }
 
         function claimVipDaily() {
-            if (!isVip) return alert("⚠️ You must be a VIP Member to claim this daily reward!");
+            if (vipTier === "Free" || vipDailyBonus <= 0) {
+                alert("⚠️ You must hold an active TON VIP Tier to claim daily bonuses!");
+                return;
+            }
             const today = new Date().toDateString();
             if (localStorage.getItem('iran_vip_claim_date') === today) {
-                return alert("⚠️ You already claimed your VIP reward today. Come back tomorrow!");
+                alert("⚠️ You already claimed your VIP reward today. Come back tomorrow!");
+                return;
             }
-            balance += 1000; localStorage.setItem('iran_vip_claim_date', today);
-            updateUI(); alert("🎉 Claimed +1,000 VIP Daily Coins!");
-        }
-
-        function buyBoost(type) {
-            if (type === 'energy' && balance >= 500) {
-                balance -= 500; customMaxEnergy += 500; maxEnergy += 500; energy = maxEnergy;
-                updateUI(); alert("🔋 Max Energy upgraded by +500!");
-            } else if (type === 'tap' && balance >= 1000) {
-                balance -= 1000; customTap += 1; tapValue += 1;
-                updateUI(); alert("⚡ Multi-Tap upgraded by +1!");
-            } else {
-                alert("⚠️ Not enough coins for this upgrade.");
-            }
+            balance += vipDailyBonus;
+            localStorage.setItem('iran_vip_claim_date', today);
+            updateUI();
+            alert(`🎉 Claimed +${vipDailyBonus.toLocaleString()} VIP Daily Coins!`);
         }
 
         // --- 6. 24h Daily Lucky Spin ---
