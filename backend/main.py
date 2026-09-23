@@ -580,6 +580,25 @@ async def process_spin(telegram_id: str):
         "new_balance": new_coins
     }
 
+# --- ۲ برابر کردن پاداش چرخونه پس از دیدن ویدیو Adsgram ---
+class DoubleRewardPayload(BaseModel):
+    telegram_id: int
+    extra_amount: float
+
+@app.post("/api/v1/spin/double")
+async def double_spin_reward(payload: DoubleRewardPayload):
+    tg_str = str(payload.telegram_id)
+    extra = float(payload.extra_amount)
+
+    if extra <= 0 or extra > 1000:
+        raise HTTPException(400, "Invalid amount")
+
+    await db_exec("UPDATE users SET balance = balance + $1 WHERE telegram_id::text=$2;", extra, tg_str)
+    row = await db_fetchrow("SELECT balance FROM users WHERE telegram_id::text=$1;", tg_str)
+    new_bal = float(row.get("balance", 0.0)) if row else 0.0
+
+    return {"success": True, "new_balance": new_bal, "reward_added": extra}
+
 @app.get("/api/v1/tasks/{telegram_id}")
 async def get_tasks(telegram_id: str):
     tg_str = str(telegram_id).strip()
