@@ -9,29 +9,7 @@ const CONFIG = {
 const TG = window.Telegram?.WebApp;
 const state = { user: null, page: 'home', prev: null, energy: 1000, maxEnergy: 1000 };
 
-/* آیکون سکه طلایی SVG داخلی بدون نیاز به تصویر خارجی */
-const COIN_SVG = `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;"><defs><radialGradient id="g" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef08a"/><stop offset="50%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#b45309"/></radialGradient></defs><circle cx="100" cy="100" r="95" fill="url(#g)" stroke="#fef08a" stroke-width="6"/><circle cx="100" cy="100" r="82" fill="none" stroke="#78350f" stroke-width="3" stroke-dasharray="6,4"/><text x="100" y="115" font-family="sans-serif" font-weight="900" font-size="28" fill="#78350f" text-anchor="middle">IRAN</text></svg>`;
-
-/* نقشه سه‌بعدی و طلایی ایران برای دکمه تب‌تب (بدون نیاز به لینک عکس) */
-const IRAN_MAP_SVG = `
-<svg class="tap-iran-map" id="tapCoin" viewBox="0 0 500 450" xmlns="http://www.w3.org/2000/svg" onclick="handleTap(event)">
-  <defs>
-    <radialGradient id="mapGold" cx="30%" cy="30%" r="80%">
-      <stop offset="0%" stop-color="#fffbeb"/>
-      <stop offset="20%" stop-color="#fde047"/>
-      <stop offset="60%" stop-color="#eab308"/>
-      <stop offset="100%" stop-color="#854d0e"/>
-    </radialGradient>
-    <filter id="mapGlow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#f59e0b" flood-opacity="0.5"/>
-    </filter>
-  </defs>
-  <!-- نقشه دقیق جغرافیایی ایران به صورت سه بعدی و طلایی -->
-  <path d="M 140 70 Q 200 50 280 80 T 410 70 T 460 120 T 430 200 T 380 260 T 350 340 T 300 420 T 230 400 T 170 340 T 100 280 T 50 190 T 80 110 Z" fill="url(#mapGold)" stroke="#fef08a" stroke-width="5" filter="url(#mapGlow)"/>
-  <!-- نشان برجسته IRAN روی نقشه -->
-  <text x="240" y="230" font-family="sans-serif" font-weight="900" font-size="36" fill="#713f12" text-anchor="middle" letter-spacing="2">IRAN</text>
-  <text x="240" y="260" font-family="sans-serif" font-weight="800" font-size="16" fill="#854d0e" text-anchor="middle">MINER</text>
-</svg>`;
+const TAP_BTN_IMG = 'https://i.postimg.cc/pT3Y09k9/iran-3d-map-miner-btn.jpg';
 
 function money(n){
   return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -125,7 +103,7 @@ function renderHome(root){
       </div>
 
       <div class="balance">
-        <div class="coin-sm">${COIN_SVG}</div>
+        <div class="coin-sm"><img src="${TAP_BTN_IMG}" style="border-radius:50%;" /></div>
         <div class="btxt">
           <div class="blabel">Your Balance</div>
           <div class="bamount">${money(u.balance)} <span>IRAN</span></div>
@@ -170,12 +148,12 @@ function renderMiner(root){
   root.innerHTML = `
     <div class="card" style="text-align:center; padding: 25px 20px;">
       <div class="title" style="font-size:22px;">⛏ Tap-Tap Miner</div>
-      <div class="sub" style="margin-bottom:10px;">Tap the golden Iran map to earn IRAN!</div>
+      <div class="sub" style="margin-bottom:10px;">Tap the Iran map miner to earn IRAN!</div>
 
       <div class="bamount" id="minerBal" style="margin:15px 0; font-size:32px;">${money(u.balance)} <span>IRAN</span></div>
 
       <div class="tap-area">
-        ${IRAN_MAP_SVG}
+        <div id="tapCoin" class="tap-miner-btn" onclick="handleTap(event)"></div>
       </div>
 
       <div style="margin-top:15px;">
