@@ -9,7 +9,29 @@ const CONFIG = {
 const TG = window.Telegram?.WebApp;
 const state = { user: null, page: 'home', prev: null, energy: 1000, maxEnergy: 1000 };
 
-const COIN_SVG = `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="g" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef08a"/><stop offset="50%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#b45309"/></radialGradient></defs><circle cx="100" cy="100" r="95" fill="url(#g)" stroke="#fef08a" stroke-width="6"/><circle cx="100" cy="100" r="82" fill="none" stroke="#78350f" stroke-width="3" stroke-dasharray="6,4"/><text x="100" y="115" font-family="sans-serif" font-weight="900" font-size="28" fill="#78350f" text-anchor="middle">IRAN</text></svg>`;
+/* آیکون سکه طلایی SVG داخلی بدون نیاز به تصویر خارجی */
+const COIN_SVG = `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;"><defs><radialGradient id="g" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef08a"/><stop offset="50%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#b45309"/></radialGradient></defs><circle cx="100" cy="100" r="95" fill="url(#g)" stroke="#fef08a" stroke-width="6"/><circle cx="100" cy="100" r="82" fill="none" stroke="#78350f" stroke-width="3" stroke-dasharray="6,4"/><text x="100" y="115" font-family="sans-serif" font-weight="900" font-size="28" fill="#78350f" text-anchor="middle">IRAN</text></svg>`;
+
+/* نقشه سه‌بعدی و طلایی ایران برای دکمه تب‌تب (بدون نیاز به لینک عکس) */
+const IRAN_MAP_SVG = `
+<svg class="tap-iran-map" id="tapCoin" viewBox="0 0 500 450" xmlns="http://www.w3.org/2000/svg" onclick="handleTap(event)">
+  <defs>
+    <radialGradient id="mapGold" cx="30%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#fffbeb"/>
+      <stop offset="20%" stop-color="#fde047"/>
+      <stop offset="60%" stop-color="#eab308"/>
+      <stop offset="100%" stop-color="#854d0e"/>
+    </radialGradient>
+    <filter id="mapGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#f59e0b" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+  <!-- نقشه دقیق جغرافیایی ایران به صورت سه بعدی و طلایی -->
+  <path d="M 140 70 Q 200 50 280 80 T 410 70 T 460 120 T 430 200 T 380 260 T 350 340 T 300 420 T 230 400 T 170 340 T 100 280 T 50 190 T 80 110 Z" fill="url(#mapGold)" stroke="#fef08a" stroke-width="5" filter="url(#mapGlow)"/>
+  <!-- نشان برجسته IRAN روی نقشه -->
+  <text x="240" y="230" font-family="sans-serif" font-weight="900" font-size="36" fill="#713f12" text-anchor="middle" letter-spacing="2">IRAN</text>
+  <text x="240" y="260" font-family="sans-serif" font-weight="800" font-size="16" fill="#854d0e" text-anchor="middle">MINER</text>
+</svg>`;
 
 function money(n){
   return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -38,7 +60,7 @@ async function apiGet(path){
 }
 
 async function init(){
-  if (TG){ TG.ready(); TG.expand(); TG.setHeaderColor('#060d15'); TG.setBackgroundColor('#060d15'); }
+  if (TG){ TG.ready(); TG.expand(); TG.setHeaderColor('#040911'); TG.setBackgroundColor('#040911'); }
   const tgUser = TG?.initDataUnsafe?.user;
   if (!tgUser){
     state.user = { telegram_id: 111111, first_name: 'User', username: 'demo', balance: 0 };
@@ -146,20 +168,20 @@ function renderHome(root){
 function renderMiner(root){
   const u = state.user || {};
   root.innerHTML = `
-    <div class="card" style="text-align:center; padding: 30px 20px;">
+    <div class="card" style="text-align:center; padding: 25px 20px;">
       <div class="title" style="font-size:22px;">⛏ Tap-Tap Miner</div>
-      <div class="sub" style="margin-bottom:10px;">Tap the coin to earn IRAN!</div>
+      <div class="sub" style="margin-bottom:10px;">Tap the golden Iran map to earn IRAN!</div>
 
-      <div class="bamount" id="minerBal" style="margin:20px 0; font-size:32px;">${money(u.balance)} <span>IRAN</span></div>
+      <div class="bamount" id="minerBal" style="margin:15px 0; font-size:32px;">${money(u.balance)} <span>IRAN</span></div>
 
       <div class="tap-area">
-        <div id="tapCoin" class="tap-coin" onclick="handleTap(event)">${COIN_SVG}</div>
+        ${IRAN_MAP_SVG}
       </div>
 
-      <div style="margin-top:20px;">
+      <div style="margin-top:15px;">
         <div class="row">
-          <span style="font-size:14px; color:#cbd5e1; font-weight:bold;">⚡ Energy</span>
-          <span style="font-size:14px; font-weight:900; color:#f8fafc;" id="energyText">${state.energy} / ${state.maxEnergy}</span>
+          <span style="font-size:13px; color:#cbd5e1; font-weight:bold;">⚡ Energy</span>
+          <span style="font-size:13px; font-weight:900; color:#f8fafc;" id="energyText">${state.energy} / ${state.maxEnergy}</span>
         </div>
         <div class="energy-bar">
           <div class="energy-fill" id="energyFill" style="width:${(state.energy/state.maxEnergy)*100}%;"></div>
@@ -228,7 +250,7 @@ function drawWheel() {
         ctx.arc(110, 110, 105, angle, angle + sliceAngle);
         ctx.fill();
         ctx.lineWidth = 2;
-        ctx.strokeStyle = "#060d15";
+        ctx.strokeStyle = "#040911";
         ctx.stroke();
 
         ctx.save();
@@ -370,9 +392,9 @@ function renderWithdraw(root){
     <div class="card">
       <div class="title" style="margin-bottom:20px;">Withdraw to TON Wallet</div>
       <div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">TON Wallet Address</div>
-      <input id="tonAddr" style="width:100%; padding:14px; margin-bottom:20px; border-radius:12px; border:1px solid #1e293b; background:#060d15; color:white; font-size:14px;" placeholder="UQ..." />
+      <input id="tonAddr" style="width:100%; padding:14px; margin-bottom:20px; border-radius:12px; border:1px solid #1e293b; background:#040911; color:white; font-size:14px;" placeholder="UQ..." />
       <div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">Amount (Min: 10,000 IRAN)</div>
-      <input id="wdAmount" type="number" style="width:100%; padding:14px; margin-bottom:20px; border-radius:12px; border:1px solid #1e293b; background:#060d15; color:white; font-size:14px;" placeholder="10000" />
+      <input id="wdAmount" type="number" style="width:100%; padding:14px; margin-bottom:20px; border-radius:12px; border:1px solid #1e293b; background:#040911; color:white; font-size:14px;" placeholder="10000" />
       <button class="btn" style="width:100%; padding:14px; font-size:16px;" onclick="requestWithdraw()">Request Withdrawal</button>
     </div>
   `;
