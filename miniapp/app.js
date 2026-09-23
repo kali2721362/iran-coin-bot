@@ -9,6 +9,8 @@ const CONFIG = {
 const TG = window.Telegram?.WebApp;
 const state = { user: null, page: 'home', prev: null, energy: 1000, maxEnergy: 1000 };
 
+const COIN_SVG = `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="g" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef08a"/><stop offset="50%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#b45309"/></radialGradient></defs><circle cx="100" cy="100" r="95" fill="url(#g)" stroke="#fef08a" stroke-width="6"/><circle cx="100" cy="100" r="82" fill="none" stroke="#78350f" stroke-width="3" stroke-dasharray="6,4"/><text x="100" y="115" font-family="sans-serif" font-weight="900" font-size="28" fill="#78350f" text-anchor="middle">IRAN</text></svg>`;
+
 function money(n){
   return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
@@ -36,7 +38,7 @@ async function apiGet(path){
 }
 
 async function init(){
-  if (TG){ TG.ready(); TG.expand(); TG.setHeaderColor('#040c14'); TG.setBackgroundColor('#040c14'); }
+  if (TG){ TG.ready(); TG.expand(); TG.setHeaderColor('#060d15'); TG.setBackgroundColor('#060d15'); }
   const tgUser = TG?.initDataUnsafe?.user;
   if (!tgUser){
     state.user = { telegram_id: 111111, first_name: 'User', username: 'demo', balance: 0 };
@@ -86,7 +88,6 @@ function navTo(page){
 
 function goBack(){ navTo(state.prev || 'home'); }
 
-/* Home Page با دکمه ماینر در گرید اصلی */
 function renderHome(root){
   const u = state.user || {};
   const ton = (Number(u.balance||0) * CONFIG.IRAN_TO_TON_RATE).toFixed(4);
@@ -96,13 +97,13 @@ function renderHome(root){
       <div class="row">
         <div>
           <div class="title">IRAN Coin</div>
-          <div class="sub">Together for a better future 🇮🇷</div>
+          <div class="sub">Earn • Play • Withdraw 🇮🇷</div>
         </div>
         <div style="opacity:.8;font-weight:800;">${u.username ? '@'+u.username : ''}</div>
       </div>
 
       <div class="balance">
-        <div class="coin-sm"><img src="https://i.ibb.co/3s8s22H/iran-map-gold-3d.png" alt="coin" /></div>
+        <div class="coin-sm">${COIN_SVG}</div>
         <div class="btxt">
           <div class="blabel">Your Balance</div>
           <div class="bamount">${money(u.balance)} <span>IRAN</span></div>
@@ -112,7 +113,7 @@ function renderHome(root){
 
       <div class="grid">
         <div class="tile" onclick="navTo('miner')">
-          <div class="tico">⛏</div><div class="tname">Tap Miner</div><div class="tsub">تب‌تب و استخراج</div>
+          <div class="tico">⛏</div><div class="tname">Tap Miner</div><div class="tsub">Tap & Earn</div>
         </div>
         <div class="tile" onclick="navTo('ads')">
           <div class="tico">▶</div><div class="tname">Watch Ads</div><div class="tsub">+5-20 IRAN</div>
@@ -127,15 +128,15 @@ function renderHome(root){
     </div>
 
     <div class="card" style="text-align:center;">
-      <div class="title">🎡 گردونه شانس روزانه</div>
-      <div class="sub" style="margin-bottom:15px;">هر ۲۴ ساعت یک‌بار شانس خودت رو امتحان کن!</div>
+      <div class="title">🎡 Daily Lucky Spin</div>
+      <div class="sub" style="margin-bottom:15px;">Test your luck every 24 hours!</div>
 
       <div style="position: relative; width: 220px; height: 220px; margin: 0 auto;">
         <div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 20px solid #ef4444; z-index: 10;"></div>
         <canvas id="wheelCanvas" width="220" height="220" style="border-radius: 50%; transition: transform 4s cubic-bezier(0.15, 0.85, 0.35, 1.2); box-shadow: 0 0 20px rgba(0,0,0,0.5);"></canvas>
       </div>
 
-      <button id="spinBtn" class="btn" onclick="spinWheel()" style="width:100%; margin-top:20px; padding:14px; font-size:16px;">بچرخون! 🎰</button>
+      <button id="spinBtn" class="btn" onclick="spinWheel()" style="width:100%; margin-top:20px; padding:14px; font-size:16px;">Spin Now! 🎰</button>
     </div>
   `;
 
@@ -147,17 +148,17 @@ function renderMiner(root){
   root.innerHTML = `
     <div class="card" style="text-align:center; padding: 30px 20px;">
       <div class="title" style="font-size:22px;">⛏ Tap-Tap Miner</div>
-      <div class="sub" style="margin-bottom:10px;">رو نقشه ایران کلیک کن و سکه بگیر!</div>
+      <div class="sub" style="margin-bottom:10px;">Tap the coin to earn IRAN!</div>
 
       <div class="bamount" id="minerBal" style="margin:20px 0; font-size:32px;">${money(u.balance)} <span>IRAN</span></div>
 
       <div class="tap-area">
-        <div id="tapCoin" class="tap-coin" onclick="handleTap(event)"></div>
+        <div id="tapCoin" class="tap-coin" onclick="handleTap(event)">${COIN_SVG}</div>
       </div>
 
       <div style="margin-top:20px;">
         <div class="row">
-          <span style="font-size:14px; color:#cbd5e1; font-weight:bold;">⚡ انرژی</span>
+          <span style="font-size:14px; color:#cbd5e1; font-weight:bold;">⚡ Energy</span>
           <span style="font-size:14px; font-weight:900; color:#f8fafc;" id="energyText">${state.energy} / ${state.maxEnergy}</span>
         </div>
         <div class="energy-bar">
@@ -170,7 +171,7 @@ function renderMiner(root){
 
 function handleTap(e){
   if (state.energy <= 0) {
-    toast("انرژی شما تمام شده است! کمی صبر کنید.", "err");
+    toast("Out of energy! Please wait for recharge.", "err");
     return;
   }
   state.energy -= 1;
@@ -227,7 +228,7 @@ function drawWheel() {
         ctx.arc(110, 110, 105, angle, angle + sliceAngle);
         ctx.fill();
         ctx.lineWidth = 2;
-        ctx.strokeStyle = "#040c14";
+        ctx.strokeStyle = "#060d15";
         ctx.stroke();
 
         ctx.save();
@@ -247,7 +248,7 @@ async function spinWheel() {
     try {
         const res = await apiPost(`/spin/${state.user?.telegram_id || "111111"}`, {});
         if (!res.success) {
-            toast(res.detail || "باید 24 ساعت صبر کنید!", "err");
+            toast(res.detail || "Must wait 24 hours!", "err");
             if (btn) { btn.disabled = false; btn.style.opacity = "1"; }
             return;
         }
@@ -261,12 +262,12 @@ async function spinWheel() {
         if (canvas) canvas.style.transform = `rotate(${currentRotation}deg)`;
 
         setTimeout(() => {
-            toast(`🎉 +${res.reward_amount} سکه برنده شدید!`, "ok");
+            toast(`🎉 +${res.reward_amount} IRAN Won!`, "ok");
             if (state.user) state.user.balance = res.new_balance;
             navTo('home');
         }, 4200);
     } catch (err) {
-        toast("خطا در چرخاندن گردونه", "err");
+        toast("Error spinning wheel", "err");
         if (btn) { btn.disabled = false; btn.style.opacity = "1"; }
     }
 }
@@ -316,10 +317,10 @@ async function doTask(taskId, url){
   const res = await apiPost('/tasks/complete', { telegram_id: state.user.telegram_id, task_id: taskId });
   if (res?.success) {
     state.user.balance = res.new_balance;
-    toast(`🎉 +${res.reward} IRAN دریافت شد!`, 'ok');
+    toast(`🎉 +${res.reward} IRAN Claimed!`, 'ok');
     loadTasks();
   } else {
-    toast(res?.message || 'ابتدا عضو کانال شوید!', 'err');
+    toast(res?.message || 'Please join the channel first!', 'err');
     btn.innerText = "Check";
   }
 }
@@ -349,7 +350,7 @@ async function watchAd(adId){
   const res = await apiPost('/ads/watch', { telegram_id: state.user.telegram_id, ad_id: adId });
   if (res?.success){
     state.user.balance = res.new_balance;
-    toast(`+${res.reward} IRAN دریافت شد!`, 'ok');
+    toast(`+${res.reward} IRAN Earned!`, 'ok');
   }
 }
 
@@ -369,9 +370,9 @@ function renderWithdraw(root){
     <div class="card">
       <div class="title" style="margin-bottom:20px;">Withdraw to TON Wallet</div>
       <div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">TON Wallet Address</div>
-      <input id="tonAddr" style="width:100%; padding:14px; margin-bottom:20px; border-radius:12px; border:1px solid #1e293b; background:#040c14; color:white; font-size:14px;" placeholder="UQ..." />
+      <input id="tonAddr" style="width:100%; padding:14px; margin-bottom:20px; border-radius:12px; border:1px solid #1e293b; background:#060d15; color:white; font-size:14px;" placeholder="UQ..." />
       <div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">Amount (Min: 10,000 IRAN)</div>
-      <input id="wdAmount" type="number" style="width:100%; padding:14px; margin-bottom:20px; border-radius:12px; border:1px solid #1e293b; background:#040c14; color:white; font-size:14px;" placeholder="10000" />
+      <input id="wdAmount" type="number" style="width:100%; padding:14px; margin-bottom:20px; border-radius:12px; border:1px solid #1e293b; background:#060d15; color:white; font-size:14px;" placeholder="10000" />
       <button class="btn" style="width:100%; padding:14px; font-size:16px;" onclick="requestWithdraw()">Request Withdrawal</button>
     </div>
   `;
@@ -380,28 +381,28 @@ function renderWithdraw(root){
 async function requestWithdraw(){
   const addr = document.getElementById('tonAddr')?.value?.trim();
   const amount = Number(document.getElementById('wdAmount')?.value || 0);
-  if (!addr) return toast('آدرس ولت را وارد کنید', 'err');
-  if (amount < 10000) return toast('حداقل برداشت ۱۰,۰۰۰ سکه است', 'err');
+  if (!addr) return toast('Please enter TON wallet address', 'err');
+  if (amount < 10000) return toast('Minimum withdrawal is 10,000 IRAN', 'err');
   const res = await apiPost('/withdraw/request', { telegram_id: state.user.telegram_id, amount, ton_address: addr });
   if (res?.success){
     state.user.balance = res.new_balance;
-    toast('درخواست برداشت ثبت شد', 'ok');
+    toast('Withdrawal requested successfully!', 'ok');
     navTo('wallet');
-  } else { toast(res?.message || 'خطا در برداشت', 'err'); }
+  } else { toast(res?.message || 'Withdrawal failed', 'err'); }
 }
 
 async function claimStreak(){
   const res = await apiPost(`/streak/claim/${state.user?.telegram_id || "111111"}`, {});
   if (res?.success) {
-    toast(`🎉 +${res.reward} سکه دریافت شد!`, 'ok');
+    toast(`🎉 +${res.reward} IRAN Bonus Claimed!`, 'ok');
     state.user.balance = res.new_balance;
     navTo('home');
-  } else { toast(res?.message || 'پاداش امروز دریافت شده است', 'err'); }
+  } else { toast(res?.message || 'Daily reward already claimed today.', 'err'); }
 }
 
 function shareReferral(){
   const link = `https://t.me/${CONFIG.BOT_USERNAME}?start=ref_${state.user?.telegram_id}`;
-  const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("🚀 بیا توی IRAN Coin سکه جمع کن!")}`;
+  const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("🚀 Play IRAN Coin Mini App & Earn Rewards!")}`;
   if (TG?.openTelegramLink) TG.openTelegramLink(shareUrl);
   else window.open(shareUrl, '_blank');
 }
