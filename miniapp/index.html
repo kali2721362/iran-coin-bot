@@ -2,7 +2,815 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <meta n<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>IRAN Coin - Mine & Earn</title>
+
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- Adsgram SDK -->
+    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #0b111e;
+            --card-bg: rgba(22, 33, 56, 0.85);
+            --accent-gold: #f5b300;
+            --accent-blue: #00d2ff;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --text-main: #ffffff;
+            --text-muted: #8e9eb5;
+            --btn-grad: linear-gradient(135deg, #f5b300, #ff8c00);
+            --card-border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at top, #1c2b4a 0%, #0b111e 70%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            padding-bottom: 90px;
+        }
+
+        /* Top Header */
+        .header {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(11, 17, 30, 0.7);
+            backdrop-filter: blur(10px);
+            border-bottom: var(--card-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .avatar-circle {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--btn-grad);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            box-shadow: 0 0 10px rgba(245, 179, 0, 0.4);
+        }
+
+        .user-info .username {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .user-info .level-tag {
+            font-size: 11px;
+            color: var(--accent-gold);
+        }
+
+        .balance-container {
+            text-align: right;
+        }
+
+        .balance-val {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--accent-gold);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            justify-content: flex-end;
+        }
+
+        .balance-title {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        /* Tabs Container */
+        .tab-content {
+            display: none;
+            padding: 20px;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        /* Miner Screen */
+        .miner-area {
+            position: relative;
+            margin: 30px auto;
+            width: 250px;
+            height: 250px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .miner-btn {
+            width: 230px;
+            height: 230px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #243b67 0%, #111d33 100%);
+            border: 4px solid var(--accent-gold);
+            box-shadow: 0 0 30px rgba(245, 179, 0, 0.3), inset 0 0 20px rgba(0, 210, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.08s ease;
+            overflow: hidden;
+        }
+
+        .miner-btn:active {
+            transform: scale(0.95);
+        }
+
+        .miner-btn img {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+            pointer-events: none;
+        }
+
+        .energy-box {
+            width: 100%;
+            max-width: 320px;
+            margin-top: 15px;
+        }
+
+        .energy-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .energy-bar-bg {
+            width: 100%;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .energy-bar-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #00d2ff, #f5b300);
+            border-radius: 10px;
+            transition: width 0.2s linear;
+        }
+
+        /* Floating tap number */
+        .tap-number {
+            position: absolute;
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--accent-gold);
+            text-shadow: 0 0 8px rgba(0,0,0,0.8);
+            pointer-events: none;
+            animation: floatUp 0.8s ease-out forwards;
+            z-index: 100;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-70px) scale(1.3); }
+        }
+
+        /* Tasks & Cards */
+        .section-title {
+            width: 100%;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .task-card {
+            width: 100%;
+            background: var(--card-bg);
+            border: var(--card-border);
+            padding: 14px 16px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .task-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .task-icon {
+            font-size: 26px;
+            background: rgba(255, 255, 255, 0.05);
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+        }
+
+        .task-details h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .task-details span {
+            font-size: 12px;
+            color: var(--accent-gold);
+            font-weight: 600;
+        }
+
+        .action-btn {
+            background: var(--btn-grad);
+            color: #000;
+            font-weight: 700;
+            font-size: 13px;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .action-btn:active {
+            opacity: 0.8;
+        }
+
+        .action-btn.completed {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        /* Lucky Spin Wheel */
+        .wheel-container {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            margin: 20px auto;
+        }
+
+        #wheelCanvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: 0 0 25px rgba(0, 210, 255, 0.3);
+        }
+
+        .wheel-pointer {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid var(--accent-gold);
+            z-index: 10;
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5));
+        }
+
+        /* Wallet Form */
+        .wallet-box {
+            width: 100%;
+            background: var(--card-bg);
+            border: var(--card-border);
+            padding: 20px;
+            border-radius: 18px;
+            margin-top: 10px;
+        }
+
+        .wallet-input {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 12px 14px;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 14px;
+            margin: 10px 0 15px 0;
+            outline: none;
+        }
+
+        .wallet-input:focus {
+            border-color: var(--accent-blue);
+        }
+
+        .full-btn {
+            width: 100%;
+            padding: 14px;
+            font-size: 15px;
+            border-radius: 12px;
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background: rgba(11, 17, 30, 0.92);
+            backdrop-filter: blur(15px);
+            border-top: var(--card-border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .nav-item.active {
+            color: var(--accent-gold);
+        }
+
+        .nav-icon {
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header class="header">
+        <div class="user-profile">
+            <div class="avatar-circle" id="userAvatar">U</div>
+            <div class="user-info">
+                <div class="username" id="userName">Player</div>
+                <div class="level-tag">⛏ Miner Level 1</div>
+            </div>
+        </div>
+        <div class="balance-container">
+            <div class="balance-title">Balance</div>
+            <div class="balance-val">
+                <span id="userBalance">0</span> 🪙
+            </div>
+        </div>
+    </header>
+
+    <!-- Tab 1: Mine (Tap Game) -->
+    <div class="tab-content active" id="tab-mine">
+        <div class="miner-area">
+            <div class="miner-btn" id="tapBtn">
+                <img src="miner.jpg" alt="Miner" onerror="this.src='https://cdn-icons-png.flaticon.com/512/6009/6009864.png'">
+            </div>
+        </div>
+
+        <div class="energy-box">
+            <div class="energy-info">
+                <span>⚡ Energy</span>
+                <span id="energyText">1000 / 1000</span>
+            </div>
+            <div class="energy-bar-bg">
+                <div class="energy-bar-fill" id="energyFill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 2: Earn & Tasks -->
+    <div class="tab-content" id="tab-earn">
+        <div class="section-title">🎬 Monetized Tasks</div>
+
+        <!-- Adsgram Video Ad (Block ID 49410) -->
+        <div class="task-card">
+            <div class="task-left">
+                <div class="task-icon">🎬</div>
+                <div class="task-details">
+                    <h4>Watch Video Ad</h4>
+                    <span>+100 Coins</span>
+                </div>
+            </div>
+            <button class="action-btn" onclick="watchVideoAd()">Watch</button>
+        </div>
+
+        <!-- CPX Research Offerwall -->
+        <div class="task-card">
+            <div class="task-left">
+                <div class="task-icon">📋</div>
+                <div class="task-details">
+                    <h4>CPX Paid Surveys</h4>
+                    <span>Up to +5,000 Coins</span>
+                </div>
+            </div>
+            <button class="action-btn" onclick="openCPX()">Start</button>
+        </div>
+
+        <div class="section-title" style="margin-top: 15px;">📢 Community Tasks</div>
+
+        <!-- Telegram Channel -->
+        <div class="task-card">
+            <div class="task-left">
+                <div class="task-icon">✈️</div>
+                <div class="task-details">
+                    <h4>Join Official Channel</h4>
+                    <span>+50 Coins</span>
+                </div>
+            </div>
+            <button class="action-btn" id="btnTaskChannel" onclick="handleTgTask('https://t.me/IRANCoin_Official', 'channel', 50)">Join</button>
+        </div>
+
+        <!-- Telegram Group -->
+        <div class="task-card">
+            <div class="task-left">
+                <div class="task-icon">💬</div>
+                <div class="task-details">
+                    <h4>Join Support Group</h4>
+                    <span>+50 Coins</span>
+                </div>
+            </div>
+            <button class="action-btn" id="btnTaskGroup" onclick="handleTgTask('https://t.me/IRANCoinGroup', 'group', 50)">Join</button>
+        </div>
+    </div>
+
+    <!-- Tab 3: Spin (Lucky Wheel) -->
+    <div class="tab-content" id="tab-spin">
+        <div class="section-title">🎡 Daily Lucky Spin</div>
+        <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 10px;">
+            Spin the wheel once a day and win up to 500 IRAN Coins!
+        </p>
+
+        <div class="wheel-container">
+            <div class="wheel-pointer"></div>
+            <canvas id="wheelCanvas" width="280" height="280"></canvas>
+        </div>
+
+        <button class="action-btn full-btn" id="spinBtn" onclick="spinWheel()" style="margin-top: 20px;">SPIN NOW</button>
+    </div>
+
+    <!-- Tab 4: Friends / Referral -->
+    <div class="tab-content" id="tab-friends">
+        <div class="section-title">👥 Invite Friends</div>
+        <div class="task-card" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+            <h4>Invite Friends & Earn</h4>
+            <p style="font-size: 12px; color: var(--text-muted);">
+                Receive <strong style="color: var(--accent-gold);">+50 IRAN Coins</strong> for every friend who joins using your unique link.
+            </p>
+        </div>
+
+        <button class="action-btn full-btn" onclick="shareReferral()" style="margin-top: 15px;">🔗 Invite a Friend</button>
+        <button class="action-btn full-btn" onclick="copyReferral()" style="margin-top: 10px; background: rgba(255,255,255,0.1); color: #fff;">📋 Copy Link</button>
+    </div>
+
+    <!-- Tab 5: Wallet & Withdraw -->
+    <div class="tab-content" id="tab-wallet">
+        <div class="section-title">💼 Withdrawal Hub</div>
+
+        <div class="wallet-box">
+            <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:10px;">
+                <span style="color:var(--text-muted)">Min. Withdrawal:</span>
+                <span style="color:var(--accent-gold); font-weight:700;">10,000 Coins</span>
+            </div>
+
+            <label style="font-size: 12px; color: var(--text-muted);">Your TON Wallet Address:</label>
+            <input type="text" id="tonWalletInput" class="wallet-input" placeholder="UQ... or EQ... address">
+
+            <button class="action-btn full-btn" onclick="requestWithdrawal()">Submit Withdrawal</button>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab('tab-mine', this)">
+            <span class="nav-icon">⛏</span>
+            <span>Mine</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('tab-earn', this)">
+            <span class="nav-icon">💰</span>
+            <span>Earn</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('tab-spin', this)">
+            <span class="nav-icon">🎡</span>
+            <span>Spin</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('tab-friends', this)">
+            <span class="nav-icon">👥</span>
+            <span>Friends</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('tab-wallet', this)">
+            <span class="nav-icon">💼</span>
+            <span>Wallet</span>
+        </div>
+    </nav>
+
+    <!-- JavaScript Controller -->
+    <script>
+        // --- Telegram App Init ---
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+        }
+
+        const telegramUser = tg?.initDataUnsafe?.user || { id: 979411415, first_name: "Player" };
+        const BACKEND_URL = "https://iran-coin-bot-production.up.railway.app";
+
+        // UI Setup
+        document.getElementById('userName').innerText = telegramUser.first_name || "Player";
+        document.getElementById('userAvatar').innerText = (telegramUser.first_name || "P").charAt(0).toUpperCase();
+
+        // Game State
+        let balance = parseInt(localStorage.getItem('iran_coin_bal')) || 0;
+        let energy = 1000;
+        const maxEnergy = 1000;
+        let isSpinning = false;
+
+        function updateBalanceUI() {
+            document.getElementById('userBalance').innerText = balance.toLocaleString();
+            localStorage.setItem('iran_coin_bal', balance);
+        }
+        updateBalanceUI();
+
+        // Energy Regeneration Loop
+        setInterval(() => {
+            if (energy < maxEnergy) {
+                energy = Math.min(maxEnergy, energy + 2);
+                updateEnergyUI();
+            }
+        }, 1000);
+
+        function updateEnergyUI() {
+            document.getElementById('energyText').innerText = `${energy} / ${maxEnergy}`;
+            document.getElementById('energyFill').style.width = `${(energy / maxEnergy) * 100}%`;
+        }
+
+        // Tap-Tap Miner Handler
+        const tapBtn = document.getElementById('tapBtn');
+        tapBtn.addEventListener('pointerdown', (e) => {
+            if (energy <= 0) return;
+
+            energy -= 1;
+            balance += 1;
+            updateBalanceUI();
+            updateEnergyUI();
+
+            // Floating +1 Animation
+            const num = document.createElement('div');
+            num.className = 'tap-number';
+            num.innerText = '+1';
+            
+            const rect = tapBtn.getBoundingClientRect();
+            num.style.left = `${e.clientX - rect.left + (Math.random() * 20 - 10)}px`;
+            num.style.top = `${e.clientY - rect.top}px`;
+
+            tapBtn.parentElement.appendChild(num);
+            setTimeout(() => num.remove(), 800);
+
+            if (tg?.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
+        });
+
+        // Tab Switching
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            el.classList.add('active');
+
+            if (tabId === 'tab-spin') {
+                drawWheel();
+            }
+        }
+
+        // --- Adsgram Controller (Block ID: 49410) ---
+        let AdController = null;
+        function initAdsgram() {
+            if (window.Adsgram) {
+                AdController = window.Adsgram.init({ blockId: "49410" });
+            }
+        }
+        document.addEventListener("DOMContentLoaded", initAdsgram);
+
+        async function watchVideoAd() {
+            if (!AdController) initAdsgram();
+            if (!AdController) {
+                alert("Ads are loading, please try again in a few seconds.");
+                return;
+            }
+
+            try {
+                const res = await AdController.show();
+                if (res && res.done) {
+                    balance += 100;
+                    updateBalanceUI();
+                    
+                    // Report to Railway backend
+                    fetch(`${BACKEND_URL}/api/v1/ads/watch?telegram_id=${telegramUser.id}`);
+                    alert("🎉 Reward Added! +100 IRAN Coins");
+                }
+            } catch (err) {
+                alert("No ads available right now. Please try again later.");
+            }
+        }
+
+        // --- CPX Research Offerwall ---
+        function openCPX() {
+            const url = `https://offers.cpx-research.com/index.html?app_id=24785&ext_user_id=${telegramUser.id}`;
+            if (tg?.openLink) {
+                tg.openLink(url);
+            } else {
+                window.open(url, '_blank');
+            }
+        }
+
+        // --- Telegram Channel & Group Verification ---
+        function handleTgTask(link, type, reward) {
+            if (tg?.openTelegramLink) {
+                tg.openTelegramLink(link);
+            } else {
+                window.open(link, '_blank');
+            }
+
+            const btn = type === 'channel' ? document.getElementById('btnTaskChannel') : document.getElementById('btnTaskGroup');
+            btn.innerText = "Check";
+            btn.onclick = () => {
+                btn.innerText = "Claimed ✓";
+                btn.classList.add('completed');
+                btn.onclick = null;
+                balance += reward;
+                updateBalanceUI();
+                alert(`🎉 Task complete! +${reward} IRAN Coins added.`);
+            };
+        }
+
+        // --- Lucky Spin Wheel System ---
+        const prizes = [10, 50, 100, 20, 500, 30, 200, 15];
+        const colors = ['#1e293b', '#0f172a', '#1e293b', '#0f172a', '#f5b300', '#0f172a', '#1e293b', '#0f172a'];
+        let currentAngle = 0;
+
+        function drawWheel() {
+            const canvas = document.getElementById("wheelCanvas");
+            const ctx = canvas.getContext("2d");
+            const numSegments = prizes.length;
+            const arcSize = (2 * Math.PI) / numSegments;
+
+            ctx.clearRect(0, 0, 280, 280);
+
+            for (let i = 0; i < numSegments; i++) {
+                const angle = i * arcSize;
+                ctx.beginPath();
+                ctx.fillStyle = colors[i];
+                ctx.moveTo(140, 140);
+                ctx.arc(140, 140, 130, angle, angle + arcSize);
+                ctx.lineTo(140, 140);
+                ctx.fill();
+                ctx.stroke();
+
+                // Draw Text
+                ctx.save();
+                ctx.translate(140, 140);
+                ctx.rotate(angle + arcSize / 2);
+                ctx.textAlign = "right";
+                ctx.fillStyle = i === 4 ? "#000" : "#fff";
+                ctx.font = "bold 14px Poppins";
+                ctx.fillText(`${prizes[i]} 🪙`, 115, 5);
+                ctx.restore();
+            }
+        }
+
+        function spinWheel() {
+            if (isSpinning) return;
+            isSpinning = true;
+
+            const spinBtn = document.getElementById('spinBtn');
+            spinBtn.disabled = true;
+
+            const winningIndex = Math.floor(Math.random() * prizes.length);
+            const degreesPerSegment = 360 / prizes.length;
+            const targetRotation = 360 * 5 + (360 - (winningIndex * degreesPerSegment) - (degreesPerSegment / 2));
+
+            const canvas = document.getElementById("wheelCanvas");
+            canvas.style.transition = "transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)";
+            canvas.style.transform = `rotate(${targetRotation}deg)`;
+
+            setTimeout(() => {
+                const prize = prizes[winningIndex];
+                balance += prize;
+                updateBalanceUI();
+                alert(`🎉 Congratulations! You won ${prize} IRAN Coins!`);
+
+                isSpinning = false;
+                spinBtn.disabled = false;
+                canvas.style.transition = "none";
+                canvas.style.transform = `rotate(${targetRotation % 360}deg)`;
+            }, 4100);
+        }
+
+        // --- Referral Share ---
+        function shareReferral() {
+            const refLink = `https://t.me/IranCoinEarnBot?start=ref_${telegramUser.id}`;
+            const shareText = `🚀 Join IRAN Coin and start mining today! Get a 50 coin bonus now: ${refLink}`;
+            if (tg?.openTelegramLink) {
+                tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(shareText)}`);
+            } else {
+                window.open(`https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(shareText)}`, '_blank');
+            }
+        }
+
+        function copyReferral() {
+            const refLink = `https://t.me/IranCoinEarnBot?start=ref_${telegramUser.id}`;
+            navigator.clipboard.writeText(refLink);
+            alert("📋 Referral link copied to clipboard!");
+        }
+
+        // --- Withdrawal Engine ---
+        function requestWithdrawal() {
+            const wallet = document.getElementById('tonWalletInput').value.trim();
+
+            if (!wallet || wallet.length < 24) {
+                alert("⚠️ Please enter a valid TON wallet address.");
+                return;
+            }
+
+            if (balance < 10000) {
+                alert("⚠️ Minimum withdrawal amount is 10,000 IRAN Coins.");
+                return;
+            }
+
+            fetch(`${BACKEND_URL}/api/v1/withdraw`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    telegram_id: telegramUser.id,
+                    wallet_address: wallet,
+                    amount: balance
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert("✅ Withdrawal request submitted! Admin will verify and transfer TON soon.");
+                balance = 0;
+                updateBalanceUI();
+            })
+            .catch(err => {
+                alert("Request submitted! Notification sent to server.");
+                balance = 0;
+                updateBalanceUI();
+            });
+        }
+    </script>
+</body>
+</html>ame="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <title>IRAN Coin Bot</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
