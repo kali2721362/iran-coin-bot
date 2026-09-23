@@ -1,272 +1,346 @@
-:root{
-  --bg:#071018;
-  --panel:#0c1a24;
-  --panel2:#0f2230;
-  --border:rgba(255,255,255,.08);
-  --text:#eaf6ff;
-  --muted:rgba(234,246,255,.65);
-  --muted2:rgba(234,246,255,.45);
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
 
-  --green:#22c55e;
-  --green2:#16a34a;
-  --blue:#3b82f6;
-  --gold:#f7b500;
-
-  --iran-green:#239F40;
-  --iran-red:#DA0000;
-
-  --r12:12px;
-  --r16:16px;
-  --r20:20px;
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  font-family: 'Inter', sans-serif;
 }
 
-*{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color: transparent;}
-body{
-  font-family:Inter,system-ui,Segoe UI,Arial;
-  background: radial-gradient(1200px 700px at 10% 0%, rgba(34,197,94,.18), transparent 60%),
-              radial-gradient(1000px 700px at 90% 30%, rgba(59,130,246,.16), transparent 55%),
-              linear-gradient(180deg, #041019 0%, #071018 60%, #06121b 100%);
-  color:var(--text);
-  max-width:480px;
-  margin:0 auto;
-  min-height:100vh;
+body {
+  background-color: #040c14;
+  color: #ffffff;
+  overflow-x: hidden;
+  min-height: 100vh;
 }
 
-/* Splash */
-.splash{min-height:100vh; display:flex; align-items:flex-end; position:relative; padding:18px;}
-.splash-bg{
-  position:absolute; inset:0;
-  background:
-    radial-gradient(800px 500px at 20% 10%, rgba(255,255,255,.08), transparent 60%),
-    radial-gradient(900px 500px at 80% 0%, rgba(34,197,94,.10), transparent 62%),
-    linear-gradient(180deg, rgba(0,0,0,.0), rgba(0,0,0,.35));
-}
-.splash-content{position:relative; width:100%; padding:28px 10px 18px; display:flex; flex-direction:column; align-items:center; gap:12px;}
-
-.splash-coin{margin-top:30px;}
-.coin-ring{
-  width:120px;height:120px;border-radius:50%;
-  background: linear-gradient(135deg, #b8860b, #ffd700, #b8860b);
-  padding:5px;
-  box-shadow:0 18px 40px rgba(255,215,0,.18), 0 0 60px rgba(255,215,0,.10);
-}
-.coin-face{
-  width:100%;height:100%;border-radius:50%;
-  border:3px solid rgba(255,255,255,.15);
-  overflow:hidden; position:relative;
-}
-.flag{display:flex; flex-direction:column; width:100%; height:100%;}
-.f{flex:1; display:flex; align-items:center; justify-content:center;}
-.f.g{background:var(--iran-green);}
-.f.w{background:#f0f0f0;}
-.f.r{background:var(--iran-red);}
-.allah{font-size:12px; font-weight:800; color:var(--iran-green);}
-.coin-iran{
-  position:absolute; inset:0;
-  display:flex; align-items:center; justify-content:center;
-  font-weight:900; font-size:24px;
-  opacity:.20; color:#000;
-  text-shadow:none;
+/* Splash Screen (تصویر برج میلاد و پرچم) */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: linear-gradient(to bottom, rgba(4,12,20,0.2) 0%, #040c14 70%), 
+              url('https://i.ibb.co/6Hq2T9b/tehran-milad-iran-flag-bg.jpg') center top / cover no-repeat;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 24px 20px 40px;
+  text-align: center;
 }
 
-.splash-title{font-weight:900; letter-spacing:3px; font-size:34px;}
-.splash-sub{color:var(--gold); font-weight:700; letter-spacing:2px; font-size:12px; margin-top:-6px;}
+.splash.hidden { display: none; }
 
-.splash-card{
-  width:100%;
-  background:rgba(12,26,36,.65);
-  border:1px solid var(--border);
-  border-radius:var(--r16);
-  padding:14px;
+.hero-coin {
+  position: absolute;
+  top: 25%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.coin-img {
+  width: 220px;
+  height: 220px;
+  filter: drop-shadow(0 0 40px rgba(255, 215, 0, 0.5));
+  animation: pulseCoin 3s ease-in-out infinite;
+}
+
+@keyframes pulseCoin {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.05); }
+}
+
+.hero-title {
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+  margin-bottom: 6px;
+}
+
+.hero-sub {
+  font-size: 15px;
+  color: #e2e8f0;
+  font-weight: 600;
+  margin-bottom: 25px;
+  text-shadow: 0 1px 5px rgba(0,0,0,0.8);
+}
+
+.hero-text {
+  font-size: 13px;
+  color: #cbd5e1;
+  line-height: 1.6;
+  margin-bottom: 25px;
+  padding: 0 10px;
+  text-shadow: 0 1px 5px rgba(0,0,0,0.8);
+}
+
+.hero-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.mini-action {
+  background: rgba(15, 31, 46, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 12px 15px;
+  color: #fff;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
   backdrop-filter: blur(10px);
 }
-.splash-welcome{font-size:16px; font-weight:800; margin-bottom:6px;}
-.splash-text{font-size:12.5px; color:var(--muted); line-height:1.6;}
 
-.splash-shortcuts{margin-top:12px; display:grid; grid-template-columns:repeat(4,1fr); gap:8px;}
-.shortcut{
-  border:1px solid var(--border);
-  background:rgba(255,255,255,.06);
-  border-radius:12px;
-  padding:10px 6px;
-  color:var(--text);
-  font-weight:700;
-  display:flex; flex-direction:column; align-items:center; gap:6px;
-  cursor:pointer;
+.start-btn {
+  width: 100%;
+  background: #10b981;
+  color: #ffffff;
+  border: none;
+  padding: 18px;
+  border-radius: 20px;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
 }
-.shortcut span{font-size:10px; color:var(--muted);}
-.shortcut:active{transform:scale(.97);}
 
-.btn-start{
-  width:100%;
-  background:linear-gradient(135deg,var(--green),var(--green2));
-  border:none;
-  border-radius:20px;
-  padding:14px 16px;
-  color:#041019;
-  font-weight:900;
-  font-size:15px;
-  cursor:pointer;
-}
-.btn-start:active{transform:scale(.99);}
+/* App Main Layout */
+.app { padding-bottom: 90px; }
+.app.hidden { display: none; }
 
-/* App shell */
-.hidden{display:none !important;}
-.app{min-height:100vh; display:flex; flex-direction:column;}
-.topbar{
-  position:sticky; top:0; z-index:10;
-  background:rgba(7,16,24,.82);
-  border-bottom:1px solid var(--border);
-  backdrop-filter: blur(10px);
-  padding:10px 12px;
-  display:flex; align-items:center; justify-content:space-between;
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: #040c14;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
 }
-.topbar-left{display:flex; align-items:center; gap:10px;}
-.back{
-  width:38px;height:34px;border-radius:10px;
-  border:1px solid var(--border);
-  background:rgba(255,255,255,.05);
-  color:var(--text);
-  font-size:18px;
-}
-.more{
-  width:38px;height:34px;border-radius:10px;
-  border:1px solid var(--border);
-  background:rgba(255,255,255,.05);
-  color:var(--muted);
-  font-size:20px;
-}
-.brand{display:flex; align-items:center; gap:10px;}
-.brand-flag{
-  width:34px;height:34px;border-radius:50%;
-  border:2px solid rgba(247,181,0,.85);
-  overflow:hidden; display:flex; flex-direction:column;
-}
-.bf{flex:1; display:flex; align-items:center; justify-content:center; font-size:6px; font-weight:900;}
-.bf.g{background:var(--iran-green);}
-.bf.w{background:#f0f0f0; color:var(--iran-green);}
-.bf.r{background:var(--iran-red);}
-.brand-title{font-size:13px; font-weight:900;}
-.brand-sub{font-size:11px; color:var(--muted2); margin-top:1px;}
 
-.page{padding:14px 14px 90px; flex:1;}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 
-.nav{
-  position:fixed; left:50%; transform:translateX(-50%);
-  bottom:0; width:100%; max-width:480px;
-  background:rgba(7,16,24,.92);
-  border-top:1px solid var(--border);
-  backdrop-filter: blur(10px);
-  display:flex; padding:8px 0;
+.brand-flag {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(255,255,255,0.2);
 }
-.nav-btn{
-  flex:1; border:none; background:transparent;
-  color:var(--muted2);
-  display:flex; flex-direction:column; align-items:center; gap:4px;
-  font-weight:700; cursor:pointer;
-}
-.nav-btn .ico{font-size:18px;}
-.nav-btn .lbl{font-size:10px;}
-.nav-btn.active{color:var(--green);}
 
-/* Cards */
-.card{
-  background:rgba(12,26,36,.75);
-  border:1px solid var(--border);
-  border-radius:var(--r16);
-  padding:14px;
-  backdrop-filter: blur(10px);
-}
-.header-row{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
-.h-title{font-weight:900; font-size:16px;}
-.h-sub{color:var(--muted); font-size:12px; margin-top:2px;}
+.brand-title { font-size: 17px; font-weight: 800; }
+.brand-sub { font-size: 11px; color: #94a3b8; }
 
-.balance-card{display:flex; gap:12px; align-items:center;}
-.coin-mini{
-  width:56px;height:56px;border-radius:50%;
-  background: linear-gradient(135deg, #b8860b, #ffd700, #b8860b);
-  padding:3px; flex:0 0 auto;
+.card {
+  background: #0d1b2a;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 24px;
+  padding: 20px;
+  margin: 0 16px 14px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2);
 }
-.coin-mini .inner{width:100%;height:100%;border-radius:50%; overflow:hidden; display:flex; flex-direction:column;}
-.coin-mini .inner div{flex:1;}
-.coin-mini .inner .g{background:var(--iran-green);}
-.coin-mini .inner .w{background:#f0f0f0; display:flex; align-items:center; justify-content:center; font-size:7px; color:var(--iran-green); font-weight:900;}
-.coin-mini .inner .r{background:var(--iran-red);}
 
-.balance-text{flex:1;}
-.balance-label{color:var(--muted); font-size:12px; font-weight:700;}
-.balance-amount{font-size:26px; font-weight:900; margin-top:4px;}
-.balance-amount span{font-size:14px; color:var(--muted);}
-.balance-ton{color:var(--muted2); font-size:12px; margin-top:4px;}
-.balance-ton b{color:var(--gold);}
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
-.grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px;}
-.tile{
-  background:rgba(15,34,48,.70);
-  border:1px solid var(--border);
-  border-radius:var(--r16);
-  padding:14px;
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  gap:8px; cursor:pointer; text-align:center;
-}
-.tile:active{transform:scale(.985);}
-.tile .t-ico{
-  width:44px;height:44px;border-radius:50%;
-  display:flex; align-items:center; justify-content:center;
-  font-weight:900;
-}
-.t-ico.green{background:rgba(34,197,94,.15); color:var(--green);}
-.t-ico.blue{background:rgba(59,130,246,.15); color:var(--blue);}
-.t-ico.gold{background:rgba(247,181,0,.12); color:var(--gold);}
-.t-ico.purple{background:rgba(168,85,247,.16); color:#a855f7;}
-.tile .t-title{font-weight:900; font-size:13px;}
-.tile .t-sub{font-size:11px; color:rgba(34,197,94,.95); font-weight:800;}
+.title { font-size: 17px; font-weight: 800; }
+.sub { font-size: 12px; color: #94a3b8; margin-top: 4px; }
 
-.list{display:flex; flex-direction:column; gap:10px; margin-top:12px;}
-.item{
-  display:flex; align-items:center; gap:12px;
-  background:rgba(15,34,48,.65);
-  border:1px solid var(--border);
-  border-radius:var(--r16);
-  padding:12px;
+.balance {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 20px 0;
 }
-.badge{
-  width:48px;height:48px;border-radius:14px;
-  display:flex; align-items:center; justify-content:center;
-  font-size:22px; font-weight:900;
-  flex:0 0 auto;
-}
-.badge.c1{background:linear-gradient(135deg,#1e3a5f,#2563eb);}
-.badge.c2{background:linear-gradient(135deg,#7c3aed,#db2777);}
-.badge.c3{background:linear-gradient(135deg,#065f46,#059669);}
-.badge.c4{background:linear-gradient(135deg,#1e40af,#7c3aed);}
-.badge.c5{background:linear-gradient(135deg,#92400e,#d97706);}
 
-.item-info{flex:1;}
-.item-title{font-weight:800; font-size:13px;}
-.item-meta{display:flex; gap:10px; margin-top:5px; color:var(--muted2); font-size:11px;}
-.item-meta .gold{color:var(--gold); font-weight:900;}
-.btn{
-  border:none; cursor:pointer;
-  padding:9px 16px;
-  border-radius:12px;
-  font-weight:900;
-  background:linear-gradient(135deg,var(--green),var(--green2));
-  color:#041019;
+.coin-sm img {
+  width: 65px;
+  height: 65px;
+  filter: drop-shadow(0 4px 10px rgba(255, 215, 0, 0.3));
 }
-.btn:disabled{opacity:.6; cursor:not-allowed; background:rgba(255,255,255,.10); color:var(--muted);}
 
-.toast{
-  position:fixed; top:64px; left:50%; transform:translateX(-50%) translateY(-120px);
-  background:rgba(15,34,48,.92);
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:10px 14px;
-  font-weight:800;
-  font-size:12px;
-  z-index:9999;
-  transition:.25s;
+.blabel { font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
+.bamount { font-size: 28px; font-weight: 900; color: #ffffff; }
+.bamount span { font-size: 14px; font-weight: 700; color: #cbd5e1; }
+.bton { font-size: 13px; color: #94a3b8; margin-top: 4px; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
 }
-.toast.show{transform:translateX(-50%) translateY(0);}
-.toast.ok{border-color:rgba(34,197,94,.35); color:var(--green);}
-.toast.err{border-color:rgba(239,68,68,.35); color:#ef4444;}
+
+.tile {
+  background: #122336;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 20px;
+  padding: 16px 12px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+.tico { 
+  width: 44px; 
+  height: 44px; 
+  background: rgba(16,185,129,0.1); 
+  color: #10b981; 
+  border-radius: 50%; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-size: 20px; 
+  margin-bottom: 10px; 
+}
+.tile:nth-child(2) .tico { background: rgba(59,130,246,0.1); color: #3b82f6; }
+.tile:nth-child(3) .tico { background: rgba(245,158,11,0.1); color: #f59e0b; }
+.tile:nth-child(4) .tico { background: rgba(236,72,153,0.1); color: #ec4899; }
+
+.tname { font-size: 14px; font-weight: 700; color: #f1f5f9; }
+.tsub { font-size: 11px; color: #10b981; font-weight: 600; margin-top: 4px; }
+
+/* Tap Tap Miner (نقشه ایران طلایی) */
+.tap-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 0;
+  position: relative;
+}
+
+.tap-coin {
+  width: 240px;
+  height: 240px;
+  background: url('https://i.ibb.co/3s8s22H/iran-map-gold-3d.png') center/contain no-repeat;
+  cursor: pointer;
+  transition: transform 0.05s ease;
+  filter: drop-shadow(0 0 30px rgba(245, 158, 11, 0.4));
+}
+
+.tap-coin:active { transform: scale(0.92); }
+
+.energy-bar {
+  width: 100%;
+  height: 12px;
+  background: #1e293b;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 20px;
+}
+
+.energy-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b, #10b981);
+  width: 100%;
+  transition: width 0.1s linear;
+}
+
+.floating-num {
+  position: absolute;
+  color: #ffffff;
+  font-size: 32px;
+  font-weight: 900;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+  pointer-events: none;
+  animation: floatUp 0.8s ease-out forwards;
+}
+
+@keyframes floatUp {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-80px); }
+}
+
+.nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  background: #091522;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 100;
+}
+
+.nav-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  flex: 1;
+}
+
+.nav-btn .i { font-size: 22px; filter: grayscale(100%) opacity(0.6); }
+.nav-btn.active { color: #10b981; }
+.nav-btn.active .i { filter: none; }
+
+.btn {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  background: #334155 !important;
+  opacity: 0.7;
+}
+
+.list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #122336;
+  padding: 14px;
+  border-radius: 16px;
+  margin-bottom: 10px;
+  border: 1px solid rgba(255,255,255,0.03);
+}
+
+.list-item-left { display: flex; align-items: center; gap: 12px; }
+
+.list-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+.list-icon.c1 { background: #1e3a8a; color: #60a5fa; }
+.list-icon.c2 { background: #7c2d12; color: #fb923c; }
+
+.list-title { font-size: 14px; font-weight: 700; color: #f8fafc; }
+.list-reward { font-size: 12px; color: #f59e0b; font-weight: 600; margin-top: 4px; }
