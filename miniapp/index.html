@@ -1,98 +1,67 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <title>IRAN Coin Bot</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+  <link rel="stylesheet" href="style.css?v=500" />
 </head>
-
 <body>
-  <!-- Splash -->
+  <!-- صفحه اسپلش برج میلاد و پرچم (طرح عکس اول) -->
   <section id="splash" class="splash">
-    <div class="splash-bg"></div>
+    <div>
+      <div class="hero-coin">
+        <img src="https://i.ibb.co/3s8s22H/iran-map-gold-3d.png" class="coin-img" alt="IRAN Coin" />
+      </div>
+      <div class="hero-title">IRAN COIN</div>
+      <div class="hero-sub">Earn • Play • Withdraw</div>
+    </div>
 
-    <div class="splash-content">
-      <div class="splash-coin">
-        <div class="coin-ring">
-          <div class="coin-face">
-            <div class="flag">
-              <div class="f g"></div>
-              <div class="f w">
-                <span class="allah">الله</span>
-              </div>
-              <div class="f r"></div>
-            </div>
-            <div class="coin-iran">IRAN</div>
-          </div>
-        </div>
+    <div>
+      <div class="hero-text">
+        Welcome to IRAN Coin! Watch ads, complete tasks, tap miner, and invite friends to earn IRAN coins.
       </div>
 
-      <div class="splash-title">IRAN COIN</div>
-      <div class="splash-sub">Earn • Play • Withdraw</div>
-
-      <div class="splash-card">
-        <div class="splash-welcome">Welcome to IRAN Coin!</div>
-        <div class="splash-text">
-          Watch ads, complete tasks and invite friends. Earn IRAN coins and withdraw to your wallet.
-        </div>
-
-        <div class="splash-shortcuts">
-          <button class="shortcut" onclick="openApp('ads')">▶<span>Watch Ads</span></button>
-          <button class="shortcut" onclick="openApp('tasks')">✓<span>Tasks</span></button>
-          <button class="shortcut" onclick="openApp('invite')">👥<span>Invite</span></button>
-          <button class="shortcut" onclick="openApp('withdraw')">↑<span>Withdraw</span></button>
-        </div>
+      <div class="hero-actions">
+        <div class="mini-action" onclick="openApp('ads')">▶<span>Watch Ads</span></div>
+        <div class="mini-action" onclick="openApp('tasks')">✓<span>Tasks</span></div>
+        <div class="mini-action" onclick="openCPXOfferwall()">📋<span>Surveys</span></div>
+        <div class="mini-action" onclick="openApp('miner')">⛏<span>Miner</span></div>
       </div>
 
-      <button class="btn-start" onclick="openApp('home')">🚀 Start</button>
+      <button class="start-btn" onclick="openApp('home')">🚀 Start</button>
     </div>
   </section>
 
-  <!-- App -->
+  <!-- برنامه اصلی -->
   <section id="app" class="app hidden">
     <header class="topbar">
-      <div class="topbar-left">
-        <button id="backBtn" class="back hidden" onclick="goBack()">←</button>
-        <div class="brand">
-          <div class="brand-flag">
-            <div class="bf g"></div>
-            <div class="bf w"><span>الله</span></div>
-            <div class="bf r"></div>
-          </div>
-          <div class="brand-text">
-            <div class="brand-title">IRAN Coin Bot</div>
-            <div class="brand-sub">mini app</div>
-          </div>
+      <div class="brand">
+        <div class="brand-flag">
+          <img src="https://flagcdn.com/w80/ir.png" alt="Iran" style="width:100%; height:100%; object-fit:cover;" />
+        </div>
+        <div>
+          <div class="brand-title">IRAN Coin Bot</div>
+          <div class="brand-sub">mini app</div>
         </div>
       </div>
-      <button class="more">⋮</button>
+      <button id="backBtn" class="hidden" onclick="goBack()" style="background:none; border:none; color:white; font-size:22px; cursor:pointer;">←</button>
     </header>
 
     <main id="page" class="page"></main>
 
+    <!-- منوی پایین -->
     <nav class="nav">
-      <button class="nav-btn active" data-page="home" onclick="navTo('home')">
-        <span class="ico">🏠</span><span class="lbl">Home</span>
-      </button>
-      <button class="nav-btn" data-page="ads" onclick="navTo('ads')">
-        <span class="ico">▶</span><span class="lbl">Ads</span>
-      </button>
-      <button class="nav-btn" data-page="tasks" onclick="navTo('tasks')">
-        <span class="ico">✓</span><span class="lbl">Tasks</span>
-      </button>
-      <button class="nav-btn" data-page="wallet" onclick="navTo('wallet')">
-        <span class="ico">👛</span><span class="lbl">Wallet</span>
-      </button>
-      <button class="nav-btn" data-page="more" onclick="navTo('more')">
-        <span class="ico">≡</span><span class="lbl">More</span>
-      </button>
+      <button class="nav-btn active" data-page="home" onclick="navTo('home')"><span class="i">🏠</span><span>Home</span></button>
+      <button class="nav-btn" data-page="ads" onclick="navTo('ads')"><span class="i">▶</span><span>Ads</span></button>
+      <button class="nav-btn" data-page="miner" onclick="navTo('miner')"><span class="i">⛏</span><span>Miner</span></button>
+      <button class="nav-btn" data-page="tasks" onclick="navTo('tasks')"><span class="i">✓</span><span>Tasks</span></button>
+      <button class="nav-btn" data-page="wallet" onclick="navTo('wallet')"><span class="i">👛</span><span>Wallet</span></button>
     </nav>
   </section>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=500"></script>
 </body>
 </html>
