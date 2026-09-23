@@ -8,7 +8,7 @@
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
-    <!-- Adsgram SDK -->
+    <!-- Adsgram Official SDK -->
     <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 
     <!-- Google Fonts -->
@@ -111,7 +111,7 @@
             text-transform: uppercase;
         }
 
-        /* Tabs Section - Direct Display Control */
+        /* Tabs Section */
         .tab-section {
             display: none;
             padding: 20px;
@@ -540,35 +540,30 @@
 
     <!-- JavaScript Controller -->
     <script>
-        // --- 1. Global Tab Switcher (Completely Error-Proof) ---
+        // --- 1. Global Tab Switcher ---
         function switchTab(tabId, el) {
             try {
-                // Hide all tab sections
                 const tabs = document.querySelectorAll('.tab-section');
                 tabs.forEach(tab => {
                     tab.classList.remove('active-tab');
                     tab.style.display = 'none';
                 });
 
-                // Remove active from all nav items
                 const navItems = document.querySelectorAll('.nav-item');
                 navItems.forEach(item => {
                     item.classList.remove('active');
                 });
 
-                // Show selected tab
                 const targetTab = document.getElementById(tabId);
                 if (targetTab) {
                     targetTab.classList.add('active-tab');
                     targetTab.style.display = 'flex';
                 }
 
-                // Set active style on clicked item
                 if (el) {
                     el.classList.add('active');
                 }
 
-                // If lucky wheel opened, redraw canvas
                 if (tabId === 'tab-spin') {
                     setTimeout(drawWheel, 100);
                 }
@@ -586,7 +581,6 @@
             } catch (e) {}
         }
 
-        // Default Admin ID if Telegram user is not resolved
         const telegramUser = tg?.initDataUnsafe?.user || { id: 979411415, first_name: "Player" };
         const BACKEND_URL = "https://iran-coin-bot-production.up.railway.app";
 
@@ -605,7 +599,6 @@
         }
         updateBalanceUI();
 
-        // Energy Refill Loop
         setInterval(() => {
             if (energy < maxEnergy) {
                 energy = Math.min(maxEnergy, energy + 2);
@@ -620,8 +613,6 @@
 
         // --- 4. Tap-Tap Game ---
         const tapBtn = document.getElementById('tapBtn');
-        
-        // Setup handler working for both touches and mouse clicks
         const tapHandler = (e) => {
             if (energy <= 0) return;
 
@@ -630,13 +621,11 @@
             updateBalanceUI();
             updateEnergyUI();
 
-            // Spawn +1 Floating Animation
             const num = document.createElement('div');
             num.className = 'tap-number';
             num.innerText = '+1';
             
             const rect = tapBtn.getBoundingClientRect();
-            // Resolve X/Y coordinates based on mouse/touch input
             const clientX = e.clientX || (e.touches && e.touches[0].clientX);
             const clientY = e.clientY || (e.touches && e.touches[0].clientY);
             
@@ -658,17 +647,14 @@
 
         tapBtn.addEventListener('pointerdown', tapHandler);
 
-        // --- 5. Adsgram Video Ads System (Block ID: 49410 - with Test/Debug Mode) ---
+        // --- 5. Adsgram Video Ads (Active Block ID: 49410) ---
         let AdController = null;
         function getAdController() {
             if (!AdController && window.Adsgram) {
                 try {
-                    AdController = window.Adsgram.init({ 
-                        blockId: "49410", 
-                        debug: true // 👈 Allows testing ads on Desktop/Browsers and avoids "Block Inactive" error!
-                    });
-                } catch(e){
-                    console.error("Adsgram Initialization Error:", e);
+                    AdController = window.Adsgram.init({ blockId: "49410" });
+                } catch(e) {
+                    console.error("Adsgram Init Error:", e);
                 }
             }
             return AdController;
@@ -677,7 +663,7 @@
         async function watchVideoAd() {
             const controller = getAdController();
             if (!controller) {
-                alert("Adsgram service is loading. Please click again in 2 seconds!");
+                alert("Adsgram service is initializing. Please try again in 3 seconds!");
                 return;
             }
 
@@ -687,15 +673,15 @@
                     balance += 100;
                     updateBalanceUI();
                     
-                    // Call backend to log transaction
+                    // Log watch activity to Railway backend
                     fetch(`${BACKEND_URL}/api/v1/ads/watch?telegram_id=${telegramUser.id}`).catch(()=>{});
-                    alert("🎉 Reward Success! +100 IRAN Coins added to your balance.");
+                    alert("🎉 Congratulations! +100 IRAN Coins added to your balance.");
+                } else {
+                    alert("⚠️ You must watch the full video to get rewarded.");
                 }
             } catch (err) {
-                alert("Ads service successfully loaded on test mode. Enjoy your coins!");
-                // Auto reward on test bypass
-                balance += 100;
-                updateBalanceUI();
+                console.warn("Adsgram Notice:", err);
+                alert("🎬 Ad service is processing. Please try again shortly!");
             }
         }
 
