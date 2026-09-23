@@ -4,7 +4,7 @@ const CONFIG = {
   API_URL: 'https://iran-coin-bot-production.up.railway.app/api/v1',
   BOT_USERNAME: 'IranCoinEarnBot',
   IRAN_TO_TON_RATE: 0.000002
-};
+const TAP_BTN_IMG = 'miner.jpg';
 
 const TG = window.Telegram?.WebApp;
 const state = { user: null, page: 'home', prev: null, energy: 1000, maxEnergy: 1000 };
