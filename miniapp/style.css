@@ -10,111 +10,105 @@
 }
 
 body {
-  background: radial-gradient(circle at top, #0f2b3c 0%, #060d15 100%);
+  background: radial-gradient(circle at top, #0f2b3c 0%, #040911 100%);
   color: #ffffff;
   overflow-x: hidden;
   min-height: 100vh;
 }
 
-/* Splash Screen (صفحه ورودی Web3 شیک) */
+/* --- Splash Screen (صفحه ورودی با بنر اختصاصی برج میلاد و پرچم) --- */
 .splash {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: radial-gradient(circle at top, #0d2a3a 0%, #040810 100%);
+  background: radial-gradient(circle at top, #113348 0%, #040810 100%);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 30px 20px 40px;
+  padding: 24px 20px 30px;
   text-align: center;
 }
 
 .splash.hidden { display: none; }
 
-.hero-coin {
-  margin: 40px auto 10px;
-  display: flex;
-  justify-content: center;
-}
-
-.gold-svg-coin {
-  width: 180px;
-  height: 180px;
-  filter: drop-shadow(0 0 35px rgba(245, 158, 11, 0.5));
-  animation: pulseCoin 3s ease-in-out infinite;
-}
-
-@keyframes pulseCoin {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+.splash-banner {
+  width: 100%;
+  max-width: 340px;
+  margin: 10px auto 0;
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(16,185,129,0.15) 0%, rgba(15,23,42,0.8) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 15px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 
 .hero-title {
-  font-size: 32px;
+  font-size: 30px;
   font-weight: 900;
   letter-spacing: 2px;
   color: #ffffff;
-  margin-bottom: 6px;
+  margin-top: 10px;
 }
 
 .hero-sub {
-  font-size: 15px;
-  color: #94a3b8;
-  font-weight: 600;
-  margin-bottom: 25px;
+  font-size: 14px;
+  color: #10b981;
+  font-weight: 700;
+  margin-bottom: 15px;
 }
 
 .hero-text {
-  font-size: 13px;
+  font-size: 12px;
   color: #cbd5e1;
-  line-height: 1.6;
-  margin-bottom: 25px;
-  padding: 0 10px;
+  line-height: 1.5;
+  margin-bottom: 20px;
 }
 
 .hero-actions {
   display: flex;
   justify-content: center;
-  gap: 12px;
-  margin-bottom: 30px;
+  gap: 8px;
+  margin-bottom: 20px;
 }
 
 .mini-action {
-  background: rgba(15, 31, 46, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 14px;
-  padding: 12px 15px;
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px 4px;
   color: #fff;
-  font-size: 12px;
+  font-size: 11px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .start-btn {
   width: 100%;
-  background: #10b981;
+  background: linear-gradient(135deg, #10b981, #059669);
   color: #ffffff;
   border: none;
-  padding: 18px;
-  border-radius: 20px;
+  padding: 16px;
+  border-radius: 16px;
   font-size: 18px;
   font-weight: 800;
   cursor: pointer;
   box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
 }
 
-/* App Main Layout */
-.app { padding-bottom: 90px; }
+/* --- App Main Layout --- */
+.app { padding-bottom: 85px; }
 .app.hidden { display: none; }
 
 .topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
-  background: #060d15;
+  padding: 14px 20px;
+  background: #040911;
   position: sticky;
   top: 0;
   z-index: 50;
@@ -124,31 +118,31 @@ body {
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
-.brand-icon {
-  width: 36px;
-  height: 36px;
+.brand-badge {
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  background: #10b981;
-  color: white;
+  background: linear-gradient(135deg, #10b981, #047857);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 900;
-  font-size: 18px;
+  font-size: 16px;
+  box-shadow: 0 0 10px rgba(16,185,129,0.3);
 }
 
-.brand-title { font-size: 17px; font-weight: 800; }
-.brand-sub { font-size: 11px; color: #94a3b8; }
+.brand-title { font-size: 16px; font-weight: 800; }
+.brand-sub { font-size: 10px; color: #94a3b8; }
 
 .card {
-  background: #0c1824;
+  background: #0d1a26;
   border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 24px;
-  padding: 20px;
-  margin: 0 16px 14px;
+  border-radius: 20px;
+  padding: 18px;
+  margin: 0 16px 12px;
   box-shadow: 0 8px 25px rgba(0,0,0,0.3);
 }
 
@@ -158,40 +152,40 @@ body {
   align-items: center;
 }
 
-.title { font-size: 17px; font-weight: 800; }
-.sub { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+.title { font-size: 16px; font-weight: 800; }
+.sub { font-size: 12px; color: #94a3b8; margin-top: 2px; }
 
 .balance {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin: 20px 0;
+  gap: 14px;
+  margin: 16px 0;
   background: rgba(255,255,255,0.02);
-  padding: 15px;
-  border-radius: 18px;
+  padding: 12px 16px;
+  border-radius: 16px;
 }
 
 .coin-sm {
-  width: 50px;
-  height: 50px;
+  width: 48px;
+  height: 48px;
 }
 
-.blabel { font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
-.bamount { font-size: 28px; font-weight: 900; color: #ffffff; }
-.bamount span { font-size: 14px; font-weight: 700; color: #cbd5e1; }
-.bton { font-size: 13px; color: #94a3b8; margin-top: 4px; }
+.blabel { font-size: 11px; color: #94a3b8; margin-bottom: 2px; }
+.bamount { font-size: 26px; font-weight: 900; color: #ffffff; }
+.bamount span { font-size: 13px; font-weight: 700; color: #cbd5e1; }
+.bton { font-size: 12px; color: #f59e0b; margin-top: 2px; }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: 10px;
 }
 
 .tile {
-  background: #112233;
+  background: #122434;
   border: 1px solid rgba(255, 255, 255, 0.04);
-  border-radius: 20px;
-  padding: 16px 12px;
+  border-radius: 16px;
+  padding: 14px 10px;
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -200,51 +194,53 @@ body {
 }
 
 .tico { 
-  width: 44px; 
-  height: 44px; 
-  background: rgba(16,185,129,0.1); 
+  width: 40px; 
+  height: 40px; 
+  background: rgba(16,185,129,0.12); 
   color: #10b981; 
   border-radius: 50%; 
   display: flex; 
   align-items: center; 
   justify-content: center; 
-  font-size: 20px; 
-  margin-bottom: 10px; 
+  font-size: 18px; 
+  margin-bottom: 8px; 
 }
-.tile:nth-child(2) .tico { background: rgba(59,130,246,0.1); color: #3b82f6; }
-.tile:nth-child(3) .tico { background: rgba(245,158,11,0.1); color: #f59e0b; }
-.tile:nth-child(4) .tico { background: rgba(236,72,153,0.1); color: #ec4899; }
+.tile:nth-child(2) .tico { background: rgba(59,130,246,0.12); color: #3b82f6; }
+.tile:nth-child(3) .tico { background: rgba(245,158,11,0.12); color: #f59e0b; }
+.tile:nth-child(4) .tico { background: rgba(236,72,153,0.12); color: #ec4899; }
 
-.tname { font-size: 14px; font-weight: 700; color: #f1f5f9; }
-.tsub { font-size: 11px; color: #10b981; font-weight: 600; margin-top: 4px; }
+.tname { font-size: 13px; font-weight: 700; color: #f1f5f9; }
+.tsub { font-size: 10px; color: #10b981; font-weight: 600; margin-top: 2px; }
 
-/* Tap Tap Miner Area */
+/* --- Tap-Tap Miner (نقشه طلایی و سه‌بعدی ایران) --- */
 .tap-area {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px 0;
+  padding: 15px 0;
   position: relative;
 }
 
-.tap-coin {
-  width: 220px;
-  height: 220px;
+.tap-iran-map {
+  width: 250px;
+  height: 230px;
   cursor: pointer;
   transition: transform 0.05s ease;
-  filter: drop-shadow(0 0 30px rgba(245, 158, 11, 0.4));
+  filter: drop-shadow(0 0 25px rgba(245, 158, 11, 0.5));
 }
 
-.tap-coin:active { transform: scale(0.92); }
+.tap-iran-map:active {
+  transform: scale(0.93);
+}
 
 .energy-bar {
   width: 100%;
-  height: 12px;
+  height: 10px;
   background: #1e293b;
-  border-radius: 6px;
+  border-radius: 5px;
   overflow: hidden;
-  margin-top: 20px;
+  margin-top: 15px;
 }
 
 .energy-fill {
@@ -266,17 +262,18 @@ body {
 
 @keyframes floatUp {
   0% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-80px); }
+  100% { opacity: 0; transform: translateY(-70px); }
 }
 
+/* Bottom Nav */
 .nav {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 70px;
-  background: #060d15;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  height: 65px;
+  background: #040911;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -290,21 +287,21 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  font-size: 11px;
+  gap: 3px;
+  font-size: 10px;
   font-weight: 600;
   cursor: pointer;
   flex: 1;
 }
 
-.nav-btn .i { font-size: 22px; }
+.nav-btn .i { font-size: 20px; }
 .nav-btn.active { color: #10b981; }
 
 .btn {
   background: #10b981;
   color: white;
   border: none;
-  padding: 10px 20px;
+  padding: 10px 18px;
   border-radius: 12px;
   font-weight: 700;
   font-size: 13px;
@@ -320,26 +317,26 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #112233;
-  padding: 14px;
-  border-radius: 16px;
-  margin-bottom: 10px;
+  background: #122434;
+  padding: 12px 14px;
+  border-radius: 14px;
+  margin-bottom: 8px;
   border: 1px solid rgba(255,255,255,0.03);
 }
 
-.list-item-left { display: flex; align-items: center; gap: 12px; }
+.list-item-left { display: flex; align-items: center; gap: 10px; }
 
 .list-icon {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 18px;
 }
 .list-icon.c1 { background: #1e3a8a; color: #60a5fa; }
 .list-icon.c2 { background: #7c2d12; color: #fb923c; }
 
-.list-title { font-size: 14px; font-weight: 700; color: #f8fafc; }
-.list-reward { font-size: 12px; color: #f59e0b; font-weight: 600; margin-top: 4px; }
+.list-title { font-size: 13px; font-weight: 700; color: #f8fafc; }
+.list-reward { font-size: 11px; color: #f59e0b; font-weight: 600; margin-top: 2px; }
