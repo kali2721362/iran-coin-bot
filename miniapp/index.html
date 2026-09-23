@@ -6,10 +6,10 @@
   <title>IRAN Coin Bot</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
-  <link rel="stylesheet" href="style.css?v=7000" />
+  <link rel="stylesheet" href="style.css?v=99999" />
 </head>
 <body>
-  <!-- Splash Screen (پس‌زمینه اصلی برج میلاد و آزادي) -->
+  <!-- Splash Screen -->
   <section id="splash" class="splash">
     <div class="splash-hero">
       <div class="hero-title">IRAN COIN</div>
@@ -22,13 +22,13 @@
       </div>
 
       <div class="hero-actions">
-        <div class="mini-action" onclick="openApp('ads')">▶<span>Watch Ads</span></div>
-        <div class="mini-action" onclick="openApp('miner')">⛏<span>Miner</span></div>
-        <div class="mini-action" onclick="openApp('tasks')">✓<span>Tasks</span></div>
-        <div class="mini-action" onclick="openCPXOfferwall()">📋<span>Surveys</span></div>
+        <div class="mini-action" onclick="window.openApp('ads')">▶<span>Watch Ads</span></div>
+        <div class="mini-action" onclick="window.openApp('miner')">⛏<span>Miner</span></div>
+        <div class="mini-action" onclick="window.openApp('tasks')">✓<span>Tasks</span></div>
+        <div class="mini-action" onclick="window.openCPXOfferwall()">📋<span>Surveys</span></div>
       </div>
 
-      <button class="start-btn" onclick="openApp('home')">🚀 Start Playing</button>
+      <button class="start-btn" onclick="window.openApp('home')">🚀 Start Playing</button>
     </div>
   </section>
 
@@ -42,21 +42,21 @@
           <div class="brand-sub">mini app</div>
         </div>
       </div>
-      <button id="backBtn" class="hidden" onclick="goBack()" style="background:none; border:none; color:white; font-size:22px; cursor:pointer;">←</button>
+      <button id="backBtn" class="hidden" onclick="window.goBack()" style="background:none; border:none; color:white; font-size:22px; cursor:pointer;">←</button>
     </header>
 
     <main id="page" class="page"></main>
 
     <!-- Bottom Nav -->
     <nav class="nav">
-      <button class="nav-btn active" data-page="home" onclick="navTo('home')"><span class="i">🏠</span><span>Home</span></button>
-      <button class="nav-btn" data-page="ads" onclick="navTo('ads')"><span class="i">▶</span><span>Ads</span></button>
-      <button class="nav-btn" data-page="miner" onclick="navTo('miner')"><span class="i">⛏</span><span>Miner</span></button>
-      <button class="nav-btn" data-page="tasks" onclick="navTo('tasks')"><span class="i">✓</span><span>Tasks</span></button>
-      <button class="nav-btn" data-page="wallet" onclick="navTo('wallet')"><span class="i">👛</span><span>Wallet</span></button>
+      <button class="nav-btn active" data-page="home" onclick="window.navTo('home')"><span class="i">🏠</span><span>Home</span></button>
+      <button class="nav-btn" data-page="ads" onclick="window.navTo('ads')"><span class="i">▶</span><span>Ads</span></button>
+      <button class="nav-btn" data-page="miner" onclick="window.navTo('miner')"><span class="i">⛏</span><span>Miner</span></button>
+      <button class="nav-btn" data-page="tasks" onclick="window.navTo('tasks')"><span class="i">✓</span><span>Tasks</span></button>
+      <button class="nav-btn" data-page="wallet" onclick="window.navTo('wallet')"><span class="i">👛</span><span>Wallet</span></button>
     </nav>
   </section>
 
-  <script src="app.js?v=7000"></script>
+  <script src="app.js?v=99999"></script>
 </body>
 </html>
