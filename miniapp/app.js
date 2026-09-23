@@ -4,12 +4,10 @@ const CONFIG = {
   API_URL: 'https://iran-coin-bot-production.up.railway.app/api/v1',
   BOT_USERNAME: 'IranCoinEarnBot',
   IRAN_TO_TON_RATE: 0.000002
-const TAP_BTN_IMG = 'miner.jpg';
-}
-const TG = window.Telegram?.WebApp;
-const state = { user: null, page: 'home', prev: null, energy: 1000, maxEnergy: 1000 };
+};
 
-const TAP_BTN_IMG = 'https://i.postimg.cc/pT3Y09k9/iran-3d-map-miner-btn.jpg';
+const TG = window.Telegram?.WebApp;
+const state = { user: null, page: 'home', prev: 'home', energy: 1000, maxEnergy: 1000 };
 
 function money(n){
   return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -26,28 +24,47 @@ function toast(msg, type='ok'){
 }
 
 async function apiPost(path, body){
-  const r = await fetch(CONFIG.API_URL + path, {
-    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body || {})
-  });
-  return r.json();
+  try {
+    const r = await fetch(CONFIG.API_URL + path, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body || {})
+    });
+    return await r.json();
+  } catch(e) {
+    return { success: false, message: 'Network error' };
+  }
 }
 
 async function apiGet(path){
-  const r = await fetch(CONFIG.API_URL + path);
-  return r.json();
+  try {
+    const r = await fetch(CONFIG.API_URL + path);
+    return await r.json();
+  } catch(e) {
+    return { success: false };
+  }
 }
 
 async function init(){
-  if (TG){ TG.ready(); TG.expand(); TG.setHeaderColor('#040911'); TG.setBackgroundColor('#040911'); }
+  if (TG){
+    TG.ready();
+    TG.expand();
+    if (TG.setHeaderColor) TG.setHeaderColor('#040911');
+    if (TG.setBackgroundColor) TG.setBackgroundColor('#040911');
+  }
+
   const tgUser = TG?.initDataUnsafe?.user;
+
   if (!tgUser){
     state.user = { telegram_id: 111111, first_name: 'User', username: 'demo', balance: 0 };
     return;
   }
+
   const payload = {
     initData: TG?.initData || '',
     user: { id: tgUser.id, username: tgUser.username || '', first_name: tgUser.first_name || 'User' }
   };
+
   try {
     const res = await apiPost('/user/init', payload);
     state.user = res?.user || { telegram_id: tgUser.id, balance: 0 };
@@ -57,8 +74,10 @@ async function init(){
 }
 
 function openApp(page){
-  document.getElementById('splash')?.classList.add('hidden');
-  document.getElementById('app')?.classList.remove('hidden');
+  const splash = document.getElementById('splash');
+  const appEl = document.getElementById('app');
+  if (splash) splash.classList.add('hidden');
+  if (appEl) appEl.classList.remove('hidden');
   navTo(page || 'home');
 }
 
@@ -103,7 +122,7 @@ function renderHome(root){
       </div>
 
       <div class="balance">
-        <div class="coin-sm"><img src="${TAP_BTN_IMG}" style="border-radius:50%;" /></div>
+        <div class="coin-sm"><img src="miner.jpg" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="Coin" /></div>
         <div class="btxt">
           <div class="blabel">Your Balance</div>
           <div class="bamount">${money(u.balance)} <span>IRAN</span></div>
@@ -112,16 +131,16 @@ function renderHome(root){
       </div>
 
       <div class="grid">
-        <div class="tile" onclick="navTo('miner')">
+        <div class="tile" onclick="window.navTo('miner')">
           <div class="tico">⛏</div><div class="tname">Tap Miner</div><div class="tsub">Tap & Earn</div>
         </div>
-        <div class="tile" onclick="navTo('ads')">
+        <div class="tile" onclick="window.navTo('ads')">
           <div class="tico">▶</div><div class="tname">Watch Ads</div><div class="tsub">+5-20 IRAN</div>
         </div>
-        <div class="tile" onclick="navTo('tasks')">
+        <div class="tile" onclick="window.navTo('tasks')">
           <div class="tico">✓</div><div class="tname">Tasks</div><div class="tsub">+10-100 IRAN</div>
         </div>
-        <div class="tile" onclick="claimStreak()">
+        <div class="tile" onclick="window.claimStreak()">
           <div class="tico">🎁</div><div class="tname">Daily Bonus</div><div class="tsub">+10 IRAN</div>
         </div>
       </div>
@@ -136,7 +155,7 @@ function renderHome(root){
         <canvas id="wheelCanvas" width="220" height="220" style="border-radius: 50%; transition: transform 4s cubic-bezier(0.15, 0.85, 0.35, 1.2); box-shadow: 0 0 20px rgba(0,0,0,0.5);"></canvas>
       </div>
 
-      <button id="spinBtn" class="btn" onclick="spinWheel()" style="width:100%; margin-top:20px; padding:14px; font-size:16px;">Spin Now! 🎰</button>
+      <button id="spinBtn" class="btn" onclick="window.spinWheel()" style="width:100%; margin-top:20px; padding:14px; font-size:16px;">Spin Now! 🎰</button>
     </div>
   `;
 
@@ -148,12 +167,12 @@ function renderMiner(root){
   root.innerHTML = `
     <div class="card" style="text-align:center; padding: 25px 20px;">
       <div class="title" style="font-size:22px;">⛏ Tap-Tap Miner</div>
-      <div class="sub" style="margin-bottom:10px;">Tap the Iran map miner to earn IRAN!</div>
+      <div class="sub" style="margin-bottom:10px;">Tap the miner icon to earn IRAN!</div>
 
       <div class="bamount" id="minerBal" style="margin:15px 0; font-size:32px;">${money(u.balance)} <span>IRAN</span></div>
 
       <div class="tap-area">
-        <div id="tapCoin" class="tap-miner-btn" onclick="handleTap(event)"></div>
+        <div id="tapCoin" class="tap-miner-btn" onclick="window.handleTap(event)"></div>
       </div>
 
       <div style="margin-top:15px;">
@@ -175,6 +194,7 @@ function handleTap(e){
     return;
   }
   state.energy -= 1;
+  if (!state.user) state.user = { balance: 0 };
   state.user.balance += 1;
 
   const balEl = document.getElementById('minerBal');
@@ -297,7 +317,7 @@ async function loadTasks(){
             <div class="list-reward">+${t.reward} IRAN</div>
           </div>
         </div>
-        <button class="btn" id="btn-task-${t.id}" ${t.completed?'disabled':''} onclick="doTask(${t.id}, '${t.task_url}')">
+        <button class="btn" id="btn-task-${t.id}" ${t.completed?'disabled':''} onclick="window.doTask(${t.id}, '${t.task_url}')">
           ${t.completed?'Done':'Join'}
         </button>
       </div>
@@ -313,7 +333,7 @@ async function doTask(taskId, url){
     btn.style.background = "#f59e0b";
     return;
   }
-  btn.innerText = "...";
+  if (btn) btn.innerText = "...";
   const res = await apiPost('/tasks/complete', { telegram_id: state.user.telegram_id, task_id: taskId });
   if (res?.success) {
     state.user.balance = res.new_balance;
@@ -321,7 +341,7 @@ async function doTask(taskId, url){
     loadTasks();
   } else {
     toast(res?.message || 'Please join the channel first!', 'err');
-    btn.innerText = "Check";
+    if (btn) btn.innerText = "Check";
   }
 }
 
@@ -339,7 +359,7 @@ function renderAds(root){
               <div class="list-reward">+${a.reward} IRAN</div>
             </div>
           </div>
-          <button class="btn" onclick="watchAd(${a.id})">Watch</button>
+          <button class="btn" onclick="window.watchAd(${a.id})">Watch</button>
         </div>
       `).join('')}
     </div>
@@ -360,7 +380,7 @@ function renderWallet(root){
     <div class="card" style="text-align:center; padding:30px 20px;">
       <div class="title" style="font-size:20px; margin-bottom:20px;">Wallet</div>
       <div class="bamount" style="font-size:36px; margin-bottom:10px;">${money(u.balance)} <span>IRAN</span></div>
-      <button class="btn" style="width:100%; font-size:16px; padding:16px; margin-top:20px;" onclick="navTo('withdraw')">🚀 Withdraw to TON</button>
+      <button class="btn" style="width:100%; font-size:16px; padding:16px; margin-top:20px;" onclick="window.navTo('withdraw')">🚀 Withdraw to TON</button>
     </div>
   `;
 }
@@ -373,7 +393,7 @@ function renderWithdraw(root){
       <input id="tonAddr" style="width:100%; padding:14px; margin-bottom:20px; border-radius:12px; border:1px solid #1e293b; background:#040911; color:white; font-size:14px;" placeholder="UQ..." />
       <div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">Amount (Min: 10,000 IRAN)</div>
       <input id="wdAmount" type="number" style="width:100%; padding:14px; margin-bottom:20px; border-radius:12px; border:1px solid #1e293b; background:#040911; color:white; font-size:14px;" placeholder="10000" />
-      <button class="btn" style="width:100%; padding:14px; font-size:16px;" onclick="requestWithdraw()">Request Withdrawal</button>
+      <button class="btn" style="width:100%; padding:14px; font-size:16px;" onclick="window.requestWithdraw()">Request Withdrawal</button>
     </div>
   `;
 }
@@ -407,6 +427,26 @@ function shareReferral(){
   else window.open(shareUrl, '_blank');
 }
 
+async function openCPXOfferwall() {
+  try {
+      const userId = state.user?.telegram_id || TG?.initDataUnsafe?.user?.id || '111111';
+      const response = await apiGet(`/offerwall/link/${userId}`);
+
+      if (response && response.success && response.url) {
+          if (TG && TG.openLink) {
+              TG.openLink(response.url);
+          } else {
+              window.open(response.url, '_blank');
+          }
+      } else {
+          toast("Error getting offerwall link.", "err");
+      }
+  } catch (error) {
+      toast("Server connection error!", "err");
+  }
+}
+
+// اتصال قطعی توابع به window تا کلیک‌ها ۱۰۰٪ عمل کنند
 window.openApp = openApp;
 window.navTo = navTo;
 window.goBack = goBack;
@@ -417,5 +457,8 @@ window.spinWheel = spinWheel;
 window.shareReferral = shareReferral;
 window.claimStreak = claimStreak;
 window.handleTap = handleTap;
+window.openCPXOfferwall = openCPXOfferwall;
 
-window.addEventListener('DOMContentLoaded', async ()=>{ await init(); });
+window.addEventListener('DOMContentLoaded', async ()=>{ 
+  await init(); 
+});
