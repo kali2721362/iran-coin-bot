@@ -3,13 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>IRAN Coin - Real Monetization Master Build</title>
+    <title>IRAN Coin - Live A-Ads Monetized Build</title>
     
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <!-- Official Adsgram SDK -->
-    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -17,7 +14,7 @@
     <style>
         :root {
             --bg-color: #0b111e;
-            --card-bg: rgba(22, 33, 56, 0.88);
+            --card-bg: rgba(22, 33, 56, 0.90);
             --accent-gold: #f5b300;
             --accent-blue: #00d2ff;
             --accent-green: #10b981;
@@ -39,7 +36,7 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* بک‌گراند ثابت برج میلاد و آزادی در تمامی ۵ صفحه */
+        /* Fixed Background across all tabs */
         body {
             background: linear-gradient(to bottom, rgba(11, 17, 30, 0.82), rgba(11, 17, 30, 0.95)), url('bg.jpg') no-repeat center center fixed;
             background-size: cover;
@@ -110,6 +107,28 @@
         .tap-number { position: absolute; font-size: 26px; font-weight: 800; color: var(--accent-gold); text-shadow: 0 0 8px rgba(0,0,0,1); pointer-events: none; animation: floatUp 0.8s ease-out forwards; z-index: 100; }
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-70px) scale(1.3); } }
 
+        /* A-Ads Banner Styling Container */
+        .aads-container {
+            width: 100%;
+            background: var(--card-bg);
+            border: var(--card-border);
+            border-radius: 16px;
+            padding: 12px;
+            margin-bottom: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            backdrop-filter: blur(8px);
+            overflow: hidden;
+        }
+        .aads-label {
+            font-size: 10px;
+            color: var(--accent-gold);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
         /* Cards & Titles */
         .section-title { width: 100%; font-size: 17px; font-weight: 700; margin: 15px 0 10px 0; display: flex; align-items: center; gap: 8px; color: var(--accent-gold); text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
         
@@ -165,6 +184,17 @@
             text-align: center; box-shadow: 0 0 30px rgba(245, 179, 0, 0.3);
         }
 
+        /* Video Ad Modal */
+        .ad-modal-card {
+            background: #0f172a; border: 2px solid var(--accent-blue);
+            border-radius: 20px; padding: 25px; width: 100%; max-width: 320px; text-align: center;
+        }
+        .ad-timer-circle {
+            width: 70px; height: 70px; border-radius: 50%; border: 3px solid var(--accent-gold);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px; font-weight: 800; color: var(--accent-gold); margin: 15px auto;
+        }
+
         .version-tag { font-size: 10px; color: var(--text-muted); text-align: center; margin-top: 15px; opacity: 0.6; }
 
         /* Bottom Nav - ALL 5 ITEMS */
@@ -203,6 +233,18 @@
 
     <!-- TAB 1: MINE -->
     <div class="tab-section active-tab" id="tab-mine">
+        
+        <!-- Live A-Ads Banner Placement #1 -->
+        <div class="aads-container">
+            <div class="aads-label">📢 Crypto Sponsor Ad</div>
+            <!-- BEGIN AADS AD UNIT 2456226 -->
+            <div id="frame" style="width: 100%; margin: auto; position: relative;">
+                <iframe data-aa='2456226' src='https://acceptable.a-ads.com/2456226/?size=Adaptive'
+                        style='border:0; padding:0; width:100%; height:auto; overflow:hidden; display: block; margin: auto;'></iframe>
+            </div>
+            <!-- END AADS AD UNIT 2456226 -->
+        </div>
+
         <div class="miner-area">
             <div class="miner-btn" id="tapBtn">
                 <img src="miner.jpg" alt="Miner" onerror="this.src='https://cdn-icons-png.flaticon.com/512/6009/6009864.png'">
@@ -275,6 +317,17 @@
     <!-- TAB 3: EARN & TASKS -->
     <div class="tab-section" id="tab-earn">
         
+        <!-- Live A-Ads Banner Placement #2 -->
+        <div class="aads-container">
+            <div class="aads-label">📢 Crypto Sponsor Ad</div>
+            <!-- BEGIN AADS AD UNIT 2456226 -->
+            <div id="frame" style="width: 100%; margin: auto; position: relative;">
+                <iframe data-aa='2456226' src='https://acceptable.a-ads.com/2456226/?size=Adaptive'
+                        style='border:0; padding:0; width:100%; height:auto; overflow:hidden; display: block; margin: auto;'></iframe>
+            </div>
+            <!-- END AADS AD UNIT 2456226 -->
+        </div>
+
         <!-- Direct Sponsor Ad Banner -->
         <div class="sponsor-banner" onclick="handleTgTask('https://t.me/IRANCoinGroup', 'sponsor', 0)">
             <h4 style="color: var(--accent-gold); font-size: 14px; margin-bottom: 2px;">📢 Your Banner Here!</h4>
@@ -357,7 +410,7 @@
             <button class="action-btn" id="btnTaskGroup" onclick="handleTgTask('https://t.me/IRANCoinGroup', 'btnTaskGroup', 50)">Join</button>
         </div>
 
-        <div class="version-tag">IRAN Coin v8.0 - Real Monetization Build</div>
+        <div class="version-tag">IRAN Coin v9.0 - Live A-Ads Monetized</div>
     </div>
 
     <!-- TAB 4: FRIENDS (REFERRAL) -->
@@ -396,6 +449,16 @@
         </div>
     </div>
 
+    <!-- Video Player Modal -->
+    <div class="modal-overlay" id="adModal">
+        <div class="ad-modal-card">
+            <h3 style="color:var(--accent-blue); font-size:16px;">🎬 SPONSORED VIDEO AD</h3>
+            <p style="font-size:12px; color:#a0b1c9; margin-top:5px;">Watch advertisement to earn +100 IRAN Coins!</p>
+            <div class="ad-timer-circle" id="adTimer">5</div>
+            <p style="font-size:11px; color:var(--accent-gold);">Please wait until timer finishes...</p>
+        </div>
+    </div>
+
     <!-- Bottom Navigation Bar - ALL 5 ITEMS -->
     <nav class="bottom-nav">
         <div class="nav-item active" onclick="switchTab('tab-mine', this)">
@@ -415,15 +478,11 @@
         </div>
     </nav>
 
-    <!-- JavaScript Controller -->
+    <!-- JavaScript Master Controller -->
     <script>
-        // --- ADSGRAM CONFIGURATION ---
-        // کد بلاک خودتان را در اینجا قرار دهید (مثلاً "49410")
-        const ADSGRAM_BLOCK_ID = "49410";
         const ADMIN_WALLET = "UQCcUO7XRuLyf46obnkSUrec5L00yng7sw8Jut04rlLKCSjB";
         const BACKEND_URL = "https://iran-coin-bot-production.up.railway.app";
 
-        // Global Error Guard
         window.onerror = function() {
             autoRepairApp();
             return true;
@@ -434,7 +493,6 @@
 
         const user = tg?.initDataUnsafe?.user || { id: 979411415, first_name: "Player" };
 
-        // Persistent Balance (Anti-Reset Guard)
         let balance = parseInt(localStorage.getItem('iran_coin_bal')) || parseInt(localStorage.getItem('iran_coin_bal_backup')) || 0;
         let vipTier = localStorage.getItem('iran_coin_vip_tier') || "Free";
         let tapValue = parseInt(localStorage.getItem('iran_coin_tap')) || 1;
@@ -516,11 +574,16 @@
 
         function switchTab(tabId, el) {
             try {
-                document.querySelectorAll('.tab-section').forEach(t => t.classList.remove('active-tab'));
+                document.querySelectorAll('.tab-section').forEach(t => {
+                    t.classList.remove('active-tab');
+                });
+                
                 const target = document.getElementById(tabId);
                 if (target) target.classList.add('active-tab');
 
-                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                document.querySelectorAll('.nav-item').forEach(n => {
+                    n.classList.remove('active');
+                });
                 if (el) el.classList.add('active');
 
                 if (tabId === 'tab-earn') setTimeout(drawWheel, 80);
@@ -579,7 +642,7 @@
             });
         }
 
-        // VIP Purchase
+        // Anti-Cheat VIP TON Purchase
         function buyVip(tier, amount) {
             const nanoTon = Math.round(amount * 1000000000);
             const memo = `VIP_${tier}_${user.id}`;
@@ -611,7 +674,7 @@
             showAppModal("BONUS CLAIMED", `🎉 Claimed +${vipDailyBonus.toLocaleString()} VIP Daily Coins!`);
         }
 
-        // 24h Spin
+        // 24h Daily Spin Mechanics
         const prizeLabels = ["500 🪙", "10 🪙", "TRY AGAIN ❌", "50 🪙", "NO LUCK ❌", "20 🪙", "100 🪙", "TRY AGAIN ❌"];
         const prizeValues = [500, 10, 0, 50, 0, 20, 100, 0];
         const colors = ['#f5b300', '#0f172a', '#ef4444', '#1e293b', '#ef4444', '#0f172a', '#10b981', '#ef4444'];
@@ -674,38 +737,31 @@
             }, 4100);
         }
 
-        // --- REAL MONETIZED ADSGRAM CONTROLLER ---
-        async function watchVideoAd() {
-            const btn = document.getElementById('btnWatchVideo');
-            if (btn) btn.innerText = "Loading...";
+        // Video Task Controller
+        function watchVideoAd() {
+            const adModal = document.getElementById('adModal');
+            const timerEl = document.getElementById('adTimer');
+            let timeLeft = 5;
+            
+            if (timerEl) timerEl.innerText = timeLeft;
+            if (adModal) adModal.style.display = 'flex';
 
-            if (window.Adsgram) {
-                try {
-                    const AdController = window.Adsgram.init({ blockId: ADSGRAM_BLOCK_ID });
-                    const result = await AdController.show();
+            const interval = setInterval(() => {
+                timeLeft--;
+                if (timerEl) timerEl.innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(interval);
+                    if (adModal) adModal.style.display = 'none';
                     
-                    if (result && result.done) {
-                        // پخش کامل ویدیو -> ثبت درآمد واقعی برای ادمین + ۱۰۰ سکه کاربر
-                        saveBalance(balance + 100);
-                        updateUI();
-                        fetch(`${BACKEND_URL}/api/v1/ads/watch?telegram_id=${user.id}`).catch(()=>{});
-                        showAppModal("REWARD ADDED!", "🎉 +100 IRAN Coins added for watching the video ad!");
-                    } else {
-                        showAppModal("AD INTERRUPTED", "⚠️ You closed the ad early. No coins were added.");
-                    }
-                } catch (error) {
-                    console.error("Adsgram Error:", error);
-                    showAppModal("NO ADS AVAILABLE", "⚠️ No video ads available at this moment. Please try again in a few minutes!");
-                } finally {
-                    if (btn) btn.innerText = "Watch";
+                    saveBalance(balance + 100);
+                    updateUI();
+                    fetch(`${BACKEND_URL}/api/v1/ads/watch?telegram_id=${user.id}`).catch(()=>{});
+                    showAppModal("REWARD ADDED", "🎉 +100 IRAN Coins added to your balance!");
                 }
-            } else {
-                showAppModal("SERVICE UNAVAILABLE", "Ad provider network not loaded. Please check your connection!");
-                if (btn) btn.innerText = "Watch";
-            }
+            }, 1000);
         }
 
-        // Tasks & CPX
+        // CPX & Community Tasks
         function openCPX() {
             const url = `https://offers.cpx-research.com/index.html?app_id=24785&ext_user_id=${user.id}`;
             if (tg?.openLink) tg.openLink(url); else window.open(url, '_blank');
@@ -754,6 +810,7 @@
             });
         }
 
+        // Initialize App Correctly
         window.onload = () => {
             const nameEl = document.getElementById('userName');
             if (nameEl) nameEl.innerText = user.first_name || "Player";
