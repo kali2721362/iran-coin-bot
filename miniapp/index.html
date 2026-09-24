@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>IRAN Coin - VIP Mining & Earn</title>
+    <title>IRAN Coin - Secure VIP Mining & Earn</title>
 
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -39,6 +39,7 @@
             font-family: 'Poppins', sans-serif;
         }
 
+        /* بک‌گراند ثابت برج میلاد و آزادی */
         body {
             background: linear-gradient(to bottom, rgba(11, 17, 30, 0.82), rgba(11, 17, 30, 0.95)), url('bg.jpg') no-repeat center center fixed;
             background-size: cover;
@@ -238,7 +239,7 @@
                 <span>🔋 <strong>Max Energy:</strong> 1,500 Energy</span>
                 <span>🎁 <strong>Daily Bonus:</strong> +500 Coins / 24h</span>
             </div>
-            <button class="ton-btn" id="btnVipBronze" onclick="buyVipTon('Bronze', 0.1, 2, 1500, 500)">Buy for 0.1 TON 💎</button>
+            <button class="ton-btn" id="btnVipBronze" onclick="buyVipTon('Bronze', 0.1)">Buy for 0.1 TON 💎</button>
         </div>
 
         <!-- Tier 2: Silver -->
@@ -252,7 +253,7 @@
                 <span>🔋 <strong>Max Energy:</strong> 3,000 Energy</span>
                 <span>🎁 <strong>Daily Bonus:</strong> +2,000 Coins / 24h</span>
             </div>
-            <button class="ton-btn" id="btnVipSilver" onclick="buyVipTon('Silver', 0.5, 5, 3000, 2000)">Buy for 0.5 TON 💎</button>
+            <button class="ton-btn" id="btnVipSilver" onclick="buyVipTon('Silver', 0.5)">Buy for 0.5 TON 💎</button>
         </div>
 
         <!-- Tier 3: Gold -->
@@ -266,7 +267,7 @@
                 <span>🔋 <strong>Max Energy:</strong> 5,000 Energy</span>
                 <span>🎁 <strong>Daily Bonus:</strong> +5,000 Coins / 24h</span>
             </div>
-            <button class="ton-btn" id="btnVipGold" style="background: var(--btn-grad); color: #000;" onclick="buyVipTon('Gold', 1.5, 10, 5000, 5000)">Buy for 1.5 TON 👑</button>
+            <button class="ton-btn" id="btnVipGold" style="background: var(--btn-grad); color: #000;" onclick="buyVipTon('Gold', 1.5)">Buy for 1.5 TON 👑</button>
         </div>
 
         <!-- Tier 4: Diamond -->
@@ -280,7 +281,7 @@
                 <span>🔋 <strong>Max Energy:</strong> 10,000 Energy</span>
                 <span>🎁 <strong>Daily Bonus:</strong> +15,000 Coins / 24h</span>
             </div>
-            <button class="ton-btn" id="btnVipDiamond" style="background: linear-gradient(135deg, #00d2ff, #0088cc); font-size:14px;" onclick="buyVipTon('Diamond', 3.0, 25, 10000, 15000)">Buy for 3.0 TON 💎</button>
+            <button class="ton-btn" id="btnVipDiamond" style="background: linear-gradient(135deg, #00d2ff, #0088cc); font-size:14px;" onclick="buyVipTon('Diamond', 3.0)">Buy for 3.0 TON 💎</button>
         </div>
     </div>
 
@@ -364,7 +365,7 @@
             <button class="action-btn" id="btnTaskGroup" onclick="handleTgTask('https://t.me/IRANCoinGroup', 'btnTaskGroup', 50)">Join</button>
         </div>
 
-        <div class="version-tag">Version 3.0 - VIP & Spin Active</div>
+        <div class="version-tag">Version 4.0 - Secure VIP Protected</div>
     </div>
 
     <!-- Tab 4: Friends -->
@@ -399,10 +400,7 @@
         <div class="modal-card">
             <div style="font-size: 18px; font-weight: 800; color: var(--accent-gold); margin-bottom: 8px;" id="modalTitle">NOTIFICATION</div>
             <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 18px; line-height: 1.4;" id="modalDesc">Message content goes here.</div>
-            <div style="display: flex; gap: 10px;">
-                <button class="action-btn full-btn" id="modalBtnConfirm" style="display:none;" onclick="confirmModalAction()">Confirm</button>
-                <button class="action-btn full-btn" id="modalBtnClose" onclick="closeModal()">Close</button>
-            </div>
+            <button class="action-btn full-btn" id="modalBtnClose" onclick="closeModal()">Close</button>
         </div>
     </div>
 
@@ -430,24 +428,13 @@
         const ADMIN_TON_WALLET = "UQCcUO7XRuLyf46obnkSUrec5L00yng7sw8Jut04rlLKCSjB";
         const BACKEND_URL = "https://iran-coin-bot-production.up.railway.app";
 
-        let modalConfirmCallback = null;
-
-        function showAppModal(title, text, showConfirm = false, onConfirm = null) {
+        function showAppModal(title, text) {
             document.getElementById('modalTitle').innerText = title;
             document.getElementById('modalDesc').innerText = text;
-            const btnConfirm = document.getElementById('modalBtnConfirm');
-            if (showConfirm) {
-                btnConfirm.style.display = 'block';
-                modalConfirmCallback = onConfirm;
-            } else {
-                btnConfirm.style.display = 'none';
-                modalConfirmCallback = null;
-            }
             document.getElementById('customModal').style.display = 'flex';
         }
 
         function closeModal() { document.getElementById('customModal').style.display = 'none'; }
-        function confirmModalAction() { closeModal(); if (modalConfirmCallback) modalConfirmCallback(); }
 
         // Navigation
         function switchTab(tabId, el) {
@@ -480,7 +467,7 @@
         document.getElementById('userName').innerText = telegramUser.first_name || "Player";
         document.getElementById('userAvatar').childNodes[0].nodeValue = (telegramUser.first_name || "P").charAt(0).toUpperCase();
 
-        // Persistent Game State
+        // Persistent Game State (Strict VIP Enforcement)
         let balance = parseInt(localStorage.getItem('iran_coin_bal')) || 0;
         let vipTier = localStorage.getItem('iran_coin_vip_tier') || "Free";
         let tapValue = parseInt(localStorage.getItem('iran_coin_tap')) || 1;
@@ -559,31 +546,36 @@
             }
         });
 
-        // TON VIP System
-        function buyVipTon(tierName, tonAmount, tapBonus, energyMax, dailyBonus) {
+        // --- SECURE TON VIP Purchase Request (NO SELF-ACTIVATION) ---
+        function buyVipTon(tierName, tonAmount) {
             const nanoTon = Math.round(tonAmount * 1000000000);
             const memo = `VIP_${tierName}_${telegramUser.id}`;
             const webTonkeeper = `https://app.tonkeeper.com/transfer/${ADMIN_TON_WALLET}?amount=${nanoTon}&text=${encodeURIComponent(memo)}`;
 
+            // Open TON Wallet
             if (tg?.openTelegramLink) {
                 tg.openTelegramLink(`https://t.me/wallet?startattach=ton_transfer_${ADMIN_TON_WALLET}`);
             } else {
                 window.open(webTonkeeper, '_blank');
             }
 
+            // Notify Railway Backend / Admin Telegram Bot
+            fetch(`${BACKEND_URL}/api/v1/vip/request`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    telegram_id: telegramUser.id,
+                    username: telegramUser.first_name,
+                    tier: tierName,
+                    amount_ton: tonAmount,
+                    memo: memo
+                })
+            }).catch(() => {});
+
+            // Display Strict Status Modal
             showAppModal(
-                `ACTIVATE ${tierName.toUpperCase()} VIP`,
-                `Have you transferred ${tonAmount} TON for ${tierName} VIP? Click Activate below after transfer.`,
-                true,
-                () => {
-                    vipTier = tierName;
-                    tapValue = tapBonus;
-                    maxEnergy = energyMax;
-                    energy = maxEnergy;
-                    vipDailyBonus = dailyBonus;
-                    updateUI();
-                    showAppModal("SUCCESS!", `🎉 Welcome to ${tierName} VIP! Benefits & Daily Bonuses are ACTIVE!`);
-                }
+                `⏳ PURCHASE INITIATED`,
+                `TON Wallet opened for ${tonAmount} TON (${tierName} VIP).\n\nYour Memo ID: ${memo}\n\nOnce your transaction is verified on the TON blockchain, Admin will activate your VIP status!`
             );
         }
 
@@ -750,4 +742,3 @@
     </script>
 </body>
 </html>
-                    
