@@ -3,175 +3,442 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>IRAN Coin - VIP Mining & Smart Ads</title>
+    <title>IRAN Coin - Master Complete Version</title>
+    
+    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+
     <style>
         :root {
             --bg-color: #0b111e;
+            --card-bg: rgba(22, 33, 56, 0.88);
             --accent-gold: #f5b300;
             --accent-blue: #00d2ff;
             --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --text-main: #ffffff;
+            --text-muted: #a0b1c9;
             --btn-grad: linear-gradient(135deg, #f5b300, #ff8c00);
+            --ton-grad: linear-gradient(135deg, #0088cc, #00d2ff);
             --card-border: 1px solid rgba(255, 255, 255, 0.15);
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
-        body {
-            background: linear-gradient(rgba(11, 17, 30, 0.82), rgba(11, 17, 30, 0.95)), url('bg.jpg') no-repeat center center fixed;
-            background-size: cover; color: #fff; min-height: 100vh; overflow-x: hidden; padding-bottom: 90px;
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
-        .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.65); backdrop-filter: blur(10px); border-bottom: var(--card-border); position: sticky; top: 0; z-index: 100; }
-        .balance-val { font-size: 22px; font-weight: 800; color: var(--accent-gold); }
-        .tab-section { display: none; padding: 20px; flex-direction: column; align-items: center; width: 100%; max-width: 480px; margin: 0 auto; }
-        .active-tab { display: flex !important; }
+
+        /* بک‌گراند ثابت برج میلاد و آزادی در تمامی ۵ صفحه */
+        body {
+            background: linear-gradient(to bottom, rgba(11, 17, 30, 0.82), rgba(11, 17, 30, 0.95)), url('bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            padding-bottom: 90px;
+        }
+
+        /* Top Header */
+        .header {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(11, 17, 30, 0.75);
+            backdrop-filter: blur(15px);
+            border-bottom: var(--card-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .user-profile { display: flex; align-items: center; gap: 10px; }
         
-        /* Miner */
-        .miner-area { position: relative; margin: 20px auto; }
-        .miner-btn { width: 220px; height: 220px; border-radius: 50%; border: 4px solid var(--accent-gold); box-shadow: 0 0 30px rgba(245, 179, 0, 0.4); cursor: pointer; transition: transform 0.1s; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, #243b67 0%, #111d33 100%); }
+        .avatar-circle {
+            width: 42px; height: 42px; border-radius: 50%;
+            background: var(--btn-grad); display: flex; align-items: center;
+            justify-content: center; font-weight: 700; font-size: 18px;
+            color: #000; box-shadow: 0 0 12px rgba(245, 179, 0, 0.4);
+            position: relative;
+        }
+
+        .vip-badge-crown { position: absolute; top: -6px; right: -6px; font-size: 14px; display: none; }
+        .user-info .username { font-size: 14px; font-weight: 600; }
+        .user-info .level-tag { font-size: 11px; color: var(--accent-gold); font-weight: 700; }
+        .balance-val { font-size: 20px; font-weight: 800; color: var(--accent-gold); display: flex; align-items: center; gap: 5px; }
+
+        /* Tab Sections */
+        .tab-section {
+            display: none; padding: 20px; flex-direction: column;
+            align-items: center; width: 100%; max-width: 480px; margin: 0 auto;
+            animation: fadeIn 0.25s ease-in-out;
+        }
+        .tab-section.active-tab { display: flex !important; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Miner Screen */
+        .miner-area { position: relative; margin: 20px auto; width: 240px; height: 240px; display: flex; justify-content: center; align-items: center; }
+        
+        .miner-btn {
+            width: 220px; height: 220px; border-radius: 50%;
+            background: radial-gradient(circle, #243b67 0%, #111d33 100%);
+            border: 4px solid var(--accent-gold);
+            box-shadow: 0 0 30px rgba(245, 179, 0, 0.4), inset 0 0 20px rgba(0, 210, 255, 0.3);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: transform 0.08s ease; touch-action: manipulation;
+        }
         .miner-btn:active { transform: scale(0.93); }
         .miner-btn img { width: 80%; height: 80%; object-fit: contain; pointer-events: none; }
+
+        .energy-box { width: 100%; max-width: 320px; margin-top: 10px; }
+        .energy-info { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+        .energy-bar-bg { width: 100%; height: 12px; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
+        .energy-bar-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #00d2ff, #f5b300); border-radius: 10px; transition: width 0.2s linear; }
+
         .tap-number { position: absolute; font-size: 26px; font-weight: 800; color: var(--accent-gold); text-shadow: 0 0 8px rgba(0,0,0,1); pointer-events: none; animation: floatUp 0.8s ease-out forwards; z-index: 100; }
-        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-70px) scale(1.3); } }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-70px) scale(1.3); } }
 
-        /* Energy */
-        .energy-bar-bg { width: 100%; max-width: 320px; height: 12px; background: rgba(0, 0, 0, 0.5); border-radius: 10px; overflow: hidden; margin-top: 10px; }
-        .energy-bar-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #00d2ff, #f5b300); transition: width 0.2s linear; }
+        /* Cards & Titles */
+        .section-title { width: 100%; font-size: 17px; font-weight: 700; margin: 15px 0 10px 0; display: flex; align-items: center; gap: 8px; color: var(--accent-gold); text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        
+        .task-card {
+            width: 100%; background: var(--card-bg); border: var(--card-border);
+            padding: 14px 16px; border-radius: 16px; display: flex;
+            align-items: center; justify-content: space-between; margin-bottom: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); backdrop-filter: blur(8px);
+        }
 
-        /* Cards */
-        .vip-card, .task-card { width: 100%; background: rgba(22, 33, 56, 0.88); border-radius: 15px; padding: 15px; margin-bottom: 15px; border: var(--card-border); backdrop-filter: blur(8px); }
-        .ton-btn { background: var(--btn-grad); color: #000; border: none; padding: 12px; border-radius: 12px; font-weight: 800; cursor: pointer; width: 100%; }
-        .status-checking { color: #00d2ff; font-size: 11px; margin-top: 8px; text-align: center; animation: blink 1.5s infinite; }
+        .action-btn { background: var(--btn-grad); color: #000; font-weight: 700; font-size: 13px; border: none; padding: 10px 18px; border-radius: 20px; cursor: pointer; touch-action: manipulation; }
+        .action-btn.completed { background: rgba(255, 255, 255, 0.1); color: var(--text-muted); cursor: not-allowed; }
+        .ton-btn { background: var(--ton-grad); color: #fff; font-weight: 700; font-size: 13px; border: none; padding: 12px; border-radius: 12px; cursor: pointer; width: 100%; }
+        .active-tier-btn { background: var(--accent-green) !important; color: #fff !important; cursor: default !important; }
+
+        /* Direct Sponsor Banner */
+        .sponsor-banner {
+            width: 100%; background: linear-gradient(135deg, rgba(0, 136, 204, 0.3), rgba(0, 210, 255, 0.2));
+            border: 1px dashed var(--accent-blue); border-radius: 16px; padding: 15px; text-align: center;
+            margin-bottom: 15px; cursor: pointer; backdrop-filter: blur(10px);
+        }
+
+        /* VIP Tier Cards Style */
+        .vip-tier-card {
+            width: 100%; background: rgba(15, 23, 42, 0.9);
+            border: 2px solid var(--accent-gold); border-radius: 18px;
+            padding: 16px; margin-bottom: 15px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            display: flex; flex-direction: column; gap: 10px; backdrop-filter: blur(10px);
+        }
+        .vip-tier-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
+        .vip-tier-name { font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 6px; }
+        .status-checking { color: #00d2ff; font-size: 11px; text-align: center; animation: blink 1.5s infinite; }
         @keyframes blink { 50% { opacity: 0.5; } }
-        .section-title { width: 100%; font-size: 17px; font-weight: 700; margin: 15px 0 10px 0; color: var(--accent-gold); text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
 
         /* Lucky Spin Wheel */
-        .wheel-container { position: relative; width: 260px; height: 260px; margin: 10px auto; }
-        #wheelCanvas { width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 0 20px rgba(0, 210, 255, 0.3); }
+        .wheel-container { position: relative; width: 260px; height: 260px; margin: 10px auto 20px auto; }
+        #wheelCanvas { width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 0 25px rgba(0, 210, 255, 0.3); }
+        .wheel-pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 25px solid var(--accent-gold); z-index: 10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
 
-        /* Bottom Nav */
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 75px; background: rgba(0,0,0,0.85); display: flex; justify-content: space-around; align-items: center; border-top: var(--card-border); backdrop-filter: blur(15px); z-index: 1000; }
-        .nav-item { color: #8e9eb5; font-size: 12px; font-weight: 600; cursor: pointer; text-align: center; flex: 1; padding: 10px; }
+        .wallet-input { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); padding: 12px 14px; border-radius: 10px; color: #fff; font-size: 14px; margin: 10px 0 15px 0; outline: none; }
+        .full-btn { width: 100%; padding: 14px; font-size: 15px; border-radius: 12px; }
+
+        /* Custom Modal Overlay */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px);
+            display: none; justify-content: center; align-items: center;
+            z-index: 2000; padding: 20px;
+        }
+        .modal-card {
+            background: #162138; border: 2px solid var(--accent-gold);
+            border-radius: 20px; padding: 22px; width: 100%; max-width: 330px;
+            text-align: center; box-shadow: 0 0 30px rgba(245, 179, 0, 0.3);
+        }
+
+        /* In-App Simulated Video Ad Modal */
+        .ad-modal-card {
+            background: #0f172a; border: 2px solid var(--accent-blue);
+            border-radius: 20px; padding: 25px; width: 100%; max-width: 320px; text-align: center;
+        }
+        .ad-timer-circle {
+            width: 70px; height: 70px; border-radius: 50%; border: 3px solid var(--accent-gold);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px; font-weight: 800; color: var(--accent-gold); margin: 15px auto;
+        }
+
+        .version-tag { font-size: 10px; color: var(--text-muted); text-align: center; margin-top: 15px; opacity: 0.6; }
+
+        /* Bottom Nav - ALL 5 ITEMS */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 75px;
+            background: rgba(11, 17, 30, 0.9); backdrop-filter: blur(20px);
+            border-top: var(--card-border); display: flex; justify-content: space-around; align-items: center; z-index: 1000;
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--text-muted); font-size: 11px; font-weight: 600; cursor: pointer; padding: 8px 2px; flex: 1; }
         .nav-item.active { color: var(--accent-gold); }
-        .nav-icon { font-size: 22px; display: block; margin-bottom: 4px; }
-
-        /* Custom Modal */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
-        .modal-card { background: #162138; border: 2px solid var(--accent-gold); border-radius: 20px; padding: 22px; width: 100%; max-width: 320px; text-align: center; }
-
-        /* Video Ad Player Modal */
-        .ad-modal-card { background: #0f172a; border: 2px solid var(--accent-blue); border-radius: 20px; padding: 25px; width: 100%; max-width: 320px; text-align: center; }
-        .ad-timer-circle { width: 70px; height: 70px; border-radius: 50%; border: 3px solid var(--accent-gold); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; color: var(--accent-gold); margin: 15px auto; }
+        .nav-icon { font-size: 20px; pointer-events: none; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
 
+    <!-- Header Section -->
     <header class="header">
-        <div id="userDisplay" style="font-weight: 600; font-size: 14px;">👤 Loading...</div>
-        <div class="balance-val"><span id="userBalance">0</span> 🪙</div>
+        <div class="user-profile">
+            <div class="avatar-circle" id="userAvatar">
+                P
+                <span class="vip-badge-crown" id="vipCrown">👑</span>
+            </div>
+            <div class="user-info">
+                <div class="username" id="userName">Player</div>
+                <div class="level-tag" id="userLevelTag">⛏ Standard Miner</div>
+            </div>
+        </div>
+        <div class="balance-container">
+            <div style="font-size: 11px; color: var(--text-muted);">BALANCE</div>
+            <div class="balance-val">
+                <span id="userBalance">0</span> 🪙
+            </div>
+        </div>
     </header>
 
-    <!-- Tab 1: Mine -->
+    <!-- TAB 1: MINE -->
     <div class="tab-section active-tab" id="tab-mine">
         <div class="miner-area">
-            <div class="miner-btn" id="tapBtn"><img src="miner.jpg" onerror="this.src='https://cdn-icons-png.flaticon.com/512/6009/6009864.png'"></div>
+            <div class="miner-btn" id="tapBtn">
+                <img src="miner.jpg" alt="Miner" onerror="this.src='https://cdn-icons-png.flaticon.com/512/6009/6009864.png'">
+            </div>
         </div>
-        <div style="width: 100%; max-width: 320px; margin-top: 10px;">
-            <div style="display: flex; justify-content: space-between; font-size: 12px;"><span>⚡ Energy</span><span id="energyText">1000 / 1000</span></div>
-            <div class="energy-bar-bg"><div class="energy-bar-fill" id="energyFill"></div></div>
+
+        <div class="energy-box">
+            <div class="energy-info">
+                <span>⚡ Energy</span>
+                <span id="energyText">1000 / 1000</span>
+            </div>
+            <div class="energy-bar-bg">
+                <div class="energy-bar-fill" id="energyFill"></div>
+            </div>
         </div>
     </div>
 
-    <!-- Tab 2: VIP Secure Upgrade -->
+    <!-- TAB 2: VIP STORE -->
     <div class="tab-section" id="tab-vip">
-        <h2 style="color:var(--accent-gold); margin-bottom:15px; text-align: center;">👑 VIP UPGRADES</h2>
-        <p style="font-size:12px; color:#a0b1c9; text-align:center; margin-bottom:20px;">Buy using TON. Status activates automatically via blockchain!</p>
-        
-        <div class="vip-card">
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-weight: 700;">
-                <span>🥉 Bronze VIP</span><span style="color:#00d2ff">0.1 TON</span>
+        <div class="section-title">👑 VIP Passes (TON Crypto)</div>
+        <p style="font-size: 12px; color: var(--text-muted); text-align: center; margin-bottom: 15px;">
+            Upgrade using TON. Benefits activate automatically via blockchain verification!
+        </p>
+
+        <!-- Tier 1: Bronze -->
+        <div class="vip-tier-card">
+            <div class="vip-tier-header">
+                <div class="vip-tier-name">🥉 Bronze VIP</div>
+                <div style="font-weight:800; color:#00d2ff">0.1 TON</div>
             </div>
-            <ul style="font-size: 12px; color: #a0b1c9; margin-bottom: 15px; padding-left: 15px;">
-                <li>+2 Coins per Tap</li>
-                <li>1,500 Max Energy</li>
-            </ul>
-            <button class="ton-btn" id="btn-Bronze" onclick="buyVip('Bronze', 0.1)">BUY WITH TON</button>
-            <div id="status-Bronze" class="status-checking" style="display:none;">Waiting for blockchain confirmation...</div>
+            <div style="font-size:12px; color:var(--text-muted);">⚡ +2 Coins/Tap | 🔋 1,500 Max Energy | 🎁 +500 Daily</div>
+            <button class="ton-btn" id="btn-Bronze" onclick="buyVip('Bronze', 0.1)">Buy for 0.1 TON 💎</button>
+            <div id="status-Bronze" class="status-checking" style="display:none;">Checking blockchain for transaction...</div>
         </div>
 
-        <div class="vip-card">
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-weight: 700;">
-                <span>💎 Diamond VIP</span><span style="color:#00d2ff">3.0 TON</span>
+        <!-- Tier 2: Silver -->
+        <div class="vip-tier-card" style="border-color: #c0c0c0;">
+            <div class="vip-tier-header">
+                <div class="vip-tier-name">🥈 Silver VIP</div>
+                <div style="font-weight:800; color:#00d2ff">0.5 TON</div>
             </div>
-            <ul style="font-size: 12px; color: #a0b1c9; margin-bottom: 15px; padding-left: 15px;">
-                <li>+25 Coins per Tap</li>
-                <li>10,000 Max Energy</li>
-            </ul>
-            <button class="ton-btn" id="btn-Diamond" onclick="buyVip('Diamond', 3.0)">BUY WITH TON</button>
-            <div id="status-Diamond" class="status-checking" style="display:none;">Waiting for blockchain confirmation...</div>
+            <div style="font-size:12px; color:var(--text-muted);">⚡ +5 Coins/Tap | 🔋 3,000 Max Energy | 🎁 +2,000 Daily</div>
+            <button class="ton-btn" id="btn-Silver" onclick="buyVip('Silver', 0.5)">Buy for 0.5 TON 💎</button>
+            <div id="status-Silver" class="status-checking" style="display:none;">Checking blockchain for transaction...</div>
+        </div>
+
+        <!-- Tier 3: Gold -->
+        <div class="vip-tier-card" style="border-color: #ffd700; background: rgba(30, 25, 10, 0.9);">
+            <div class="vip-tier-header">
+                <div class="vip-tier-name">🥇 Gold VIP</div>
+                <div style="font-weight:800; color:#00d2ff">1.5 TON</div>
+            </div>
+            <div style="font-size:12px; color:var(--text-muted);">⚡ +10 Coins/Tap | 🔋 5,000 Max Energy | 🎁 +5,000 Daily</div>
+            <button class="ton-btn" id="btn-Gold" style="background: var(--btn-grad); color: #000;" onclick="buyVip('Gold', 1.5)">Buy for 1.5 TON 👑</button>
+            <div id="status-Gold" class="status-checking" style="display:none;">Checking blockchain for transaction...</div>
+        </div>
+
+        <!-- Tier 4: Diamond -->
+        <div class="vip-tier-card" style="border-color: #00d2ff; background: rgba(10, 30, 45, 0.9);">
+            <div class="vip-tier-header">
+                <div class="vip-tier-name">💎 Diamond VIP</div>
+                <div style="font-weight:800; color:#00d2ff">3.0 TON</div>
+            </div>
+            <div style="font-size:12px; color:var(--text-muted);">⚡ +25 Coins/Tap | 🔋 10,000 Max Energy | 🎁 +15,000 Daily</div>
+            <button class="ton-btn" id="btn-Diamond" style="background: linear-gradient(135deg, #00d2ff, #0088cc);" onclick="buyVip('Diamond', 3.0)">Buy for 3.0 TON 💎</button>
+            <div id="status-Diamond" class="status-checking" style="display:none;">Checking blockchain for transaction...</div>
         </div>
     </div>
 
-    <!-- Tab 3: Earn & Tasks -->
+    <!-- TAB 3: EARN & TASKS -->
     <div class="tab-section" id="tab-earn">
-        <!-- 24h Spin -->
-        <div class="section-title">🎡 24h Daily Spin</div>
-        <div class="task-card" style="display:flex; flex-direction:column; align-items:center;">
+        
+        <!-- Direct Sponsor Ad Banner -->
+        <div class="sponsor-banner" onclick="handleTgTask('https://t.me/IRANCoinGroup', 'sponsor', 0)">
+            <h4 style="color: var(--accent-gold); font-size: 14px; margin-bottom: 2px;">📢 Your Banner Here!</h4>
+            <span style="font-size: 12px; color: var(--text-muted);">Click to advertise your Telegram Channel or Bot</span>
+        </div>
+
+        <!-- 24h Daily Spin -->
+        <div class="section-title">🎡 24h Daily Lucky Spin</div>
+        <div class="task-card" style="flex-direction: column; align-items: center; padding: 20px;">
+            <p style="font-size: 13px; text-align: center; margin-bottom: 15px;">Spin once every 24 hours to test your luck!</p>
             <div class="wheel-container">
+                <div class="wheel-pointer"></div>
                 <canvas id="wheelCanvas" width="260" height="260"></canvas>
             </div>
-            <button class="ton-btn" id="spinBtn" onclick="spinWheel()" style="margin-top: 15px;">SPIN DAILY WHEEL</button>
+            <button class="action-btn full-btn" id="spinBtn" onclick="spinWheel()" style="margin-top: 10px;">SPIN NOW</button>
         </div>
 
-        <!-- Video Ads Task -->
-        <div class="section-title">🎬 Video Rewards</div>
-        <div class="task-card" style="display:flex; justify-content:space-between; align-items:center;">
-            <div>
-                <h4 style="margin-bottom: 3px;">Watch Video Ad</h4>
-                <small style="color:var(--accent-gold);">+100 Coins</small>
+        <!-- VIP Daily Bonus -->
+        <div class="section-title">👑 Active VIP Daily Bonus</div>
+        <div class="task-card">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <span style="font-size: 26px;">🎁</span>
+                <div>
+                    <h4 style="font-size: 14px;" id="vipDailyTitle">VIP Daily Reward</h4>
+                    <span style="font-size: 12px; color: var(--accent-gold);" id="vipDailyDesc">Claim active tier bonus</span>
+                </div>
             </div>
-            <button class="ton-btn" style="width:auto; padding:8px 20px;" onclick="watchVideoAd()">Watch</button>
+            <button class="action-btn" id="btnClaimVipDaily" onclick="claimVipDaily()">Claim</button>
+        </div>
+
+        <div class="section-title">🎬 Sponsored Tasks</div>
+        
+        <!-- Video Ad Task -->
+        <div class="task-card">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <span style="font-size:24px;">🎬</span>
+                <div>
+                    <h4>Watch Video Ad</h4>
+                    <span style="font-size:12px; color:var(--accent-gold);">+100 Coins</span>
+                </div>
+            </div>
+            <button class="action-btn" onclick="watchVideoAd()">Watch</button>
+        </div>
+
+        <!-- CPX Survey Task -->
+        <div class="task-card">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <span style="font-size:24px;">📋</span>
+                <div>
+                    <h4>CPX Paid Surveys</h4>
+                    <span style="font-size:12px; color:var(--accent-gold);">Up to +5,000 Coins</span>
+                </div>
+            </div>
+            <button class="action-btn" onclick="openCPX()">Start</button>
+        </div>
+
+        <div class="section-title">📢 Community Tasks</div>
+        
+        <!-- Channel Task -->
+        <div class="task-card">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <span style="font-size:24px;">✈️</span>
+                <div>
+                    <h4>Join Official Channel</h4>
+                    <span style="font-size:12px; color:var(--accent-gold);">+50 Coins</span>
+                </div>
+            </div>
+            <button class="action-btn" id="btnTaskChannel" onclick="handleTgTask('https://t.me/IRANCoin_Official', 'btnTaskChannel', 50)">Join</button>
+        </div>
+
+        <!-- Group Task -->
+        <div class="task-card">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <span style="font-size:24px;">💬</span>
+                <div>
+                    <h4>Join Support Group</h4>
+                    <span style="font-size:12px; color:var(--accent-gold);">+50 Coins</span>
+                </div>
+            </div>
+            <button class="action-btn" id="btnTaskGroup" onclick="handleTgTask('https://t.me/IRANCoinGroup', 'btnTaskGroup', 50)">Join</button>
+        </div>
+
+        <div class="version-tag">IRAN Coin v6.0 - Master Complete Build</div>
+    </div>
+
+    <!-- TAB 4: FRIENDS (REFERRAL) -->
+    <div class="tab-section" id="tab-friends">
+        <div class="section-title">👥 Invite Friends</div>
+        <div class="task-card" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+            <h4>Invite Friends & Earn</h4>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+                Receive <strong style="color: var(--accent-gold);">+50 IRAN Coins</strong> for every friend who joins using your unique invite link.
+            </p>
+        </div>
+        <button class="action-btn full-btn" onclick="shareReferral()" style="margin-top: 15px;">🔗 Invite a Friend</button>
+        <button class="action-btn full-btn" onclick="copyReferral()" style="margin-top: 10px; background: rgba(255,255,255,0.1); color: #fff;">📋 Copy Referral Link</button>
+    </div>
+
+    <!-- TAB 5: WALLET (WITHDRAWAL) -->
+    <div class="tab-section" id="tab-wallet">
+        <div class="section-title">💼 Withdrawal Hub</div>
+        <div class="task-card" style="flex-direction: column; align-items: stretch; gap: 10px; background: rgba(0,0,0,0.5);">
+            <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:10px;">
+                <span style="color:var(--text-muted)">Min. Withdrawal:</span>
+                <span style="color:var(--accent-gold); font-weight:700;">10,000 Coins</span>
+            </div>
+            <label style="font-size: 12px; color: var(--text-muted);">Your TON Wallet Address:</label>
+            <input type="text" id="tonWalletInput" class="wallet-input" placeholder="UQ... or EQ... address">
+            <button class="action-btn full-btn" onclick="submitWithdrawal()">Submit Withdrawal Request</button>
         </div>
     </div>
 
-    <!-- Custom Modal -->
+    <!-- Custom Notification Modal -->
     <div class="modal-overlay" id="customModal">
         <div class="modal-card">
-            <h3 id="modalTitle" style="color:var(--accent-gold); margin-bottom:10px;">NOTICE</h3>
-            <p id="modalDesc" style="font-size:13px; color:#fff; margin-bottom:20px; line-height: 1.5;"></p>
-            <button class="ton-btn" onclick="closeModal()">OK, UNDERSTOOD</button>
+            <h3 id="modalTitle" style="color:var(--accent-gold); margin-bottom:10px; font-size:18px;">NOTIFICATION</h3>
+            <p id="modalDesc" style="font-size:13px; color:#fff; margin-bottom:20px; line-height:1.5;"></p>
+            <button class="action-btn full-btn" onclick="closeModal()">OK, UNDERSTOOD</button>
         </div>
     </div>
 
-    <!-- Video Ad Fallback Player Modal -->
+    <!-- In-App Simulated Video Player Modal -->
     <div class="modal-overlay" id="adModal">
         <div class="ad-modal-card">
-            <h3 style="color:var(--accent-blue); font-size:16px;">🎬 SPONSORED AD</h3>
-            <p style="font-size:12px; color:#a0b1c9; margin-top:5px;">Watch the advertisement to earn +100 Coins!</p>
+            <h3 style="color:var(--accent-blue); font-size:16px;">🎬 SPONSORED VIDEO AD</h3>
+            <p style="font-size:12px; color:#a0b1c9; margin-top:5px;">Watch advertisement to earn +100 IRAN Coins!</p>
             <div class="ad-timer-circle" id="adTimer">5</div>
-            <p style="font-size:11px; color:var(--accent-gold);">Please wait until timer reaches zero...</p>
+            <p style="font-size:11px; color:var(--accent-gold);">Please wait until timer finishes...</p>
         </div>
     </div>
 
-    <!-- Bottom Navigation -->
+    <!-- Bottom Navigation Bar - ALL 5 ITEMS -->
     <nav class="bottom-nav">
-        <div class="nav-item active" onclick="switchTab('tab-mine', this)"><span class="nav-icon">⛏</span>MINE</div>
-        <div class="nav-item" onclick="switchTab('tab-vip', this)"><span class="nav-icon">👑</span>VIP</div>
-        <div class="nav-item" onclick="switchTab('tab-earn', this)"><span class="nav-icon">💰</span>EARN</div>
+        <div class="nav-item active" onclick="switchTab('tab-mine', this)">
+            <span class="nav-icon">⛏</span><span>Mine</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('tab-vip', this)">
+            <span class="nav-icon">👑</span><span>VIP</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('tab-earn', this)">
+            <span class="nav-icon">💰</span><span>Earn</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('tab-friends', this)">
+            <span class="nav-icon">👥</span><span>Friends</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('tab-wallet', this)">
+            <span class="nav-icon">💼</span><span>Wallet</span>
+        </div>
     </nav>
 
+    <!-- JavaScript Master Logic -->
     <script>
-        const tg = window.Telegram.WebApp;
-        const BACKEND_URL = "https://iran-coin-bot-production.up.railway.app";
         const ADMIN_WALLET = "UQCcUO7XRuLyf46obnkSUrec5L00yng7sw8Jut04rlLKCSjB";
-        
-        let user = tg.initDataUnsafe.user || { id: 979411415, first_name: "Player" };
-        let balance = parseInt(localStorage.getItem('iran_coin_bal')) || 0;
-        let vipTier = "Free";
-        let tapValue = 1;
-        let maxEnergy = 1000;
-        let energy = maxEnergy;
+        const BACKEND_URL = "https://iran-coin-bot-production.up.railway.app";
 
+        // In-App Modal
         function showAppModal(title, desc) {
             document.getElementById('modalTitle').innerText = title;
             document.getElementById('modalDesc').innerText = desc;
@@ -179,15 +446,37 @@
         }
         function closeModal() { document.getElementById('customModal').style.display = 'none'; }
 
-        function switchTab(id, el) {
+        // Navigation for all 5 Tabs
+        function switchTab(tabId, el) {
             document.querySelectorAll('.tab-section').forEach(t => t.classList.remove('active-tab'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(id).classList.add('active-tab');
-            el.classList.add('active');
-            if (id === 'tab-earn') setTimeout(drawWheel, 100);
+            
+            const target = document.getElementById(tabId);
+            if (target) target.classList.add('active-tab');
+            if (el) el.classList.add('active');
+            
+            if (tabId === 'tab-earn') setTimeout(drawWheel, 100);
         }
 
-        // Anti-Cheat Sync
+        // Telegram WebApp Setup
+        const tg = window.Telegram?.WebApp;
+        if (tg) { try { tg.ready(); tg.expand(); } catch (e) {} }
+
+        const user = tg?.initDataUnsafe?.user || { id: 979411415, first_name: "Player" };
+
+        document.getElementById('userName').innerText = user.first_name || "Player";
+        document.getElementById('userAvatar').childNodes[0].nodeValue = (user.first_name || "P").charAt(0).toUpperCase();
+
+        // Game State & Storage
+        let balance = parseInt(localStorage.getItem('iran_coin_bal')) || 0;
+        let vipTier = localStorage.getItem('iran_coin_vip_tier') || "Free";
+        let tapValue = parseInt(localStorage.getItem('iran_coin_tap')) || 1;
+        let maxEnergy = parseInt(localStorage.getItem('iran_coin_maxen')) || 1000;
+        let vipDailyBonus = parseInt(localStorage.getItem('iran_coin_vip_daily')) || 0;
+        let energy = maxEnergy;
+        let isSpinning = false;
+
+        // Anti-Cheat Server Sync
         async function syncData() {
             try {
                 const res = await fetch(`${BACKEND_URL}/api/v1/user/${user.id}`);
@@ -197,29 +486,39 @@
                     vipTier = data.vip_tier || "Free";
                     tapValue = data.tap_value || 1;
                     maxEnergy = data.max_energy || 1000;
-                    
-                    document.getElementById('userBalance').innerText = balance.toLocaleString();
-                    document.getElementById('userDisplay').innerText = `${vipTier !== 'Free' ? '👑' : '👤'} ${user.first_name}`;
-                    
-                    if (vipTier !== "Free") {
-                        const btn = document.getElementById(`btn-${vipTier}`);
-                        if (btn) {
-                            btn.innerText = "ACTIVE TIER ✓";
-                            btn.disabled = true;
-                            btn.style.background = "#10b981";
-                            btn.style.color = "#fff";
-                            document.getElementById(`status-${vipTier}`).style.display = "none";
-                        }
-                    }
-                    localStorage.setItem('iran_coin_bal', balance);
+                    updateUI();
                 }
             } catch (e) {
-                document.getElementById('userBalance').innerText = balance.toLocaleString();
+                updateUI();
             }
         }
         setInterval(syncData, 15000);
 
-        // Energy
+        function updateUI() {
+            document.getElementById('userBalance').innerText = balance.toLocaleString();
+            document.getElementById('energyText').innerText = `${energy} / ${maxEnergy}`;
+            document.getElementById('energyFill').style.width = `${(energy / maxEnergy) * 100}%`;
+            
+            if (vipTier !== "Free") {
+                document.getElementById('vipCrown').style.display = 'block';
+                document.getElementById('userLevelTag').innerText = `👑 ${vipTier} VIP`;
+                document.getElementById('vipDailyDesc').innerText = `+${vipDailyBonus.toLocaleString()} Coins / 24h`;
+            }
+
+            const tiers = ['Bronze', 'Silver', 'Gold', 'Diamond'];
+            tiers.forEach(t => {
+                const btn = document.getElementById(`btn-${t}`);
+                if (btn && vipTier === t) {
+                    btn.innerText = "ACTIVE TIER ✓";
+                    btn.className = "ton-btn active-tier-btn";
+                    btn.onclick = null;
+                }
+            });
+
+            localStorage.setItem('iran_coin_bal', balance);
+        }
+
+        // Energy Regeneration
         setInterval(() => {
             if (energy < maxEnergy) {
                 energy = Math.min(maxEnergy, energy + (vipTier !== "Free" ? 4 : 2));
@@ -235,15 +534,12 @@
 
             energy -= tapValue;
             balance += tapValue;
-            
-            document.getElementById('userBalance').innerText = balance.toLocaleString();
-            document.getElementById('energyText').innerText = `${energy} / ${maxEnergy}`;
-            document.getElementById('energyFill').style.width = `${(energy / maxEnergy) * 100}%`;
-            localStorage.setItem('iran_coin_bal', balance);
+            updateUI();
 
             const num = document.createElement('div');
             num.className = 'tap-number';
             num.innerText = `+${tapValue}`;
+            
             const rect = tapBtn.getBoundingClientRect();
             const clientX = e.clientX || (e.touches && e.touches[0].clientX);
             const clientY = e.clientY || (e.touches && e.touches[0].clientY);
@@ -263,125 +559,18 @@
             }).catch(()=>{});
         });
 
-        // TON VIP System
+        // Anti-Cheat VIP Request
         function buyVip(tier, amount) {
+            const nanoTon = Math.round(amount * 1000000000);
             const memo = `VIP_${tier}_${user.id}`;
-            const tonUrl = `https://app.tonkeeper.com/transfer/${ADMIN_WALLET}?amount=${amount * 1e9}&text=${memo}`;
+            const tonUrl = `https://app.tonkeeper.com/transfer/${ADMIN_WALLET}?amount=${nanoTon}&text=${memo}`;
             
             if (tg?.openTelegramLink) tg.openTelegramLink(`https://t.me/wallet?startattach=ton_transfer_${ADMIN_WALLET}`);
             else window.open(tonUrl, '_blank');
 
             document.getElementById(`status-${tier}`).style.display = "block";
-            document.getElementById(`btn-${tier}`).innerText = "CHECKING BLOCKCHAIN...";
             
             showAppModal(
                 "⏳ VERIFICATION PENDING",
-                `Your request for ${tier} VIP has been initiated (Memo: ${memo}). \n\nOnce confirmed on TON Blockchain, your VIP status will activate automatically!`
-            );
-        }
-
-        // Wheel
-        const prizeLabels = ["500 🪙", "10 🪙", "NO LUCK ❌", "50 🪙", "NO LUCK ❌", "20 🪙", "100 🪙", "TRY AGAIN ❌"];
-        const prizeValues = [500, 10, 0, 50, 0, 20, 100, 0];
-        const colors = ['#f5b300', '#0f172a', '#ef4444', '#1e293b', '#ef4444', '#0f172a', '#10b981', '#ef4444'];
-
-        function drawWheel() {
-            const canvas = document.getElementById("wheelCanvas");
-            if (!canvas) return;
-            const ctx = canvas.getContext("2d");
-            const arcSize = (2 * Math.PI) / 8;
-            ctx.clearRect(0,0,260,260);
-            for (let i = 0; i < 8; i++) {
-                ctx.beginPath(); ctx.fillStyle = colors[i];
-                ctx.moveTo(130,130); ctx.arc(130,130,125, i * arcSize, (i+1) * arcSize);
-                ctx.lineTo(130,130); ctx.fill(); ctx.save();
-                ctx.translate(130,130); ctx.rotate(i * arcSize + arcSize/2);
-                ctx.textAlign = "right"; ctx.fillStyle = "#fff"; ctx.font = "bold 11px Poppins";
-                ctx.fillText(`${prizeLabels[i]}`, 115, 4); ctx.restore();
-            }
-        }
-
-        function spinWheel() {
-            const today = new Date().toDateString();
-            if (localStorage.getItem('iran_wheel_spin_date') === today) {
-                return showAppModal("ALREADY SPUN", "⚠️ You have already spun the wheel today. Come back tomorrow!");
-            }
-            const spinBtn = document.getElementById('spinBtn');
-            spinBtn.disabled = true;
-
-            let winIdx = localStorage.getItem('iran_wheel_first') ? Math.floor(Math.random()*7)+1 : 0;
-            localStorage.setItem('iran_wheel_first', 'done');
-
-            const deg = 360 * 5 + (360 - (winIdx * 45) - 22.5);
-            const canvas = document.getElementById("wheelCanvas");
-            canvas.style.transition = "transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)";
-            canvas.style.transform = `rotate(${deg}deg)`;
-
-            setTimeout(() => {
-                const prize = prizeValues[winIdx];
-                balance += prize;
-                localStorage.setItem('iran_wheel_spin_date', today);
-                document.getElementById('userBalance').innerText = balance.toLocaleString();
-                
-                showAppModal("RESULT", prize > 0 ? `🎉 Congratulations! You won ${prize} Coins!` : `❌ ${prizeLabels[winIdx]}. Try again tomorrow!`);
-                spinBtn.disabled = false;
-                canvas.style.transition = "none";
-                canvas.style.transform = `rotate(${deg % 360}deg)`;
-            }, 4100);
-        }
-
-        // --- SMART VIDEO AD CONTROLLER (WITH AUTOMATIC FALLBACK) ---
-        async function watchVideoAd() {
-            // ۱. تلاش برای لود ادزگرام
-            if (window.Adsgram) {
-                try {
-                    const AdController = window.Adsgram.init({ blockId: "49410" });
-                    const res = await AdController.show();
-                    if (res && res.done) {
-                        rewardUserAd();
-                        return;
-                    }
-                } catch (e) {
-                    console.log("Adsgram unavailable, starting smart fallback player...");
-                }
-            }
+                `TON Wallet opened for ${amount} TON (${tier} VIP).\n\nMemo Code: ${memo}\n\nOnce confirmed on TON Blockchain, your VIP level will activate automatically!`
             
-            // ۲. در صورت ارور یا نبود ادزگرام ➔ اجرای پورتال ویدیوی تستی هوشمند
-            runSimulatedAdPlayer();
-        }
-
-        function runSimulatedAdPlayer() {
-            const adModal = document.getElementById('adModal');
-            const timerEl = document.getElementById('adTimer');
-            let timeLeft = 5;
-            
-            timerEl.innerText = timeLeft;
-            adModal.style.display = 'flex';
-
-            const interval = setInterval(() => {
-                timeLeft--;
-                timerEl.innerText = timeLeft;
-                if (timeLeft <= 0) {
-                    clearInterval(interval);
-                    adModal.style.display = 'none';
-                    rewardUserAd();
-                }
-            }, 1000);
-        }
-
-        function rewardUserAd() {
-            balance += 100;
-            document.getElementById('userBalance').innerText = balance.toLocaleString();
-            localStorage.setItem('iran_coin_bal', balance);
-            
-            fetch(`${BACKEND_URL}/api/v1/ads/watch?telegram_id=${user.id}`).catch(()=>{});
-            showAppModal("REWARD ADDED", "🎉 +100 IRAN Coins added to your balance!");
-        }
-
-        window.onload = () => {
-            syncData();
-            drawWheel();
-        };
-    </script>
-</body>
-</html>
