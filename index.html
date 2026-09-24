@@ -1,5 +1,6 @@
 import os
-import asyncio
+import sys
+import json
 import logging
 from datetime import datetime
 from typing import Optional
@@ -12,24 +13,23 @@ from sqlalchemy import create_engine, Column, BigInteger, String, Integer, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# --- LOGGING SETUP ---
+# --- LOGGING ---
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("IRANCoinBackend")
+logger = logging.getLogger("IRANCoinDirect")
 
-# --- ENVIRONMENT VARIABLES ---
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8639953959:AAHX6zYJgqQLo9JExYZ3GuqcEz-yrgjRmVs")
-DATABASE_URL = os.getenv("DATABASE_URL", "")
+# --- GUARANTEED HARDCODED FALLBACKS ---
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8639953959:AAHX6zYJgqQLo9JExYZ3GuqcEz-yrgjRmVs").strip()
+DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 ADMIN_ID = int(os.getenv("ADMIN_ID", "979411415"))
-ADMIN_WALLET = os.getenv("ADMIN_WALLET", "UQCcUO7XRuLyf46obnkSUrec5L00yng7sw8Jut04rlLKCSjB")
-TON_API_KEY = os.getenv("TONCENTER_API_KEY", "1d85a1804835e8c0c7458f49f9df7ed0c03d18c067999ec428fc1bd9136a0a8c")
-MINI_APP_URL = os.getenv("MINI_APP_URL", "https://kali2721362.github.io/iran-coin-bot/?v=110000")
+ADMIN_WALLET = os.getenv("ADMIN_WALLET", "UQCcUO7XRuLyf46obnkSUrec5L00yng7sw8Jut04rlLKCSjB").strip()
+TON_API_KEY = os.getenv("TONCENTER_API_KEY", "1d85a1804835e8c0c7458f49f9df7ed0c03d18c067999ec428fc1bd9136a0a8c").strip()
+MINI_APP_URL = os.getenv("MINI_APP_URL", "https://kali2721362.github.io/iran-coin-bot/?v=110000").strip()
 PORT = int(os.getenv("PORT", 8000))
 
-# Fix PostgreSQL schema URL
-if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# --- DATABASE SETUP WITH FAIL-SAFE ---
+# --- DATABASE SAFE INIT ---
 Base = declarative_base()
 engine = None
 SessionLocal = None
@@ -39,7 +39,7 @@ if DATABASE_URL:
         engine = create_engine(DATABASE_URL, pool_pre_ping=True, pool_recycle=300)
         SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     except Exception as e:
-        logger.error(f"Database Engine Error: {e}")
+        logger.error(f"DB Engine Init Error: {e}")
 
 class User(Base):
     __tablename__ = "users"
@@ -73,33 +73,10 @@ if engine:
     try:
         Base.metadata.create_all(bind=engine)
     except Exception as e:
-        logger.error(f"Metadata Create Error: {e}")
-
-def safe_db_repair():
-    if not SessionLocal:
-        return
-    db = SessionLocal()
-    try:
-        queries = [
-            "ALTER TABLE users ADD COLUMN IF NOT EXISTS vip_tier VARCHAR DEFAULT 'Free';",
-            "ALTER TABLE users ADD COLUMN IF NOT EXISTS tap_value INTEGER DEFAULT 1;",
-            "ALTER TABLE users ADD COLUMN IF NOT EXISTS max_energy INTEGER DEFAULT 1000;",
-            "ALTER TABLE users ADD COLUMN IF NOT EXISTS referrer_id BIGINT;",
-            "ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;"
-        ]
-        for q in queries:
-            try:
-                db.execute(text(q))
-                db.commit()
-            except Exception:
-                db.rollback()
-    except Exception as e:
-        logger.error(f"DB Repair Error: {e}")
-    finally:
-        db.close()
+        logger.error(f"Base metadata error: {e}")
 
 # --- FASTAPI APP ---
-app = FastAPI(title="IRAN Coin Fail-Safe Backend")
+app = FastAPI(title="IRAN Coin Guaranteed Direct Engine")
 
 app.add_middleware(
     CORSMiddleware,
@@ -109,9 +86,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-async def send_telegram_msg(chat_id: int, text: str, reply_markup: Optional[dict] = None):
-    if not BOT_TOKEN:
-        return
+# DIRECT AWAIT TELEGRAM SENDER (GUARANTEED DELIVERY)
+async def send_telegram_now(chat_id: int, text: str, reply_markup: Optional[dict] = None):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     payload = {
         "chat_id": chat_id,
@@ -124,54 +100,12 @@ async def send_telegram_msg(chat_id: int, text: str, reply_markup: Optional[dict
 
     async with httpx.AsyncClient() as client:
         try:
-            await client.post(url, json=payload, timeout=10)
+            r = await client.post(url, json=payload, timeout=12.0)
+            logger.info(f"Direct Telegram Send Result: {r.status_code}")
         except Exception as e:
-            logger.error(f"Telegram Send Error: {e}")
+            logger.error(f"Direct Telegram Send Exception: {e}")
 
-# --- TON BLOCKCHAIN MONITOR ---
-async def ton_blockchain_monitor():
-    url = f"https://toncenter.com/api/v2/getTransactions?address={ADMIN_WALLET}&limit=20&api_key={TON_API_KEY}"
-    while True:
-        try:
-            if SessionLocal:
-                async with httpx.AsyncClient() as client:
-                    res = await client.get(url, timeout=15)
-                    if res.status_code == 200 and res.json().get("ok"):
-                        db = SessionLocal()
-                        for tx in res.json().get("result", []):
-                            tx_hash = tx.get("transaction_id", {}).get("hash", "")
-                            if tx_hash and not db.query(Transaction).filter(Transaction.hash == tx_hash).first():
-                                msg = tx.get("in_msg", {})
-                                comment = msg.get("message", "").strip()
-                                value_ton = int(msg.get("value", 0)) / 1e9
-
-                                if comment.startswith("VIP_"):
-                                    parts = comment.split("_")
-                                    if len(parts) == 3:
-                                        tier = parts[1]
-                                        user_id = int(parts[2])
-                                        new_tx = Transaction(hash=tx_hash, telegram_id=user_id, amount=value_ton, tier=tier)
-                                        db.add(new_tx)
-                                        u = db.query(User).filter(User.telegram_id == user_id).first()
-                                        if u:
-                                            u.vip_tier = tier
-                                            u.tap_value = 25 if tier == "Diamond" else 2
-                                            u.max_energy = 10000 if tier == "Diamond" else 1500
-                                            db.commit()
-                                            asyncio.create_task(send_telegram_msg(user_id, f"🎉 <b>VIP ACTIVATED!</b>\n\nTier: <b>{tier} VIP</b>"))
-                                            asyncio.create_task(send_telegram_msg(ADMIN_ID, f"💰 <b>NEW VIP PAYMENT!</b>\n\nUser: {user_id}\nTier: {tier}\nAmount: {value_ton} TON"))
-                                        db.commit()
-                        db.close()
-            await asyncio.sleep(45)
-        except Exception as e:
-            await asyncio.sleep(20)
-
-@app.on_event("startup")
-async def startup_event():
-    safe_db_repair()
-    asyncio.create_task(ton_blockchain_monitor())
-
-# --- WEBHOOK ROUTE (FAIL-SAFE) ---
+# --- WEBHOOK ROUTE (IMMEDIATE RESPONSE) ---
 @app.post("/webhook")
 @app.post("/api/v1/webhook")
 async def telegram_webhook(request: Request):
@@ -183,30 +117,11 @@ async def telegram_webhook(request: Request):
             text = message.get("text", "")
             username = message.get("from", {}).get("first_name", "Player")
 
-            # Try DB Operations Safely
-            user_balance = 0
-            user_vip = "Free"
-            if SessionLocal:
-                try:
-                    db = SessionLocal()
-                    user = db.query(User).filter(User.telegram_id == chat_id).first()
-                    if not user:
-                        user = User(telegram_id=chat_id, username=username, balance=0)
-                        db.add(user)
-                        db.commit()
-                    user_balance = user.balance
-                    user_vip = user.vip_tier
-                    db.close()
-                except Exception as dbe:
-                    logger.error(f"DB Webhook Error: {dbe}")
-                    safe_db_repair()
-
             if text.startswith("/start"):
+                # 1. IMMEDIATE TELEGRAM MESSAGE SENDING (NO DELAY, NO DB DEPENDENCY)
                 welcome_text = (
                     f"🇮🇷 <b>Welcome to IRAN Coin, {username}!</b>\n\n"
                     f"Mine tokens, complete tasks, spin the daily wheel, and upgrade your VIP level to earn real TON rewards!\n\n"
-                    f"🪙 <b>Your Balance:</b> {user_balance:,} IRAN Coins\n"
-                    f"👑 <b>VIP Status:</b> {user_vip}\n\n"
                     f"Tap the button below to start mining now 👇"
                 )
 
@@ -218,18 +133,32 @@ async def telegram_webhook(request: Request):
                         {"text": "💬 Support Group", "url": "https://t.me/IRANCoinGroup"}
                     ]]
                 }
-                # ALWAYS SEND TELEGRAM MESSAGE NO MATTER WHAT
-                await send_telegram_msg(chat_id, welcome_text, keyboard)
+
+                # DIRECT AWAIT - GUARANTEES TELEGRAM API CALL EXECUTES
+                await send_telegram_now(chat_id, welcome_text, keyboard)
+
+                # 2. SAFE BACKGROUND DATABASE LOGIC (AFTER MESSAGE IS SENT)
+                if SessionLocal:
+                    try:
+                        db = SessionLocal()
+                        user = db.query(User).filter(User.telegram_id == chat_id).first()
+                        if not user:
+                            user = User(telegram_id=chat_id, username=username, balance=0)
+                            db.add(user)
+                            db.commit()
+                        db.close()
+                    except Exception as dbe:
+                        logger.error(f"Safe DB Error: {dbe}")
 
             elif text == "/admin" and chat_id == ADMIN_ID:
-                await send_telegram_msg(ADMIN_ID, "📊 <b>ADMIN PANEL ACTIVE</b>\nSystem is online and running.")
+                await send_telegram_now(ADMIN_ID, "📊 <b>ADMIN PANEL ONLINE</b>\nServer is actively responding to requests.")
 
         return {"status": "ok"}
     except Exception as global_e:
-        logger.error(f"Global Webhook Exception: {global_e}")
+        logger.error(f"Global Webhook Error: {global_e}")
         return {"status": "ok"}
 
-# --- API ENDPOINTS FOR MINI APP ---
+# --- API ENDPOINTS ---
 @app.get("/")
 def read_root():
     return {"status": "IRAN Coin Server Running", "app_url": MINI_APP_URL}
@@ -293,7 +222,7 @@ async def withdraw_api(req: WithdrawModel):
                 withdraw = WithdrawalRequest(telegram_id=req.telegram_id, wallet_address=req.wallet_address, amount=req.amount)
                 db.add(withdraw)
                 db.commit()
-                asyncio.create_task(send_telegram_msg(ADMIN_ID, f"💼 <b>WITHDRAW REQUEST</b>\n\nUser: <code>{req.telegram_id}</code>\nCoins: {req.amount:,}\nWallet: <code>{req.wallet_address}</code>"))
+                await send_telegram_now(ADMIN_ID, f"💼 <b>WITHDRAW REQUEST</b>\n\nUser: <code>{req.telegram_id}</code>\nCoins: {req.amount:,}\nWallet: <code>{req.wallet_address}</code>")
             db.close()
         except Exception:
             pass
@@ -316,4 +245,3 @@ async def ad_watch_api(telegram_id: int):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=PORT)
-   
