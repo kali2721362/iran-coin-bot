@@ -21,7 +21,7 @@
             --accent-gold: #f5b300;
             --accent-blue: #00d2ff;
             --accent-green: #10b981;
-            --accent-vip: linear-gradient(135deg, #ffe066, #f5b300, #b8860b);
+            --accent-red: #ef4444;
             --text-main: #ffffff;
             --text-muted: #a0b1c9;
             --btn-grad: linear-gradient(135deg, #f5b300, #ff8c00);
@@ -205,7 +205,7 @@
         </div>
     </div>
 
-    <!-- Tab 2: VIP Zone (Purchasable ONLY with TON) -->
+    <!-- Tab 2: VIP Zone -->
     <div class="tab-section" id="tab-vip">
         <div class="section-title">👑 VIP Passes (TON Crypto)</div>
         <p style="font-size: 12px; color: var(--text-muted); text-align: center; margin-bottom: 15px;">
@@ -278,10 +278,10 @@
             <span style="font-size: 12px; color: var(--text-muted);">Click to advertise your Telegram Channel or Bot</span>
         </div>
 
-        <!-- 24h Daily Spin -->
+        <!-- 24h Daily Spin with Empty Options -->
         <div class="section-title">🎡 24h Daily Lucky Spin</div>
         <div class="task-card" style="flex-direction: column; align-items: center; padding: 20px;">
-            <p style="font-size: 13px; text-align: center; margin-bottom: 15px;">Spin once every 24 hours to win free coins!</p>
+            <p style="font-size: 13px; text-align: center; margin-bottom: 15px;">Spin once every 24 hours to test your luck!</p>
             <div class="wheel-container">
                 <div class="wheel-pointer"></div>
                 <canvas id="wheelCanvas" width="260" height="260"></canvas>
@@ -556,25 +556,26 @@
             alert(`🎉 Claimed +${vipDailyBonus.toLocaleString()} VIP Daily Coins!`);
         }
 
-        // --- 6. 24h Daily Lucky Spin ---
-        const prizes = [10, 50, 100, 20, 500, 30, 200, 15];
-        const colors = ['#1e293b', '#0f172a', '#1e293b', '#0f172a', '#f5b300', '#0f172a', '#1e293b', '#0f172a'];
+        // --- 6. 24h Daily Lucky Spin (First Spin Guaranteed 500 Coins + Empty Options) ---
+        const prizeLabels = ["500 🪙", "10 🪙", "TRY AGAIN ❌", "50 🪙", "NO LUCK ❌", "20 🪙", "100 🪙", "TRY AGAIN ❌"];
+        const prizeValues = [500, 10, 0, 50, 0, 20, 100, 0];
+        const colors = ['#f5b300', '#0f172a', '#ef4444', '#1e293b', '#ef4444', '#0f172a', '#10b981', '#ef4444'];
 
         function drawWheel() {
             const canvas = document.getElementById("wheelCanvas");
             if (!canvas) return;
             const ctx = canvas.getContext("2d");
-            const arcSize = (2 * Math.PI) / prizes.length;
+            const arcSize = (2 * Math.PI) / prizeLabels.length;
             ctx.clearRect(0, 0, 260, 260);
 
-            for (let i = 0; i < prizes.length; i++) {
+            for (let i = 0; i < prizeLabels.length; i++) {
                 const angle = i * arcSize;
                 ctx.beginPath(); ctx.fillStyle = colors[i];
                 ctx.moveTo(130, 130); ctx.arc(130, 130, 125, angle, angle + arcSize);
                 ctx.lineTo(130, 130); ctx.fill(); ctx.save();
                 ctx.translate(130, 130); ctx.rotate(angle + arcSize / 2);
-                ctx.textAlign = "right"; ctx.fillStyle = i === 4 ? "#000" : "#fff";
-                ctx.font = "bold 13px Poppins"; ctx.fillText(`${prizes[i]} 🪙`, 105, 5); ctx.restore();
+                ctx.textAlign = "right"; ctx.fillStyle = "#fff";
+                ctx.font = "bold 12px Poppins"; ctx.fillText(`${prizeLabels[i]}`, 115, 5); ctx.restore();
             }
         }
 
@@ -590,8 +591,19 @@
             const spinBtn = document.getElementById('spinBtn');
             spinBtn.disabled = true;
 
-            const winningIndex = Math.floor(Math.random() * prizes.length);
-            const degreesPerSegment = 360 / prizes.length;
+            // First Spin Logic: Guaranteed 500 Coins
+            let winningIndex;
+            const isFirstSpinDone = localStorage.getItem('iran_wheel_first_done');
+
+            if (!isFirstSpinDone) {
+                winningIndex = 0; // Segment 0 = 500 Coins
+                localStorage.setItem('iran_wheel_first_done', 'true');
+            } else {
+                // Random spin from index 1 to 7
+                winningIndex = Math.floor(Math.random() * (prizeLabels.length - 1)) + 1;
+            }
+
+            const degreesPerSegment = 360 / prizeLabels.length;
             const targetRotation = 360 * 5 + (360 - (winningIndex * degreesPerSegment) - (degreesPerSegment / 2));
 
             const canvas = document.getElementById("wheelCanvas");
@@ -599,11 +611,16 @@
             canvas.style.transform = `rotate(${targetRotation}deg)`;
 
             setTimeout(() => {
-                const prize = prizes[winningIndex];
+                const prize = prizeValues[winningIndex];
                 balance += prize;
                 localStorage.setItem('iran_wheel_spin_date', today);
                 updateUI();
-                alert(`🎉 Congratulations! You won ${prize} IRAN Coins!`);
+
+                if (prize > 0) {
+                    alert(`🎉 Congratulations! You won ${prize} IRAN Coins!`);
+                } else {
+                    alert(`❌ No luck today! (${prizeLabels[winningIndex]}). Try again tomorrow!`);
+                }
 
                 isSpinning = false;
                 spinBtn.disabled = false;
