@@ -17,7 +17,7 @@
     <style>
         :root {
             --bg-color: #0b111e;
-            --card-bg: rgba(22, 33, 56, 0.85);
+            --card-bg: rgba(22, 33, 56, 0.88);
             --accent-gold: #f5b300;
             --accent-blue: #00d2ff;
             --accent-green: #10b981;
@@ -57,7 +57,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(11, 17, 30, 0.65);
+            background: rgba(11, 17, 30, 0.7);
             backdrop-filter: blur(15px);
             border-bottom: var(--card-border);
             position: sticky;
@@ -152,6 +152,21 @@
         /* Input & Buttons */
         .wallet-input { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); padding: 12px 14px; border-radius: 10px; color: #fff; font-size: 14px; margin: 10px 0 15px 0; outline: none; }
         .full-btn { width: 100%; padding: 14px; font-size: 15px; border-radius: 12px; }
+
+        /* Custom In-App Modal Popup */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px);
+            display: none; justify-content: center; align-items: center;
+            z-index: 2000; padding: 20px;
+        }
+        .modal-card {
+            background: #162138; border: 2px solid var(--accent-gold);
+            border-radius: 20px; padding: 22px; width: 100%; max-width: 340px;
+            text-align: center; box-shadow: 0 0 30px rgba(245, 179, 0, 0.3);
+        }
+        .modal-title { font-size: 18px; font-weight: 800; color: var(--accent-gold); margin-bottom: 8px; }
+        .modal-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 18px; line-height: 1.4; }
 
         /* Bottom Nav */
         .bottom-nav {
@@ -278,7 +293,7 @@
             <span style="font-size: 12px; color: var(--text-muted);">Click to advertise your Telegram Channel or Bot</span>
         </div>
 
-        <!-- 24h Daily Spin with Empty Options -->
+        <!-- 24h Daily Spin -->
         <div class="section-title">🎡 24h Daily Lucky Spin</div>
         <div class="task-card" style="flex-direction: column; align-items: center; padding: 20px;">
             <p style="font-size: 13px; text-align: center; margin-bottom: 15px;">Spin once every 24 hours to test your luck!</p>
@@ -377,6 +392,18 @@
         </div>
     </div>
 
+    <!-- Custom Modal Overlay -->
+    <div class="modal-overlay" id="customModal">
+        <div class="modal-card">
+            <div class="modal-title" id="modalTitle">NOTIFICATION</div>
+            <div class="modal-desc" id="modalDesc">Message content goes here.</div>
+            <div style="display: flex; gap: 10px;">
+                <button class="action-btn full-btn" id="modalBtnConfirm" style="display:none;" onclick="confirmModalAction()">Confirm</button>
+                <button class="action-btn full-btn" id="modalBtnClose" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Bottom Navigation Bar -->
     <nav class="bottom-nav">
         <div class="nav-item active" onclick="switchTab('tab-mine', this)">
@@ -401,6 +428,34 @@
         const ADMIN_TON_WALLET = "UQCcUO7XRuLyf46obnkSUrec5L00yng7sw8Jut04rlLKCSjB";
         const BACKEND_URL = "https://iran-coin-bot-production.up.railway.app";
 
+        // --- Custom In-App Modal System (Replaces Native Browser Alerts) ---
+        let modalConfirmCallback = null;
+
+        function showAppModal(title, text, showConfirm = false, onConfirm = null) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalDesc').innerText = text;
+            
+            const btnConfirm = document.getElementById('modalBtnConfirm');
+            if (showConfirm) {
+                btnConfirm.style.display = 'block';
+                modalConfirmCallback = onConfirm;
+            } else {
+                btnConfirm.style.display = 'none';
+                modalConfirmCallback = null;
+            }
+
+            document.getElementById('customModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('customModal').style.display = 'none';
+        }
+
+        function confirmModalAction() {
+            closeModal();
+            if (modalConfirmCallback) modalConfirmCallback();
+        }
+
         // --- 1. Global Navigation ---
         function switchTab(tabId, el) {
             document.querySelectorAll('.tab-section').forEach(tab => {
@@ -419,7 +474,7 @@
             if (el) el.classList.add('active');
 
             if (tabId === 'tab-earn') {
-                setTimeout(drawWheel, 100);
+                setTimeout(drawWheel, 80);
             }
         }
 
@@ -472,7 +527,6 @@
             localStorage.setItem('iran_coin_maxen', maxEnergy);
             localStorage.setItem('iran_coin_vip_daily', vipDailyBonus);
         }
-        updateUI();
 
         setInterval(() => {
             if (energy < maxEnergy) {
@@ -526,37 +580,39 @@
                 window.open(webTonkeeper, '_blank');
             }
 
-            setTimeout(() => {
-                const confirmed = confirm(`💎 Have you transferred ${tonAmount} TON for ${tierName} VIP? Click OK to confirm activation!`);
-                if (confirmed) {
+            showAppModal(
+                `ACTIVATE ${tierName.toUpperCase()} VIP`,
+                `Have you sent ${tonAmount} TON to activate ${tierName} VIP? Click Activate below after transfer.`,
+                true,
+                () => {
                     vipTier = tierName;
                     tapValue = tapBonus;
                     maxEnergy = energyMax;
                     energy = maxEnergy;
                     vipDailyBonus = dailyBonus;
                     updateUI();
-                    alert(`🎉 Success! You are now a ${tierName} VIP member!`);
+                    showAppModal("SUCCESS!", `🎉 Welcome to ${tierName} VIP! Your boosts & daily bonuses are now ACTIVE!`);
                 }
-            }, 800);
+            );
         }
 
         function claimVipDaily() {
             if (vipTier === "Free" || vipDailyBonus <= 0) {
-                alert("⚠️ You must hold an active TON VIP Tier to claim daily bonuses!");
+                showAppModal("VIP REQUIRED", "⚠️ You must hold an active TON VIP Pass to claim daily bonuses!");
                 return;
             }
             const today = new Date().toDateString();
             if (localStorage.getItem('iran_vip_claim_date') === today) {
-                alert("⚠️ You already claimed your VIP reward today. Come back tomorrow!");
+                showAppModal("CLAIMED TODAY", "⚠️ You already claimed your VIP bonus today. Come back tomorrow!");
                 return;
             }
             balance += vipDailyBonus;
             localStorage.setItem('iran_vip_claim_date', today);
             updateUI();
-            alert(`🎉 Claimed +${vipDailyBonus.toLocaleString()} VIP Daily Coins!`);
+            showAppModal("BONUS CLAIMED", `🎉 Claimed +${vipDailyBonus.toLocaleString()} VIP Daily Coins!`);
         }
 
-        // --- 6. 24h Daily Lucky Spin (First Spin Guaranteed 500 Coins + Empty Options) ---
+        // --- 6. 24h Daily Lucky Spin (First Spin Guaranteed 500 Coins) ---
         const prizeLabels = ["500 🪙", "10 🪙", "TRY AGAIN ❌", "50 🪙", "NO LUCK ❌", "20 🪙", "100 🪙", "TRY AGAIN ❌"];
         const prizeValues = [500, 10, 0, 50, 0, 20, 100, 0];
         const colors = ['#f5b300', '#0f172a', '#ef4444', '#1e293b', '#ef4444', '#0f172a', '#10b981', '#ef4444'];
@@ -575,14 +631,14 @@
                 ctx.lineTo(130, 130); ctx.fill(); ctx.save();
                 ctx.translate(130, 130); ctx.rotate(angle + arcSize / 2);
                 ctx.textAlign = "right"; ctx.fillStyle = "#fff";
-                ctx.font = "bold 12px Poppins"; ctx.fillText(`${prizeLabels[i]}`, 115, 5); ctx.restore();
+                ctx.font = "bold 11px Poppins"; ctx.fillText(`${prizeLabels[i]}`, 115, 4); ctx.restore();
             }
         }
 
         function spinWheel() {
             const today = new Date().toDateString();
             if (localStorage.getItem('iran_wheel_spin_date') === today) {
-                alert("⚠️ You have already spun the wheel today. Try again tomorrow!");
+                showAppModal("ALREADY SPUN", "⚠️ You have already spun the wheel today. Try again tomorrow!");
                 return;
             }
 
@@ -596,10 +652,9 @@
             const isFirstSpinDone = localStorage.getItem('iran_wheel_first_done');
 
             if (!isFirstSpinDone) {
-                winningIndex = 0; // Segment 0 = 500 Coins
+                winningIndex = 0; // Index 0 = 500 Coins
                 localStorage.setItem('iran_wheel_first_done', 'true');
             } else {
-                // Random spin from index 1 to 7
                 winningIndex = Math.floor(Math.random() * (prizeLabels.length - 1)) + 1;
             }
 
@@ -617,9 +672,9 @@
                 updateUI();
 
                 if (prize > 0) {
-                    alert(`🎉 Congratulations! You won ${prize} IRAN Coins!`);
+                    showAppModal("CONGRATULATIONS!", `🎉 You won ${prize} IRAN Coins!`);
                 } else {
-                    alert(`❌ No luck today! (${prizeLabels[winningIndex]}). Try again tomorrow!`);
+                    showAppModal("NO LUCK TODAY", `❌ ${prizeLabels[winningIndex]}. Try again tomorrow!`);
                 }
 
                 isSpinning = false;
@@ -640,17 +695,17 @@
 
         async function watchVideoAd() {
             const controller = getAdController();
-            if (!controller) { alert("Ad provider loading, try again in 3 seconds!"); return; }
+            if (!controller) { showAppModal("LOADING", "Ad provider loading, try again in 3 seconds!"); return; }
             try {
                 const res = await controller.show();
                 if (res && res.done) {
                     balance += 100; updateUI();
                     fetch(`${BACKEND_URL}/api/v1/ads/watch?telegram_id=${telegramUser.id}`).catch(()=>{});
-                    alert("🎉 Reward Added! +100 IRAN Coins");
+                    showAppModal("REWARD ADDED", "🎉 +100 IRAN Coins added for watching video!");
                 }
             } catch (err) {
                 balance += 100; updateUI();
-                alert("🎉 Test Video Watched! +100 Coins");
+                showAppModal("REWARD ADDED", "🎉 +100 IRAN Coins added!");
             }
         }
 
@@ -666,7 +721,8 @@
                 btn.innerText = "Check";
             } else if (btn.innerText === "Check") {
                 btn.innerText = "Claimed ✓"; btn.onclick = null; btn.classList.add('completed');
-                balance += reward; updateUI(); alert(`🎉 Task complete! +${reward} IRAN Coins.`);
+                balance += reward; updateUI();
+                showAppModal("TASK COMPLETED", `🎉 Task complete! +${reward} IRAN Coins added.`);
             }
         }
 
@@ -680,22 +736,28 @@
 
         function copyReferral() {
             navigator.clipboard.writeText(`https://t.me/IranCoinEarnBot?start=ref_${telegramUser.id}`);
-            alert("📋 Unique referral link copied to clipboard!");
+            showAppModal("LINK COPIED", "📋 Unique referral link copied to clipboard!");
         }
 
         // --- 9. Withdrawal Engine ---
         function submitWithdrawal() {
             const wallet = document.getElementById('tonWalletInput').value.trim();
-            if (!wallet || wallet.length < 24) return alert("⚠️ Please enter a valid TON wallet address.");
-            if (balance < 10000) return alert("⚠️ Minimum withdrawal required is 10,000 IRAN Coins.");
+            if (!wallet || wallet.length < 24) return showAppModal("INVALID ADDRESS", "⚠️ Please enter a valid TON wallet address.");
+            if (balance < 10000) return showAppModal("MINIMUM LIMIT", "⚠️ Minimum withdrawal required is 10,000 IRAN Coins.");
             
             fetch(`${BACKEND_URL}/api/v1/withdraw`, {
                 method: "POST", headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ telegram_id: telegramUser.id, wallet_address: wallet, amount: balance })
             }).finally(() => {
-                alert("✅ Withdrawal request submitted to admin!"); balance = 0; updateUI();
+                showAppModal("REQUEST SUBMITTED", "✅ Withdrawal request submitted to admin!"); balance = 0; updateUI();
             });
         }
+
+        // Initialize App on Window Load
+        window.onload = () => {
+            updateUI();
+            drawWheel();
+        };
     </script>
 </body>
 </html>
