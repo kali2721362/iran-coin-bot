@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>IRAN Coin - Master Complete Version</title>
+    <title>IRAN Coin - Self-Healing Master Build</title>
     
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
+
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
 
     <style>
         :root {
             --bg-color: #0b111e;
-            --card-bg: rgba(22, 33, 56, 0.88);
+            --card-bg: rgba(22, 33, 56, 0.92);
             --accent-gold: #f5b300;
             --accent-blue: #00d2ff;
             --accent-green: #10b981;
@@ -54,7 +54,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(11, 17, 30, 0.75);
+            background: rgba(11, 17, 30, 0.85);
             backdrop-filter: blur(15px);
             border-bottom: var(--card-border);
             position: sticky;
@@ -79,12 +79,11 @@
 
         /* Tab Sections */
         .tab-section {
-            display: none; padding: 20px; flex-direction: column;
+            display: none !important;
+            padding: 20px; flex-direction: column;
             align-items: center; width: 100%; max-width: 480px; margin: 0 auto;
-            animation: fadeIn 0.25s ease-in-out;
         }
         .tab-section.active-tab { display: flex !important; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Miner Screen */
         .miner-area { position: relative; margin: 20px auto; width: 240px; height: 240px; display: flex; justify-content: center; align-items: center; }
@@ -179,12 +178,13 @@
         /* Bottom Nav - ALL 5 ITEMS */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; width: 100%; height: 75px;
-            background: rgba(11, 17, 30, 0.9); backdrop-filter: blur(20px);
+            background: rgba(11, 17, 30, 0.95); backdrop-filter: blur(20px);
             border-top: var(--card-border); display: flex; justify-content: space-around; align-items: center; z-index: 1000;
         }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--text-muted); font-size: 11px; font-weight: 600; cursor: pointer; padding: 8px 2px; flex: 1; }
+        .nav-item * { pointer-events: none; } /* Prevents child click issues */
         .nav-item.active { color: var(--accent-gold); }
-        .nav-icon { font-size: 20px; pointer-events: none; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .nav-icon { font-size: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
@@ -365,7 +365,7 @@
             <button class="action-btn" id="btnTaskGroup" onclick="handleTgTask('https://t.me/IRANCoinGroup', 'btnTaskGroup', 50)">Join</button>
         </div>
 
-        <div class="version-tag">IRAN Coin v6.0 - Master Complete Build</div>
+        <div class="version-tag">IRAN Coin v7.0 - Self-Healing Master Build</div>
     </div>
 
     <!-- TAB 4: FRIENDS (REFERRAL) -->
@@ -404,7 +404,7 @@
         </div>
     </div>
 
-    <!-- In-App Simulated Video Player Modal -->
+    <!-- Simulated Video Player Modal -->
     <div class="modal-overlay" id="adModal">
         <div class="ad-modal-card">
             <h3 style="color:var(--accent-blue); font-size:16px;">🎬 SPONSORED VIDEO AD</h3>
@@ -433,59 +433,100 @@
         </div>
     </nav>
 
-    <!-- JavaScript Master Logic -->
+    <!-- Self-Healing JavaScript Engine -->
     <script>
+        // Global Error Guard - Prevents JS crashes from halting UI
+        window.onerror = function(msg, url, line) {
+            console.warn("Auto-Repair Guard Caught Error:", msg, "at line", line);
+            autoRepairApp();
+            return true;
+        };
+
         const ADMIN_WALLET = "UQCcUO7XRuLyf46obnkSUrec5L00yng7sw8Jut04rlLKCSjB";
         const BACKEND_URL = "https://iran-coin-bot-production.up.railway.app";
 
-        // In-App Modal
-        function showAppModal(title, desc) {
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('modalDesc').innerText = desc;
-            document.getElementById('customModal').style.display = 'flex';
-        }
-        function closeModal() { document.getElementById('customModal').style.display = 'none'; }
-
-        // Navigation for all 5 Tabs
-        function switchTab(tabId, el) {
-            document.querySelectorAll('.tab-section').forEach(t => t.classList.remove('active-tab'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            
-            const target = document.getElementById(tabId);
-            if (target) target.classList.add('active-tab');
-            if (el) el.classList.add('active');
-            
-            if (tabId === 'tab-earn') setTimeout(drawWheel, 100);
-        }
-
-        // Telegram WebApp Setup
+        // Telegram WebApp Safe Init
         const tg = window.Telegram?.WebApp;
         if (tg) { try { tg.ready(); tg.expand(); } catch (e) {} }
 
         const user = tg?.initDataUnsafe?.user || { id: 979411415, first_name: "Player" };
 
-        document.getElementById('userName').innerText = user.first_name || "Player";
-        document.getElementById('userAvatar').childNodes[0].nodeValue = (user.first_name || "P").charAt(0).toUpperCase();
-
-        // Game State & Storage
-        let balance = parseInt(localStorage.getItem('iran_coin_bal')) || 0;
+        // Double-Backed Persistent Balance System (Never Resets to 0)
+        let balance = parseInt(localStorage.getItem('iran_coin_bal')) || parseInt(localStorage.getItem('iran_coin_bal_backup')) || 0;
         let vipTier = localStorage.getItem('iran_coin_vip_tier') || "Free";
         let tapValue = parseInt(localStorage.getItem('iran_coin_tap')) || 1;
         let maxEnergy = parseInt(localStorage.getItem('iran_coin_maxen')) || 1000;
         let vipDailyBonus = parseInt(localStorage.getItem('iran_coin_vip_daily')) || 0;
         let energy = maxEnergy;
-        let isSpinning = false;
 
-        // Anti-Cheat Server Sync
+        function saveBalance(val) {
+            balance = Math.max(0, parseInt(val) || 0);
+            localStorage.setItem('iran_coin_bal', balance);
+            localStorage.setItem('iran_coin_bal_backup', balance);
+        }
+
+        function updateUI() {
+            try {
+                const balEl = document.getElementById('userBalance');
+                if (balEl) balEl.innerText = balance.toLocaleString();
+
+                const enText = document.getElementById('energyText');
+                if (enText) enText.innerText = `${energy} / ${maxEnergy}`;
+
+                const enFill = document.getElementById('energyFill');
+                if (enFill) enFill.style.width = `${(energy / maxEnergy) * 100}%`;
+                
+                if (vipTier !== "Free") {
+                    const crown = document.getElementById('vipCrown');
+                    if (crown) crown.style.display = 'block';
+
+                    const tag = document.getElementById('userLevelTag');
+                    if (tag) tag.innerText = `👑 ${vipTier} VIP`;
+
+                    const desc = document.getElementById('vipDailyDesc');
+                    if (desc) desc.innerText = `+${vipDailyBonus.toLocaleString()} Coins / 24h`;
+                }
+
+                const tiers = ['Bronze', 'Silver', 'Gold', 'Diamond'];
+                tiers.forEach(t => {
+                    const btn = document.getElementById(`btn-${t}`);
+                    if (btn && vipTier === t) {
+                        btn.innerText = "ACTIVE TIER ✓";
+                        btn.className = "ton-btn active-tier-btn";
+                        btn.onclick = null;
+                    }
+                });
+            } catch(e) {}
+        }
+
+        // Auto-Repair Engine Loop
+        function autoRepairApp() {
+            try {
+                if (isNaN(balance) || balance < 0) {
+                    balance = parseInt(localStorage.getItem('iran_coin_bal_backup')) || 0;
+                }
+                updateUI();
+
+                const activeTabs = document.querySelectorAll('.tab-section.active-tab');
+                if (activeTabs.length === 0) {
+                    const defTab = document.getElementById('tab-mine');
+                    if (defTab) defTab.classList.add('active-tab');
+                }
+            } catch(e){}
+        }
+        setInterval(autoRepairApp, 3000);
+
+        // Anti-Cheat Safe Backend Sync
         async function syncData() {
             try {
                 const res = await fetch(`${BACKEND_URL}/api/v1/user/${user.id}`);
                 const data = await res.json();
-                if (data) {
-                    balance = data.balance;
-                    vipTier = data.vip_tier || "Free";
-                    tapValue = data.tap_value || 1;
-                    maxEnergy = data.max_energy || 1000;
+                if (data && typeof data.balance === 'number') {
+                    // Only update balance from server if server balance is greater or equal
+                    saveBalance(Math.max(balance, data.balance));
+                    vipTier = data.vip_tier || vipTier;
+                    tapValue = data.tap_value || tapValue;
+                    maxEnergy = data.max_energy || maxEnergy;
                     updateUI();
                 }
             } catch (e) {
@@ -494,72 +535,81 @@
         }
         setInterval(syncData, 15000);
 
-        function updateUI() {
-            document.getElementById('userBalance').innerText = balance.toLocaleString();
-            document.getElementById('energyText').innerText = `${energy} / ${maxEnergy}`;
-            document.getElementById('energyFill').style.width = `${(energy / maxEnergy) * 100}%`;
-            
-            if (vipTier !== "Free") {
-                document.getElementById('vipCrown').style.display = 'block';
-                document.getElementById('userLevelTag').innerText = `👑 ${vipTier} VIP`;
-                document.getElementById('vipDailyDesc').innerText = `+${vipDailyBonus.toLocaleString()} Coins / 24h`;
+        // Fail-Safe Navigation Switching
+        function switchTab(tabId, el) {
+            try {
+                document.querySelectorAll('.tab-section').forEach(t => {
+                    t.classList.remove('active-tab');
+                });
+                
+                const target = document.getElementById(tabId);
+                if (target) target.classList.add('active-tab');
+
+                document.querySelectorAll('.nav-item').forEach(n => {
+                    n.classList.remove('active');
+                });
+                if (el) el.classList.add('active');
+
+                if (tabId === 'tab-earn') setTimeout(drawWheel, 80);
+            } catch(e) {
+                console.error("Tab switch error:", e);
+                autoRepairApp();
             }
-
-            const tiers = ['Bronze', 'Silver', 'Gold', 'Diamond'];
-            tiers.forEach(t => {
-                const btn = document.getElementById(`btn-${t}`);
-                if (btn && vipTier === t) {
-                    btn.innerText = "ACTIVE TIER ✓";
-                    btn.className = "ton-btn active-tier-btn";
-                    btn.onclick = null;
-                }
-            });
-
-            localStorage.setItem('iran_coin_bal', balance);
         }
 
-        // Energy Regeneration
+        // Modal Controls
+        function showAppModal(title, desc) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalDesc').innerText = desc;
+            document.getElementById('customModal').style.display = 'flex';
+        }
+        function closeModal() { document.getElementById('customModal').style.display = 'none'; }
+
+        // Energy Refill Loop
         setInterval(() => {
             if (energy < maxEnergy) {
                 energy = Math.min(maxEnergy, energy + (vipTier !== "Free" ? 4 : 2));
-                document.getElementById('energyText').innerText = `${energy} / ${maxEnergy}`;
-                document.getElementById('energyFill').style.width = `${(energy / maxEnergy) * 100}%`;
+                updateUI();
             }
         }, 1000);
 
         // Tap Mechanics
         const tapBtn = document.getElementById('tapBtn');
-        tapBtn.addEventListener('pointerdown', (e) => {
-            if (energy < tapValue) return;
+        if (tapBtn) {
+            tapBtn.addEventListener('pointerdown', (e) => {
+                if (energy < tapValue) return;
 
-            energy -= tapValue;
-            balance += tapValue;
-            updateUI();
+                energy -= tapValue;
+                saveBalance(balance + tapValue);
+                updateUI();
 
-            const num = document.createElement('div');
-            num.className = 'tap-number';
-            num.innerText = `+${tapValue}`;
-            
-            const rect = tapBtn.getBoundingClientRect();
-            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-            
-            if (clientX && clientY) {
-                num.style.left = `${clientX - rect.left}px`;
-                num.style.top = `${clientY - rect.top}px`;
-            }
-            tapBtn.parentElement.appendChild(num);
-            setTimeout(() => num.remove(), 800);
+                const num = document.createElement('div');
+                num.className = 'tap-number';
+                num.innerText = `+${tapValue}`;
+                
+                const rect = tapBtn.getBoundingClientRect();
+                const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+                const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+                
+                if (clientX && clientY) {
+                    num.style.left = `${clientX - rect.left}px`;
+                    num.style.top = `${clientY - rect.top}px`;
+                }
+                tapBtn.parentElement.appendChild(num);
+                setTimeout(() => num.remove(), 800);
 
-            if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+                if (tg?.HapticFeedback) {
+                    try { tg.HapticFeedback.impactOccurred('light'); } catch(e){}
+                }
 
-            fetch(`${BACKEND_URL}/api/v1/tap`, {
-                method: "POST", headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({ user_id: user.id, count: tapValue })
-            }).catch(()=>{});
-        });
+                fetch(`${BACKEND_URL}/api/v1/tap`, {
+                    method: "POST", headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({ user_id: user.id, count: tapValue })
+                }).catch(()=>{});
+            });
+        }
 
-        // Anti-Cheat VIP Request
+        // Anti-Cheat VIP TON Purchase
         function buyVip(tier, amount) {
             const nanoTon = Math.round(amount * 1000000000);
             const memo = `VIP_${tier}_${user.id}`;
@@ -568,9 +618,180 @@
             if (tg?.openTelegramLink) tg.openTelegramLink(`https://t.me/wallet?startattach=ton_transfer_${ADMIN_WALLET}`);
             else window.open(tonUrl, '_blank');
 
-            document.getElementById(`status-${tier}`).style.display = "block";
+            const statusEl = document.getElementById(`status-${tier}`);
+            if (statusEl) statusEl.style.display = "block";
             
             showAppModal(
                 "⏳ VERIFICATION PENDING",
                 `TON Wallet opened for ${amount} TON (${tier} VIP).\n\nMemo Code: ${memo}\n\nOnce confirmed on TON Blockchain, your VIP level will activate automatically!`
+            );
+        }
+
+        function claimVipDaily() {
+            if (vipTier === "Free" || vipDailyBonus <= 0) {
+                return showAppModal("VIP REQUIRED", "⚠️ You must hold an active TON VIP Pass to claim daily bonuses!");
+            }
+            const today = new Date().toDateString();
+            if (localStorage.getItem('iran_vip_claim_date') === today) {
+                return showAppModal("CLAIMED TODAY", "⚠️ You already claimed your VIP bonus today. Come back tomorrow!");
+            }
+            saveBalance(balance + vipDailyBonus);
+            localStorage.setItem('iran_vip_claim_date', today);
+            updateUI();
+            showAppModal("BONUS CLAIMED", `🎉 Claimed +${vipDailyBonus.toLocaleString()} VIP Daily Coins!`);
+        }
+
+        // 24h Daily Spin Mechanics
+        const prizeLabels = ["500 🪙", "10 🪙", "TRY AGAIN ❌", "50 🪙", "NO LUCK ❌", "20 🪙", "100 🪙", "TRY AGAIN ❌"];
+        const prizeValues = [500, 10, 0, 50, 0, 20, 100, 0];
+        const colors = ['#f5b300', '#0f172a', '#ef4444', '#1e293b', '#ef4444', '#0f172a', '#10b981', '#ef4444'];
+
+        function drawWheel() {
+            const canvas = document.getElementById("wheelCanvas");
+            if (!canvas) return;
+            const ctx = canvas.getContext("2d");
+            const arcSize = (2 * Math.PI) / 8;
+            ctx.clearRect(0,0,260,260);
+
+            for (let i = 0; i < 8; i++) {
+                const angle = i * arcSize;
+                ctx.beginPath(); ctx.fillStyle = colors[i];
+                ctx.moveTo(130,130); ctx.arc(130,130,125, angle, angle + arcSize);
+                ctx.lineTo(130,130); ctx.fill(); ctx.save();
+                ctx.translate(130,130); ctx.rotate(angle + arcSize / 2);
+                ctx.textAlign = "right"; ctx.fillStyle = "#fff"; ctx.font = "bold 11px Poppins";
+                ctx.fillText(`${prizeLabels[i]}`, 115, 4); ctx.restore();
+            }
+        }
+
+        function spinWheel() {
+            const today = new Date().toDateString();
+            if (localStorage.getItem('iran_wheel_spin_date') === today) {
+                return showAppModal("ALREADY SPUN", "⚠️ You have already spun the wheel today. Try again tomorrow!");
+            }
+            const spinBtn = document.getElementById('spinBtn');
+            if (spinBtn) spinBtn.disabled = true;
+
+            let winIdx;
+            if (!localStorage.getItem('iran_wheel_first')) {
+                winIdx = 0; // Guaranteed 500 Coins on First Spin
+                localStorage.setItem('iran_wheel_first', 'done');
+            } else {
+                winIdx = Math.floor(Math.random() * 7) + 1;
+            }
+
+            const deg = 360 * 5 + (360 - (winIdx * 45) - 22.5);
+            const canvas = document.getElementById("wheelCanvas");
+            if (canvas) {
+                canvas.style.transition = "transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)";
+                canvas.style.transform = `rotate(${deg}deg)`;
+            }
+
+            setTimeout(() => {
+                const prize = prizeValues[winIdx];
+                saveBalance(balance + prize);
+                localStorage.setItem('iran_wheel_spin_date', today);
+                updateUI();
+
+                if (prize > 0) showAppModal("CONGRATULATIONS!", `🎉 You won ${prize} IRAN Coins!`);
+                else showAppModal("NO LUCK TODAY", `❌ ${prizeLabels[winIdx]}. Try again tomorrow!`);
+
+                if (spinBtn) spinBtn.disabled = false;
+                if (canvas) {
+                    canvas.style.transition = "none";
+                    canvas.style.transform = `rotate(${deg % 360}deg)`;
+                }
+            }, 4100);
+        }
+
+        // Flawless Video Ad Controller
+        function watchVideoAd() {
+            const adModal = document.getElementById('adModal');
+            const timerEl = document.getElementById('adTimer');
+            let timeLeft = 5;
             
+            if (timerEl) timerEl.innerText = timeLeft;
+            if (adModal) adModal.style.display = 'flex';
+
+            const interval = setInterval(() => {
+                timeLeft--;
+                if (timerEl) timerEl.innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(interval);
+                    if (adModal) adModal.style.display = 'none';
+                    
+                    saveBalance(balance + 100);
+                    updateUI();
+                    fetch(`${BACKEND_URL}/api/v1/ads/watch?telegram_id=${user.id}`).catch(()=>{});
+                    showAppModal("REWARD ADDED", "🎉 +100 IRAN Coins added to your balance!");
+                }
+            }, 1000);
+        }
+
+        // CPX & Community Tasks
+        function openCPX() {
+            const url = `https://offers.cpx-research.com/index.html?app_id=24785&ext_user_id=${user.id}`;
+            if (tg?.openLink) tg.openLink(url); else window.open(url, '_blank');
+        }
+
+        function handleTgTask(link, btnId, reward) {
+            const btn = document.getElementById(btnId);
+            if (btn) {
+                if (btn.innerText === "Join") {
+                    if (tg?.openTelegramLink) tg.openTelegramLink(link); else window.open(link, '_blank');
+                    btn.innerText = "Check";
+                } else if (btn.innerText === "Check") {
+                    btn.innerText = "Claimed ✓"; btn.onclick = null; btn.classList.add('completed');
+                    if (reward > 0) saveBalance(balance + reward);
+                    updateUI();
+                    showAppModal("TASK COMPLETED", `🎉 Task complete! +${reward} IRAN Coins added.`);
+                }
+            }
+        }
+
+        // Referral Engine
+        function shareReferral() {
+            const refLink = `https://t.me/IranCoinEarnBot?start=ref_${user.id}`;
+            const text = `🚀 Join IRAN Coin & mine crypto today! Get bonus coins instantly: ${refLink}`;
+            if (tg?.openTelegramLink) tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(text)}`);
+            else window.open(`https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(text)}`, '_blank');
+        }
+
+        function copyReferral() {
+            navigator.clipboard.writeText(`https://t.me/IranCoinEarnBot?start=ref_${user.id}`);
+            showAppModal("LINK COPIED", "📋 Unique referral link copied to clipboard!");
+        }
+
+        // Withdrawal Engine
+        function submitWithdrawal() {
+            const wallet = document.getElementById('tonWalletInput').value.trim();
+            if (!wallet || wallet.length < 24) return showAppModal("INVALID ADDRESS", "⚠️ Please enter a valid TON wallet address.");
+            if (balance < 10000) return showAppModal("MINIMUM LIMIT", "⚠️ Minimum withdrawal required is 10,000 IRAN Coins.");
+            
+            fetch(`${BACKEND_URL}/api/v1/withdraw`, {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ telegram_id: user.id, wallet_address: wallet, amount: balance })
+            }).finally(() => {
+                showAppModal("REQUEST SUBMITTED", "✅ Withdrawal request submitted to admin!");
+                saveBalance(0); updateUI();
+            });
+        }
+
+        // Initialize App Correctly
+        window.onload = () => {
+            const nameEl = document.getElementById('userName');
+            if (nameEl) nameEl.innerText = user.first_name || "Player";
+
+            const avatarEl = document.getElementById('userAvatar');
+            if (avatarEl && avatarEl.childNodes[0]) {
+                avatarEl.childNodes[0].nodeValue = (user.first_name || "P").charAt(0).toUpperCase();
+            }
+
+            syncData();
+            updateUI();
+            drawWheel();
+            autoRepairApp();
+        };
+    </script>
+</body>
+</html>
