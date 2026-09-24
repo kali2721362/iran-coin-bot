@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>IRAN Coin - Live A-Ads Monetized Build</title>
+    <title>IRAN Coin - Verified A-Ads Build</title>
     
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -36,7 +36,7 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Fixed Background across all tabs */
+        /* Fixed Background */
         body {
             background: linear-gradient(to bottom, rgba(11, 17, 30, 0.82), rgba(11, 17, 30, 0.95)), url('bg.jpg') no-repeat center center fixed;
             background-size: cover;
@@ -234,16 +234,15 @@
     <!-- TAB 1: MINE -->
     <div class="tab-section active-tab" id="tab-mine">
         
-        <!-- Live A-Ads Banner Placement #1 -->
+        <!-- BEGIN AADS AD UNIT 2456226 (Placement #1) -->
         <div class="aads-container">
             <div class="aads-label">📢 Crypto Sponsor Ad</div>
-            <!-- BEGIN AADS AD UNIT 2456226 -->
             <div id="frame" style="width: 100%; margin: auto; position: relative;">
                 <iframe data-aa='2456226' src='https://acceptable.a-ads.com/2456226/?size=Adaptive'
                         style='border:0; padding:0; width:100%; height:auto; overflow:hidden; display: block; margin: auto;'></iframe>
             </div>
-            <!-- END AADS AD UNIT 2456226 -->
         </div>
+        <!-- END AADS AD UNIT 2456226 -->
 
         <div class="miner-area">
             <div class="miner-btn" id="tapBtn">
@@ -317,16 +316,15 @@
     <!-- TAB 3: EARN & TASKS -->
     <div class="tab-section" id="tab-earn">
         
-        <!-- Live A-Ads Banner Placement #2 -->
+        <!-- BEGIN AADS AD UNIT 2456226 (Placement #2) -->
         <div class="aads-container">
             <div class="aads-label">📢 Crypto Sponsor Ad</div>
-            <!-- BEGIN AADS AD UNIT 2456226 -->
             <div id="frame" style="width: 100%; margin: auto; position: relative;">
                 <iframe data-aa='2456226' src='https://acceptable.a-ads.com/2456226/?size=Adaptive'
                         style='border:0; padding:0; width:100%; height:auto; overflow:hidden; display: block; margin: auto;'></iframe>
             </div>
-            <!-- END AADS AD UNIT 2456226 -->
         </div>
+        <!-- END AADS AD UNIT 2456226 -->
 
         <!-- Direct Sponsor Ad Banner -->
         <div class="sponsor-banner" onclick="handleTgTask('https://t.me/IRANCoinGroup', 'sponsor', 0)">
@@ -410,7 +408,7 @@
             <button class="action-btn" id="btnTaskGroup" onclick="handleTgTask('https://t.me/IRANCoinGroup', 'btnTaskGroup', 50)">Join</button>
         </div>
 
-        <div class="version-tag">IRAN Coin v9.0 - Live A-Ads Monetized</div>
+        <div class="version-tag">IRAN Coin v10.0 - Verified A-Ads Integration</div>
     </div>
 
     <!-- TAB 4: FRIENDS (REFERRAL) -->
@@ -707,7 +705,7 @@
 
             let winIdx;
             if (!localStorage.getItem('iran_wheel_first')) {
-                winIdx = 0; // 500 Coins guaranteed first spin
+                winIdx = 0; // Guaranteed 500 Coins on First Spin
                 localStorage.setItem('iran_wheel_first', 'done');
             } else {
                 winIdx = Math.floor(Math.random() * 7) + 1;
