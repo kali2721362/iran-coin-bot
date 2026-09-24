@@ -1,828 +1,380 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>IRAN Coin - Verified A-Ads Build</title>
+import os
+import sys
+import json
+import asyncio
+import logging
+from datetime import datetime
+from typing import Optional
+
+import httpx
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from sqlalchemy import create_engine, Column, BigInteger, String, Integer, Float, DateTime, Boolean, text
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+# --- LOGGING SETUP ---
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("IRANCoinBackend")
+
+# --- ENVIRONMENT VARIABLES ---
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8639953959:AAHX6zYJgqQLo9JExYZ3GuqcEz-yrgjRmVs")
+DATABASE_URL = os.getenv("DATABASE_URL", "")
+ADMIN_ID = int(os.getenv("ADMIN_ID", "979411415"))
+ADMIN_WALLET = os.getenv("ADMIN_WALLET", "UQCcUO7XRuLyf46obnkSUrec5L00yng7sw8Jut04rlLKCSjB")
+TON_API_KEY = os.getenv("TONCENTER_API_KEY", "1d85a1804835e8c0c7458f49f9df7ed0c03d18c067999ec428fc1bd9136a0a8c")
+MINI_APP_URL = os.getenv("MINI_APP_URL", "https://kali2721362.github.io/iran-coin-bot/?v=110000")
+PORT = int(os.getenv("PORT", 8000))
+
+# Fix PostgreSQL schema for SQLAlchemy if needed
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+# --- DATABASE SETUP ---
+Base = declarative_base()
+engine = create_engine(DATABASE_URL, pool_pre_ping=True, pool_recycle=300)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+class User(Base):
+    __tablename__ = "users"
+    telegram_id = Column(BigInteger, primary_key=True)
+    username = Column(String, nullable=True)
+    balance = Column(BigInteger, default=0)
+    vip_tier = Column(String, default="Free") # Free, Bronze, Silver, Gold, Diamond
+    tap_value = Column(Integer, default=1)
+    max_energy = Column(Integer, default=1000)
+    referrer_id = Column(BigInteger, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class Transaction(Base):
+    __tablename__ = "transactions"
+    hash = Column(String, primary_key=True)
+    telegram_id = Column(BigInteger)
+    amount = Column(Float)
+    tier = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class WithdrawalRequest(Base):
+    __tablename__ = "withdrawals"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    telegram_id = Column(BigInteger)
+    wallet_address = Column(String)
+    amount = Column(BigInteger)
+    status = Column(String, default="Pending")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+Base.metadata.create_all(bind=engine)
+
+# --- AUTO DATABASE MIGRATION SCRIPT (FIXES MISSING COLUMNS) ---
+def run_auto_db_repair():
+    """به صورت اتوماتیک ستون‌های جدید را به دیتابیس قدیمی اضافه می‌کند بدون پاک شدن اطلاعات"""
+    db = SessionLocal()
+    try:
+        queries = [
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS vip_tier VARCHAR DEFAULT 'Free';",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS tap_value INTEGER DEFAULT 1;",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS max_energy INTEGER DEFAULT 1000;",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS referrer_id BIGINT;",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;"
+        ]
+        for q in queries:
+            db.execute(text(q))
+        db.commit()
+        logger.info("Database schema auto-repaired successfully!")
+    except Exception as e:
+        logger.error(f"DB Migration Note: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+run_auto_db_repair()
+
+# VIP Tiers Configuration
+VIP_CONFIG = {
+    "Bronze": {"price": 0.1, "tap": 2, "energy": 1500},
+    "Silver": {"price": 0.5, "tap": 5, "energy": 3000},
+    "Gold": {"price": 1.5, "tap": 10, "energy": 5000},
+    "Diamond": {"price": 3.0, "tap": 25, "energy": 10000},
+}
+
+# --- FASTAPI APP ---
+app = FastAPI(title="IRAN Coin Backend Engine")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+async def send_telegram_msg(chat_id: int, text: str, reply_markup: Optional[dict] = None):
+    if not BOT_TOKEN:
+        return
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    payload = {
+        "chat_id": chat_id,
+        "text": text,
+        "parse_mode": "HTML",
+        "disable_web_page_preview": True
+    }
+    if reply_markup:
+        payload["reply_markup"] = reply_markup
+
+    async with httpx.AsyncClient() as client:
+        try:
+            await client.post(url, json=payload, timeout=10)
+        except Exception as e:
+            logger.error(f"Error sending Telegram message: {e}")
+
+# --- TON BLOCKCHAIN MONITOR ---
+async def ton_blockchain_monitor():
+    url = f"https://toncenter.com/api/v2/getTransactions?address={ADMIN_WALLET}&limit=20&api_key={TON_API_KEY}"
+    logger.info("TON Blockchain Monitor Background Engine Started.")
     
-    <!-- Telegram WebApp SDK -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    while True:
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, timeout=15)
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get("ok"):
+                        db = SessionLocal()
+                        for tx in data.get("result", []):
+                            tx_hash = tx.get("transaction_id", {}).get("hash", "")
+                            if not tx_hash:
+                                continue
 
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+                            if not db.query(Transaction).filter(Transaction.hash == tx_hash).first():
+                                msg = tx.get("in_msg", {})
+                                comment = msg.get("message", "").strip()
+                                value_ton = int(msg.get("value", 0)) / 1e9
 
-    <style>
-        :root {
-            --bg-color: #0b111e;
-            --card-bg: rgba(22, 33, 56, 0.90);
-            --accent-gold: #f5b300;
-            --accent-blue: #00d2ff;
-            --accent-green: #10b981;
-            --accent-red: #ef4444;
-            --text-main: #ffffff;
-            --text-muted: #a0b1c9;
-            --btn-grad: linear-gradient(135deg, #f5b300, #ff8c00);
-            --ton-grad: linear-gradient(135deg, #0088cc, #00d2ff);
-            --card-border: 1px solid rgba(255, 255, 255, 0.15);
-        }
+                                if comment.startswith("VIP_"):
+                                    parts = comment.split("_")
+                                    if len(parts) == 3:
+                                        tier = parts[1]
+                                        user_id = int(parts[2])
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Poppins', sans-serif;
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
+                                        if tier in VIP_CONFIG and value_ton >= (VIP_CONFIG[tier]["price"] * 0.9):
+                                            new_tx = Transaction(hash=tx_hash, telegram_id=user_id, amount=value_ton, tier=tier)
+                                            db.add(new_tx)
 
-        /* Fixed Background */
-        body {
-            background: linear-gradient(to bottom, rgba(11, 17, 30, 0.82), rgba(11, 17, 30, 0.95)), url('bg.jpg') no-repeat center center fixed;
-            background-size: cover;
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow-x: hidden;
-            padding-bottom: 90px;
-        }
+                                            u = db.query(User).filter(User.telegram_id == user_id).first()
+                                            if u:
+                                                u.vip_tier = tier
+                                                u.tap_value = VIP_CONFIG[tier]["tap"]
+                                                u.max_energy = VIP_CONFIG[tier]["energy"]
+                                                db.commit()
 
-        /* Top Header */
-        .header {
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(11, 17, 30, 0.85);
-            backdrop-filter: blur(15px);
-            border-bottom: var(--card-border);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
+                                                msg_text = (
+                                                    f"🎉 <b>VIP MEMBERSHIP ACTIVATED!</b>\n\n"
+                                                    f"👑 Tier: <b>{tier} VIP</b>\n"
+                                                    f"⚡ Tap Power: <b>+{VIP_CONFIG[tier]['tap']} Coins/Tap</b>\n"
+                                                    f"🔋 Max Energy: <b>{VIP_CONFIG[tier]['energy']}</b>\n\n"
+                                                    f"Thank you for supporting IRAN Coin!"
+                                                )
+                                                asyncio.create_task(send_telegram_msg(user_id, msg_text))
 
-        .user-profile { display: flex; align-items: center; gap: 10px; }
-        
-        .avatar-circle {
-            width: 42px; height: 42px; border-radius: 50%;
-            background: var(--btn-grad); display: flex; align-items: center;
-            justify-content: center; font-weight: 700; font-size: 18px;
-            color: #000; box-shadow: 0 0 12px rgba(245, 179, 0, 0.4);
-            position: relative;
-        }
+                                                admin_alert = (
+                                                    f"💰 <b>NEW TON VIP PAYMENT RECEIVED!</b>\n\n"
+                                                    f"👤 User: <code>{user_id}</code>\n"
+                                                    f"💎 Tier: <b>{tier} VIP</b>\n"
+                                                    f"💵 Amount: <b>{value_ton} TON</b>\n"
+                                                    f"🔗 Memo: <code>{comment}</code>"
+                                                )
+                                                asyncio.create_task(send_telegram_msg(ADMIN_ID, admin_alert))
 
-        .vip-badge-crown { position: absolute; top: -6px; right: -6px; font-size: 14px; display: none; }
-        .user-info .username { font-size: 14px; font-weight: 600; }
-        .user-info .level-tag { font-size: 11px; color: var(--accent-gold); font-weight: 700; }
-        .balance-val { font-size: 20px; font-weight: 800; color: var(--accent-gold); display: flex; align-items: center; gap: 5px; }
+                                            db.commit()
+                        db.close()
+            await asyncio.sleep(45)
+        except Exception as e:
+            logger.error(f"TON Monitor Error: {e}")
+            await asyncio.sleep(20)
 
-        /* Tab Sections */
-        .tab-section {
-            display: none !important;
-            padding: 20px; flex-direction: column;
-            align-items: center; width: 100%; max-width: 480px; margin: 0 auto;
-        }
-        .tab-section.active-tab { display: flex !important; }
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(ton_blockchain_monitor())
 
-        /* Miner Screen */
-        .miner-area { position: relative; margin: 20px auto; width: 240px; height: 240px; display: flex; justify-content: center; align-items: center; }
-        
-        .miner-btn {
-            width: 220px; height: 220px; border-radius: 50%;
-            background: radial-gradient(circle, #243b67 0%, #111d33 100%);
-            border: 4px solid var(--accent-gold);
-            box-shadow: 0 0 30px rgba(245, 179, 0, 0.4), inset 0 0 20px rgba(0, 210, 255, 0.3);
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: transform 0.08s ease; touch-action: manipulation;
-        }
-        .miner-btn:active { transform: scale(0.93); }
-        .miner-btn img { width: 80%; height: 80%; object-fit: contain; pointer-events: none; }
+# --- TELEGRAM WEBHOOK ROUTE ---
+@app.post("/webhook")
+@app.post("/api/v1/webhook")
+async def telegram_webhook(request: Request):
+    try:
+        data = await request.json()
+        if "message" in data:
+            message = data["message"]
+            chat_id = message["chat"]["id"]
+            text = message.get("text", "")
+            username = message.get("from", {}).get("first_name", "Player")
 
-        .energy-box { width: 100%; max-width: 320px; margin-top: 10px; }
-        .energy-info { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
-        .energy-bar-bg { width: 100%; height: 12px; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
-        .energy-bar-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #00d2ff, #f5b300); border-radius: 10px; transition: width 0.2s linear; }
+            db = SessionLocal()
+            user = db.query(User).filter(User.telegram_id == chat_id).first()
 
-        .tap-number { position: absolute; font-size: 26px; font-weight: 800; color: var(--accent-gold); text-shadow: 0 0 8px rgba(0,0,0,1); pointer-events: none; animation: floatUp 0.8s ease-out forwards; z-index: 100; }
-        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-70px) scale(1.3); } }
+            referrer_id = None
+            if text.startswith("/start"):
+                parts = text.split()
+                if len(parts) > 1 and parts[1].startswith("ref_"):
+                    try:
+                        referrer_id = int(parts[1].replace("ref_", ""))
+                        if referrer_id == chat_id:
+                            referrer_id = None
+                    except:
+                        referrer_id = None
 
-        /* A-Ads Banner Styling Container */
-        .aads-container {
-            width: 100%;
-            background: var(--card-bg);
-            border: var(--card-border);
-            border-radius: 16px;
-            padding: 12px;
-            margin-bottom: 15px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            backdrop-filter: blur(8px);
-            overflow: hidden;
-        }
-        .aads-label {
-            font-size: 10px;
-            color: var(--accent-gold);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-            font-weight: 700;
-        }
+                if not user:
+                    user = User(
+                        telegram_id=chat_id,
+                        username=username,
+                        balance=0,
+                        referrer_id=referrer_id
+                    )
+                    db.add(user)
+                    db.commit()
 
-        /* Cards & Titles */
-        .section-title { width: 100%; font-size: 17px; font-weight: 700; margin: 15px 0 10px 0; display: flex; align-items: center; gap: 8px; color: var(--accent-gold); text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-        
-        .task-card {
-            width: 100%; background: var(--card-bg); border: var(--card-border);
-            padding: 14px 16px; border-radius: 16px; display: flex;
-            align-items: center; justify-content: space-between; margin-bottom: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3); backdrop-filter: blur(8px);
-        }
+                    if referrer_id:
+                        ref_user = db.query(User).filter(User.telegram_id == referrer_id).first()
+                        if ref_user:
+                            ref_user.balance += 50
+                            db.commit()
+                            ref_msg = (
+                                f"👥 <b>New Referral Joined!</b>\n\n"
+                                f"User <b>{username}</b> joined using your link!\n"
+                                f"🎁 You earned <b>+50 IRAN Coins</b>!"
+                            )
+                            asyncio.create_task(send_telegram_msg(referrer_id, ref_msg))
 
-        .action-btn { background: var(--btn-grad); color: #000; font-weight: 700; font-size: 13px; border: none; padding: 10px 18px; border-radius: 20px; cursor: pointer; touch-action: manipulation; }
-        .action-btn.completed { background: rgba(255, 255, 255, 0.1); color: var(--text-muted); cursor: not-allowed; }
-        .ton-btn { background: var(--ton-grad); color: #fff; font-weight: 700; font-size: 13px; border: none; padding: 12px; border-radius: 12px; cursor: pointer; width: 100%; }
-        .active-tier-btn { background: var(--accent-green) !important; color: #fff !important; cursor: default !important; }
+                welcome_text = (
+                    f"🇮🇷 <b>Welcome to IRAN Coin, {username}!</b>\n\n"
+                    f"Mine tokens, complete tasks, spin the daily wheel, and upgrade your VIP level to earn real TON rewards!\n\n"
+                    f"🪙 <b>Your Balance:</b> {user.balance:,} IRAN Coins\n"
+                    f"👑 <b>VIP Status:</b> {user.vip_tier}\n\n"
+                    f"Tap the button below to start mining now 👇"
+                )
 
-        /* Direct Sponsor Banner */
-        .sponsor-banner {
-            width: 100%; background: linear-gradient(135deg, rgba(0, 136, 204, 0.3), rgba(0, 210, 255, 0.2));
-            border: 1px dashed var(--accent-blue); border-radius: 16px; padding: 15px; text-align: center;
-            margin-bottom: 15px; cursor: pointer; backdrop-filter: blur(10px);
-        }
-
-        /* VIP Tier Cards Style */
-        .vip-tier-card {
-            width: 100%; background: rgba(15, 23, 42, 0.9);
-            border: 2px solid var(--accent-gold); border-radius: 18px;
-            padding: 16px; margin-bottom: 15px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-            display: flex; flex-direction: column; gap: 10px; backdrop-filter: blur(10px);
-        }
-        .vip-tier-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
-        .vip-tier-name { font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 6px; }
-        .status-checking { color: #00d2ff; font-size: 11px; text-align: center; animation: blink 1.5s infinite; }
-        @keyframes blink { 50% { opacity: 0.5; } }
-
-        /* Lucky Spin Wheel */
-        .wheel-container { position: relative; width: 260px; height: 260px; margin: 10px auto 20px auto; }
-        #wheelCanvas { width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 0 25px rgba(0, 210, 255, 0.3); }
-        .wheel-pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 25px solid var(--accent-gold); z-index: 10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
-
-        .wallet-input { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); padding: 12px 14px; border-radius: 10px; color: #fff; font-size: 14px; margin: 10px 0 15px 0; outline: none; }
-        .full-btn { width: 100%; padding: 14px; font-size: 15px; border-radius: 12px; }
-
-        /* Custom Modal Overlay */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px);
-            display: none; justify-content: center; align-items: center;
-            z-index: 2000; padding: 20px;
-        }
-        .modal-card {
-            background: #162138; border: 2px solid var(--accent-gold);
-            border-radius: 20px; padding: 22px; width: 100%; max-width: 330px;
-            text-align: center; box-shadow: 0 0 30px rgba(245, 179, 0, 0.3);
-        }
-
-        /* Video Ad Modal */
-        .ad-modal-card {
-            background: #0f172a; border: 2px solid var(--accent-blue);
-            border-radius: 20px; padding: 25px; width: 100%; max-width: 320px; text-align: center;
-        }
-        .ad-timer-circle {
-            width: 70px; height: 70px; border-radius: 50%; border: 3px solid var(--accent-gold);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 26px; font-weight: 800; color: var(--accent-gold); margin: 15px auto;
-        }
-
-        .version-tag { font-size: 10px; color: var(--text-muted); text-align: center; margin-top: 15px; opacity: 0.6; }
-
-        /* Bottom Nav - ALL 5 ITEMS */
-        .bottom-nav {
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 75px;
-            background: rgba(11, 17, 30, 0.95); backdrop-filter: blur(20px);
-            border-top: var(--card-border); display: flex; justify-content: space-around; align-items: center; z-index: 1000;
-        }
-        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--text-muted); font-size: 11px; font-weight: 600; cursor: pointer; padding: 8px 2px; flex: 1; }
-        .nav-item * { pointer-events: none; }
-        .nav-item.active { color: var(--accent-gold); }
-        .nav-icon { font-size: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-    </style>
-</head>
-<body>
-
-    <!-- Header Section -->
-    <header class="header">
-        <div class="user-profile">
-            <div class="avatar-circle" id="userAvatar">
-                P
-                <span class="vip-badge-crown" id="vipCrown">👑</span>
-            </div>
-            <div class="user-info">
-                <div class="username" id="userName">Player</div>
-                <div class="level-tag" id="userLevelTag">⛏ Standard Miner</div>
-            </div>
-        </div>
-        <div class="balance-container">
-            <div style="font-size: 11px; color: var(--text-muted);">BALANCE</div>
-            <div class="balance-val">
-                <span id="userBalance">0</span> 🪙
-            </div>
-        </div>
-    </header>
-
-    <!-- TAB 1: MINE -->
-    <div class="tab-section active-tab" id="tab-mine">
-        
-        <!-- BEGIN AADS AD UNIT 2456226 (Placement #1) -->
-        <div class="aads-container">
-            <div class="aads-label">📢 Crypto Sponsor Ad</div>
-            <div id="frame" style="width: 100%; margin: auto; position: relative;">
-                <iframe data-aa='2456226' src='https://acceptable.a-ads.com/2456226/?size=Adaptive'
-                        style='border:0; padding:0; width:100%; height:auto; overflow:hidden; display: block; margin: auto;'></iframe>
-            </div>
-        </div>
-        <!-- END AADS AD UNIT 2456226 -->
-
-        <div class="miner-area">
-            <div class="miner-btn" id="tapBtn">
-                <img src="miner.jpg" alt="Miner" onerror="this.src='https://cdn-icons-png.flaticon.com/512/6009/6009864.png'">
-            </div>
-        </div>
-
-        <div class="energy-box">
-            <div class="energy-info">
-                <span>⚡ Energy</span>
-                <span id="energyText">1000 / 1000</span>
-            </div>
-            <div class="energy-bar-bg">
-                <div class="energy-bar-fill" id="energyFill"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- TAB 2: VIP STORE -->
-    <div class="tab-section" id="tab-vip">
-        <div class="section-title">👑 VIP Passes (TON Crypto)</div>
-        <p style="font-size: 12px; color: var(--text-muted); text-align: center; margin-bottom: 15px;">
-            Upgrade using TON. Benefits activate automatically via blockchain verification!
-        </p>
-
-        <!-- Tier 1: Bronze -->
-        <div class="vip-tier-card">
-            <div class="vip-tier-header">
-                <div class="vip-tier-name">🥉 Bronze VIP</div>
-                <div style="font-weight:800; color:#00d2ff">0.1 TON</div>
-            </div>
-            <div style="font-size:12px; color:var(--text-muted);">⚡ +2 Coins/Tap | 🔋 1,500 Max Energy | 🎁 +500 Daily</div>
-            <button class="ton-btn" id="btn-Bronze" onclick="buyVip('Bronze', 0.1)">Buy for 0.1 TON 💎</button>
-            <div id="status-Bronze" class="status-checking" style="display:none;">Checking blockchain for transaction...</div>
-        </div>
-
-        <!-- Tier 2: Silver -->
-        <div class="vip-tier-card" style="border-color: #c0c0c0;">
-            <div class="vip-tier-header">
-                <div class="vip-tier-name">🥈 Silver VIP</div>
-                <div style="font-weight:800; color:#00d2ff">0.5 TON</div>
-            </div>
-            <div style="font-size:12px; color:var(--text-muted);">⚡ +5 Coins/Tap | 🔋 3,000 Max Energy | 🎁 +2,000 Daily</div>
-            <button class="ton-btn" id="btn-Silver" onclick="buyVip('Silver', 0.5)">Buy for 0.5 TON 💎</button>
-            <div id="status-Silver" class="status-checking" style="display:none;">Checking blockchain for transaction...</div>
-        </div>
-
-        <!-- Tier 3: Gold -->
-        <div class="vip-tier-card" style="border-color: #ffd700; background: rgba(30, 25, 10, 0.9);">
-            <div class="vip-tier-header">
-                <div class="vip-tier-name">🥇 Gold VIP</div>
-                <div style="font-weight:800; color:#00d2ff">1.5 TON</div>
-            </div>
-            <div style="font-size:12px; color:var(--text-muted);">⚡ +10 Coins/Tap | 🔋 5,000 Max Energy | 🎁 +5,000 Daily</div>
-            <button class="ton-btn" id="btn-Gold" style="background: var(--btn-grad); color: #000;" onclick="buyVip('Gold', 1.5)">Buy for 1.5 TON 👑</button>
-            <div id="status-Gold" class="status-checking" style="display:none;">Checking blockchain for transaction...</div>
-        </div>
-
-        <!-- Tier 4: Diamond -->
-        <div class="vip-tier-card" style="border-color: #00d2ff; background: rgba(10, 30, 45, 0.9);">
-            <div class="vip-tier-header">
-                <div class="vip-tier-name">💎 Diamond VIP</div>
-                <div style="font-weight:800; color:#00d2ff">3.0 TON</div>
-            </div>
-            <div style="font-size:12px; color:var(--text-muted);">⚡ +25 Coins/Tap | 🔋 10,000 Max Energy | 🎁 +15,000 Daily</div>
-            <button class="ton-btn" id="btn-Diamond" style="background: linear-gradient(135deg, #00d2ff, #0088cc);" onclick="buyVip('Diamond', 3.0)">Buy for 3.0 TON 💎</button>
-            <div id="status-Diamond" class="status-checking" style="display:none;">Checking blockchain for transaction...</div>
-        </div>
-    </div>
-
-    <!-- TAB 3: EARN & TASKS -->
-    <div class="tab-section" id="tab-earn">
-        
-        <!-- BEGIN AADS AD UNIT 2456226 (Placement #2) -->
-        <div class="aads-container">
-            <div class="aads-label">📢 Crypto Sponsor Ad</div>
-            <div id="frame" style="width: 100%; margin: auto; position: relative;">
-                <iframe data-aa='2456226' src='https://acceptable.a-ads.com/2456226/?size=Adaptive'
-                        style='border:0; padding:0; width:100%; height:auto; overflow:hidden; display: block; margin: auto;'></iframe>
-            </div>
-        </div>
-        <!-- END AADS AD UNIT 2456226 -->
-
-        <!-- Direct Sponsor Ad Banner -->
-        <div class="sponsor-banner" onclick="handleTgTask('https://t.me/IRANCoinGroup', 'sponsor', 0)">
-            <h4 style="color: var(--accent-gold); font-size: 14px; margin-bottom: 2px;">📢 Your Banner Here!</h4>
-            <span style="font-size: 12px; color: var(--text-muted);">Click to advertise your Telegram Channel or Bot</span>
-        </div>
-
-        <!-- 24h Daily Spin -->
-        <div class="section-title">🎡 24h Daily Lucky Spin</div>
-        <div class="task-card" style="flex-direction: column; align-items: center; padding: 20px;">
-            <p style="font-size: 13px; text-align: center; margin-bottom: 15px;">Spin once every 24 hours to test your luck!</p>
-            <div class="wheel-container">
-                <div class="wheel-pointer"></div>
-                <canvas id="wheelCanvas" width="260" height="260"></canvas>
-            </div>
-            <button class="action-btn full-btn" id="spinBtn" onclick="spinWheel()" style="margin-top: 10px;">SPIN NOW</button>
-        </div>
-
-        <!-- VIP Daily Bonus -->
-        <div class="section-title">👑 Active VIP Daily Bonus</div>
-        <div class="task-card">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <span style="font-size: 26px;">🎁</span>
-                <div>
-                    <h4 style="font-size: 14px;" id="vipDailyTitle">VIP Daily Reward</h4>
-                    <span style="font-size: 12px; color: var(--accent-gold);" id="vipDailyDesc">Claim active tier bonus</span>
-                </div>
-            </div>
-            <button class="action-btn" id="btnClaimVipDaily" onclick="claimVipDaily()">Claim</button>
-        </div>
-
-        <div class="section-title">🎬 Sponsored Tasks</div>
-        
-        <!-- Video Ad Task -->
-        <div class="task-card">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <span style="font-size:24px;">🎬</span>
-                <div>
-                    <h4>Watch Video Ad</h4>
-                    <span style="font-size:12px; color:var(--accent-gold);">+100 Coins</span>
-                </div>
-            </div>
-            <button class="action-btn" id="btnWatchVideo" onclick="watchVideoAd()">Watch</button>
-        </div>
-
-        <!-- CPX Survey Task -->
-        <div class="task-card">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <span style="font-size:24px;">📋</span>
-                <div>
-                    <h4>CPX Paid Surveys</h4>
-                    <span style="font-size:12px; color:var(--accent-gold);">Up to +5,000 Coins</span>
-                </div>
-            </div>
-            <button class="action-btn" onclick="openCPX()">Start</button>
-        </div>
-
-        <div class="section-title">📢 Community Tasks</div>
-        
-        <!-- Channel Task -->
-        <div class="task-card">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <span style="font-size:24px;">✈️</span>
-                <div>
-                    <h4>Join Official Channel</h4>
-                    <span style="font-size:12px; color:var(--accent-gold);">+50 Coins</span>
-                </div>
-            </div>
-            <button class="action-btn" id="btnTaskChannel" onclick="handleTgTask('https://t.me/IRANCoin_Official', 'btnTaskChannel', 50)">Join</button>
-        </div>
-
-        <!-- Group Task -->
-        <div class="task-card">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <span style="font-size:24px;">💬</span>
-                <div>
-                    <h4>Join Support Group</h4>
-                    <span style="font-size:12px; color:var(--accent-gold);">+50 Coins</span>
-                </div>
-            </div>
-            <button class="action-btn" id="btnTaskGroup" onclick="handleTgTask('https://t.me/IRANCoinGroup', 'btnTaskGroup', 50)">Join</button>
-        </div>
-
-        <div class="version-tag">IRAN Coin v10.0 - Verified A-Ads Integration</div>
-    </div>
-
-    <!-- TAB 4: FRIENDS (REFERRAL) -->
-    <div class="tab-section" id="tab-friends">
-        <div class="section-title">👥 Invite Friends</div>
-        <div class="task-card" style="flex-direction: column; align-items: flex-start; gap: 8px;">
-            <h4>Invite Friends & Earn</h4>
-            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
-                Receive <strong style="color: var(--accent-gold);">+50 IRAN Coins</strong> for every friend who joins using your unique invite link.
-            </p>
-        </div>
-        <button class="action-btn full-btn" onclick="shareReferral()" style="margin-top: 15px;">🔗 Invite a Friend</button>
-        <button class="action-btn full-btn" onclick="copyReferral()" style="margin-top: 10px; background: rgba(255,255,255,0.1); color: #fff;">📋 Copy Referral Link</button>
-    </div>
-
-    <!-- TAB 5: WALLET (WITHDRAWAL) -->
-    <div class="tab-section" id="tab-wallet">
-        <div class="section-title">💼 Withdrawal Hub</div>
-        <div class="task-card" style="flex-direction: column; align-items: stretch; gap: 10px; background: rgba(0,0,0,0.5);">
-            <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:10px;">
-                <span style="color:var(--text-muted)">Min. Withdrawal:</span>
-                <span style="color:var(--accent-gold); font-weight:700;">10,000 Coins</span>
-            </div>
-            <label style="font-size: 12px; color: var(--text-muted);">Your TON Wallet Address:</label>
-            <input type="text" id="tonWalletInput" class="wallet-input" placeholder="UQ... or EQ... address">
-            <button class="action-btn full-btn" onclick="submitWithdrawal()">Submit Withdrawal Request</button>
-        </div>
-    </div>
-
-    <!-- Custom Notification Modal -->
-    <div class="modal-overlay" id="customModal">
-        <div class="modal-card">
-            <h3 id="modalTitle" style="color:var(--accent-gold); margin-bottom:10px; font-size:18px;">NOTIFICATION</h3>
-            <p id="modalDesc" style="font-size:13px; color:#fff; margin-bottom:20px; line-height:1.5;"></p>
-            <button class="action-btn full-btn" onclick="closeModal()">OK, UNDERSTOOD</button>
-        </div>
-    </div>
-
-    <!-- Video Player Modal -->
-    <div class="modal-overlay" id="adModal">
-        <div class="ad-modal-card">
-            <h3 style="color:var(--accent-blue); font-size:16px;">🎬 SPONSORED VIDEO AD</h3>
-            <p style="font-size:12px; color:#a0b1c9; margin-top:5px;">Watch advertisement to earn +100 IRAN Coins!</p>
-            <div class="ad-timer-circle" id="adTimer">5</div>
-            <p style="font-size:11px; color:var(--accent-gold);">Please wait until timer finishes...</p>
-        </div>
-    </div>
-
-    <!-- Bottom Navigation Bar - ALL 5 ITEMS -->
-    <nav class="bottom-nav">
-        <div class="nav-item active" onclick="switchTab('tab-mine', this)">
-            <span class="nav-icon">⛏</span><span>Mine</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('tab-vip', this)">
-            <span class="nav-icon">👑</span><span>VIP</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('tab-earn', this)">
-            <span class="nav-icon">💰</span><span>Earn</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('tab-friends', this)">
-            <span class="nav-icon">👥</span><span>Friends</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('tab-wallet', this)">
-            <span class="nav-icon">💼</span><span>Wallet</span>
-        </div>
-    </nav>
-
-    <!-- JavaScript Master Controller -->
-    <script>
-        const ADMIN_WALLET = "UQCcUO7XRuLyf46obnkSUrec5L00yng7sw8Jut04rlLKCSjB";
-        const BACKEND_URL = "https://iran-coin-bot-production.up.railway.app";
-
-        window.onerror = function() {
-            autoRepairApp();
-            return true;
-        };
-
-        const tg = window.Telegram?.WebApp;
-        if (tg) { try { tg.ready(); tg.expand(); } catch (e) {} }
-
-        const user = tg?.initDataUnsafe?.user || { id: 979411415, first_name: "Player" };
-
-        let balance = parseInt(localStorage.getItem('iran_coin_bal')) || parseInt(localStorage.getItem('iran_coin_bal_backup')) || 0;
-        let vipTier = localStorage.getItem('iran_coin_vip_tier') || "Free";
-        let tapValue = parseInt(localStorage.getItem('iran_coin_tap')) || 1;
-        let maxEnergy = parseInt(localStorage.getItem('iran_coin_maxen')) || 1000;
-        let vipDailyBonus = parseInt(localStorage.getItem('iran_coin_vip_daily')) || 0;
-        let energy = maxEnergy;
-
-        function saveBalance(val) {
-            balance = Math.max(0, parseInt(val) || 0);
-            localStorage.setItem('iran_coin_bal', balance);
-            localStorage.setItem('iran_coin_bal_backup', balance);
-        }
-
-        function updateUI() {
-            try {
-                const balEl = document.getElementById('userBalance');
-                if (balEl) balEl.innerText = balance.toLocaleString();
-
-                const enText = document.getElementById('energyText');
-                if (enText) enText.innerText = `${energy} / ${maxEnergy}`;
-
-                const enFill = document.getElementById('energyFill');
-                if (enFill) enFill.style.width = `${(energy / maxEnergy) * 100}%`;
-                
-                if (vipTier !== "Free") {
-                    const crown = document.getElementById('vipCrown');
-                    if (crown) crown.style.display = 'block';
-
-                    const tag = document.getElementById('userLevelTag');
-                    if (tag) tag.innerText = `👑 ${vipTier} VIP`;
-
-                    const desc = document.getElementById('vipDailyDesc');
-                    if (desc) desc.innerText = `+${vipDailyBonus.toLocaleString()} Coins / 24h`;
+                keyboard = {
+                    "inline_keyboard": [[
+                        {"text": "🚀 Play IRAN Coin Now", "web_app": {"url": MINI_APP_URL}}
+                    ], [
+                        {"text": "📢 Official Channel", "url": "https://t.me/IRANCoin_Official"},
+                        {"text": "💬 Support Group", "url": "https://t.me/IRANCoinGroup"}
+                    ]]
                 }
+                asyncio.create_task(send_telegram_msg(chat_id, welcome_text, keyboard))
 
-                const tiers = ['Bronze', 'Silver', 'Gold', 'Diamond'];
-                tiers.forEach(t => {
-                    const btn = document.getElementById(`btn-${t}`);
-                    if (btn && vipTier === t) {
-                        btn.innerText = "ACTIVE TIER ✓";
-                        btn.className = "ton-btn active-tier-btn";
-                        btn.onclick = null;
-                    }
-                });
-            } catch(e) {}
-        }
+            elif text == "/admin" and chat_id == ADMIN_ID:
+                total_users = db.query(User).count()
+                total_balance = db.query(User).all()
+                total_coins = sum(u.balance for u in total_balance)
+                vip_count = db.query(User).filter(User.vip_tier != "Free").count()
+                pending_withdraws = db.query(WithdrawalRequest).filter(WithdrawalRequest.status == "Pending").count()
 
-        function autoRepairApp() {
-            try {
-                if (isNaN(balance) || balance < 0) {
-                    balance = parseInt(localStorage.getItem('iran_coin_bal_backup')) || 0;
-                }
-                updateUI();
-                const activeTabs = document.querySelectorAll('.tab-section.active-tab');
-                if (activeTabs.length === 0) {
-                    const defTab = document.getElementById('tab-mine');
-                    if (defTab) defTab.classList.add('active-tab');
-                }
-            } catch(e){}
-        }
-        setInterval(autoRepairApp, 3000);
+                admin_stats = (
+                    f"📊 <b>IRAN COIN SYSTEM STATS</b>\n\n"
+                    f"👥 Total Members: <b>{total_users:,}</b>\n"
+                    f"🪙 Total Coins Mined: <b>{total_coins:,}</b>\n"
+                    f"👑 Total VIP Members: <b>{vip_count}</b>\n"
+                    f"💼 Pending Withdrawals: <b>{pending_withdraws}</b>\n\n"
+                    f"Use <code>/broadcast Your message</code> to send a message to all members."
+                )
+                asyncio.create_task(send_telegram_msg(chat_id, admin_stats))
 
-        async function syncData() {
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/v1/user/${user.id}`);
-                const data = await res.json();
-                if (data && typeof data.balance === 'number') {
-                    saveBalance(Math.max(balance, data.balance));
-                    vipTier = data.vip_tier || vipTier;
-                    tapValue = data.tap_value || tapValue;
-                    maxEnergy = data.max_energy || maxEnergy;
-                    updateUI();
-                }
-            } catch (e) {
-                updateUI();
-            }
-        }
-        setInterval(syncData, 15000);
+            elif text.startswith("/broadcast") and chat_id == ADMIN_ID:
+                bc_text = text.replace("/broadcast", "").strip()
+                if bc_text:
+                    all_users = db.query(User).all()
+                    sent_count = 0
+                    for u in all_users:
+                        asyncio.create_task(send_telegram_msg(u.telegram_id, f"📢 <b>ANNOUNCEMENT:</b>\n\n{bc_text}"))
+                        sent_count += 1
+                    asyncio.create_task(send_telegram_msg(ADMIN_ID, f"✅ Broadcast sent to {sent_count} users!"))
 
-        function switchTab(tabId, el) {
-            try {
-                document.querySelectorAll('.tab-section').forEach(t => {
-                    t.classList.remove('active-tab');
-                });
-                
-                const target = document.getElementById(tabId);
-                if (target) target.classList.add('active-tab');
+            db.close()
+        return {"status": "ok"}
+    except Exception as e:
+        logger.error(f"Webhook Error: {e}")
+        return {"status": "ok"}
 
-                document.querySelectorAll('.nav-item').forEach(n => {
-                    n.classList.remove('active');
-                });
-                if (el) el.classList.add('active');
+# --- API ENDPOINTS ---
+@app.get("/")
+def read_root():
+    return {"status": "IRAN Coin Server Running", "app_url": MINI_APP_URL}
 
-                if (tabId === 'tab-earn') setTimeout(drawWheel, 80);
-            } catch(e) {
-                autoRepairApp();
-            }
-        }
+@app.get("/api/v1/user/{user_id}")
+async def get_user_api(user_id: int):
+    db = SessionLocal()
+    user = db.query(User).filter(User.telegram_id == user_id).first()
+    if not user:
+        user = User(telegram_id=user_id, balance=0, vip_tier="Free")
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    
+    res = {
+        "telegram_id": user.telegram_id,
+        "username": user.username,
+        "balance": user.balance,
+        "vip_tier": user.vip_tier,
+        "tap_value": user.tap_value,
+        "max_energy": user.max_energy
+    }
+    db.close()
+    return res
 
-        function showAppModal(title, desc) {
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('modalDesc').innerText = desc;
-            document.getElementById('customModal').style.display = 'flex';
-        }
-        function closeModal() { document.getElementById('customModal').style.display = 'none'; }
+class TapModel(BaseModel):
+    user_id: int
+    count: int
 
-        setInterval(() => {
-            if (energy < maxEnergy) {
-                energy = Math.min(maxEnergy, energy + (vipTier !== "Free" ? 4 : 2));
-                updateUI();
-            }
-        }, 1000);
+@app.post("/api/v1/tap")
+async def tap_coins_api(req: TapModel):
+    db = SessionLocal()
+    user = db.query(User).filter(User.telegram_id == req.user_id).first()
+    if user:
+        user.balance += req.count
+        db.commit()
+    db.close()
+    return {"status": "ok"}
 
-        // Tap Mechanics
-        const tapBtn = document.getElementById('tapBtn');
-        if (tapBtn) {
-            tapBtn.addEventListener('pointerdown', (e) => {
-                if (energy < tapValue) return;
+class WithdrawModel(BaseModel):
+    telegram_id: int
+    wallet_address: str
+    amount: int
 
-                energy -= tapValue;
-                saveBalance(balance + tapValue);
-                updateUI();
+@app.post("/api/v1/withdraw")
+async def withdraw_api(req: WithdrawModel):
+    db = SessionLocal()
+    user = db.query(User).filter(User.telegram_id == req.telegram_id).first()
+    if not user or user.balance < req.amount or req.amount < 10000:
+        db.close()
+        raise HTTPException(status_code=400, detail="Insufficient balance or invalid amount.")
 
-                const num = document.createElement('div');
-                num.className = 'tap-number';
-                num.innerText = `+${tapValue}`;
-                
-                const rect = tapBtn.getBoundingClientRect();
-                const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-                const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-                
-                if (clientX && clientY) {
-                    num.style.left = `${clientX - rect.left}px`;
-                    num.style.top = `${clientY - rect.top}px`;
-                }
-                tapBtn.parentElement.appendChild(num);
-                setTimeout(() => num.remove(), 800);
+    user.balance -= req.amount
+    withdraw = WithdrawalRequest(telegram_id=req.telegram_id, wallet_address=req.wallet_address, amount=req.amount)
+    db.add(withdraw)
+    db.commit()
 
-                if (tg?.HapticFeedback) {
-                    try { tg.HapticFeedback.impactOccurred('light'); } catch(e){}
-                }
+    admin_text = (
+        f"💼 <b>NEW WITHDRAWAL REQUEST!</b>\n\n"
+        f"👤 User ID: <code>{req.telegram_id}</code>\n"
+        f"🪙 Amount: <b>{req.amount:,} Coins</b>\n"
+        f"👛 TON Wallet:\n<code>{req.wallet_address}</code>"
+    )
+    asyncio.create_task(send_telegram_msg(ADMIN_ID, admin_text))
 
-                fetch(`${BACKEND_URL}/api/v1/tap`, {
-                    method: "POST", headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({ user_id: user.id, count: tapValue })
-                }).catch(()=>{});
-            });
-        }
+    db.close()
+    return {"status": "success"}
 
-        // Anti-Cheat VIP TON Purchase
-        function buyVip(tier, amount) {
-            const nanoTon = Math.round(amount * 1000000000);
-            const memo = `VIP_${tier}_${user.id}`;
-            const tonUrl = `https://app.tonkeeper.com/transfer/${ADMIN_WALLET}?amount=${nanoTon}&text=${memo}`;
-            
-            if (tg?.openTelegramLink) tg.openTelegramLink(`https://t.me/wallet?startattach=ton_transfer_${ADMIN_WALLET}`);
-            else window.open(tonUrl, '_blank');
+@app.get("/api/v1/ads/watch")
+async def ad_watch_api(telegram_id: int):
+    db = SessionLocal()
+    user = db.query(User).filter(User.telegram_id == telegram_id).first()
+    if user:
+        user.balance += 100
+        db.commit()
+    db.close()
+    return {"status": "rewarded"}
 
-            const statusEl = document.getElementById(`status-${tier}`);
-            if (statusEl) statusEl.style.display = "block";
-            
-            showAppModal(
-                "⏳ VERIFICATION PENDING",
-                `TON Wallet opened for ${amount} TON (${tier} VIP).\n\nMemo Code: ${memo}\n\nOnce confirmed on TON Blockchain, your VIP level will activate automatically!`
-            );
-        }
-
-        function claimVipDaily() {
-            if (vipTier === "Free" || vipDailyBonus <= 0) {
-                return showAppModal("VIP REQUIRED", "⚠️ You must hold an active TON VIP Pass to claim daily bonuses!");
-            }
-            const today = new Date().toDateString();
-            if (localStorage.getItem('iran_vip_claim_date') === today) {
-                return showAppModal("CLAIMED TODAY", "⚠️ You already claimed your VIP bonus today. Come back tomorrow!");
-            }
-            saveBalance(balance + vipDailyBonus);
-            localStorage.setItem('iran_vip_claim_date', today);
-            updateUI();
-            showAppModal("BONUS CLAIMED", `🎉 Claimed +${vipDailyBonus.toLocaleString()} VIP Daily Coins!`);
-        }
-
-        // 24h Daily Spin Mechanics
-        const prizeLabels = ["500 🪙", "10 🪙", "TRY AGAIN ❌", "50 🪙", "NO LUCK ❌", "20 🪙", "100 🪙", "TRY AGAIN ❌"];
-        const prizeValues = [500, 10, 0, 50, 0, 20, 100, 0];
-        const colors = ['#f5b300', '#0f172a', '#ef4444', '#1e293b', '#ef4444', '#0f172a', '#10b981', '#ef4444'];
-
-        function drawWheel() {
-            const canvas = document.getElementById("wheelCanvas");
-            if (!canvas) return;
-            const ctx = canvas.getContext("2d");
-            const arcSize = (2 * Math.PI) / 8;
-            ctx.clearRect(0,0,260,260);
-
-            for (let i = 0; i < 8; i++) {
-                const angle = i * arcSize;
-                ctx.beginPath(); ctx.fillStyle = colors[i];
-                ctx.moveTo(130,130); ctx.arc(130,130,125, angle, angle + arcSize);
-                ctx.lineTo(130,130); ctx.fill(); ctx.save();
-                ctx.translate(130,130); ctx.rotate(angle + arcSize / 2);
-                ctx.textAlign = "right"; ctx.fillStyle = "#fff"; ctx.font = "bold 11px Poppins";
-                ctx.fillText(`${prizeLabels[i]}`, 115, 4); ctx.restore();
-            }
-        }
-
-        function spinWheel() {
-            const today = new Date().toDateString();
-            if (localStorage.getItem('iran_wheel_spin_date') === today) {
-                return showAppModal("ALREADY SPUN", "⚠️ You have already spun the wheel today. Try again tomorrow!");
-            }
-            const spinBtn = document.getElementById('spinBtn');
-            if (spinBtn) spinBtn.disabled = true;
-
-            let winIdx;
-            if (!localStorage.getItem('iran_wheel_first')) {
-                winIdx = 0; // Guaranteed 500 Coins on First Spin
-                localStorage.setItem('iran_wheel_first', 'done');
-            } else {
-                winIdx = Math.floor(Math.random() * 7) + 1;
-            }
-
-            const deg = 360 * 5 + (360 - (winIdx * 45) - 22.5);
-            const canvas = document.getElementById("wheelCanvas");
-            if (canvas) {
-                canvas.style.transition = "transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)";
-                canvas.style.transform = `rotate(${deg}deg)`;
-            }
-
-            setTimeout(() => {
-                const prize = prizeValues[winIdx];
-                saveBalance(balance + prize);
-                localStorage.setItem('iran_wheel_spin_date', today);
-                updateUI();
-
-                if (prize > 0) showAppModal("CONGRATULATIONS!", `🎉 You won ${prize} IRAN Coins!`);
-                else showAppModal("NO LUCK TODAY", `❌ ${prizeLabels[winIdx]}. Try again tomorrow!`);
-
-                if (spinBtn) spinBtn.disabled = false;
-                if (canvas) {
-                    canvas.style.transition = "none";
-                    canvas.style.transform = `rotate(${deg % 360}deg)`;
-                }
-            }, 4100);
-        }
-
-        // Video Task Controller
-        function watchVideoAd() {
-            const adModal = document.getElementById('adModal');
-            const timerEl = document.getElementById('adTimer');
-            let timeLeft = 5;
-            
-            if (timerEl) timerEl.innerText = timeLeft;
-            if (adModal) adModal.style.display = 'flex';
-
-            const interval = setInterval(() => {
-                timeLeft--;
-                if (timerEl) timerEl.innerText = timeLeft;
-                if (timeLeft <= 0) {
-                    clearInterval(interval);
-                    if (adModal) adModal.style.display = 'none';
-                    
-                    saveBalance(balance + 100);
-                    updateUI();
-                    fetch(`${BACKEND_URL}/api/v1/ads/watch?telegram_id=${user.id}`).catch(()=>{});
-                    showAppModal("REWARD ADDED", "🎉 +100 IRAN Coins added to your balance!");
-                }
-            }, 1000);
-        }
-
-        // CPX & Community Tasks
-        function openCPX() {
-            const url = `https://offers.cpx-research.com/index.html?app_id=24785&ext_user_id=${user.id}`;
-            if (tg?.openLink) tg.openLink(url); else window.open(url, '_blank');
-        }
-
-        function handleTgTask(link, btnId, reward) {
-            const btn = document.getElementById(btnId);
-            if (btn) {
-                if (btn.innerText === "Join") {
-                    if (tg?.openTelegramLink) tg.openTelegramLink(link); else window.open(link, '_blank');
-                    btn.innerText = "Check";
-                } else if (btn.innerText === "Check") {
-                    btn.innerText = "Claimed ✓"; btn.onclick = null; btn.classList.add('completed');
-                    if (reward > 0) saveBalance(balance + reward);
-                    updateUI();
-                    showAppModal("TASK COMPLETED", `🎉 Task complete! +${reward} IRAN Coins added.`);
-                }
-            }
-        }
-
-        // Referral Engine
-        function shareReferral() {
-            const refLink = `https://t.me/IranCoinEarnBot?start=ref_${user.id}`;
-            const text = `🚀 Join IRAN Coin & mine crypto today! Get bonus coins instantly: ${refLink}`;
-            if (tg?.openTelegramLink) tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(text)}`);
-            else window.open(`https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(text)}`, '_blank');
-        }
-
-        function copyReferral() {
-            navigator.clipboard.writeText(`https://t.me/IranCoinEarnBot?start=ref_${user.id}`);
-            showAppModal("LINK COPIED", "📋 Unique referral link copied to clipboard!");
-        }
-
-        // Withdrawal Engine
-        function submitWithdrawal() {
-            const wallet = document.getElementById('tonWalletInput').value.trim();
-            if (!wallet || wallet.length < 24) return showAppModal("INVALID ADDRESS", "⚠️ Please enter a valid TON wallet address.");
-            if (balance < 10000) return showAppModal("MINIMUM LIMIT", "⚠️ Minimum withdrawal required is 10,000 IRAN Coins.");
-            
-            fetch(`${BACKEND_URL}/api/v1/withdraw`, {
-                method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ telegram_id: user.id, wallet_address: wallet, amount: balance })
-            }).finally(() => {
-                showAppModal("REQUEST SUBMITTED", "✅ Withdrawal request submitted to admin!");
-                saveBalance(0); updateUI();
-            });
-        }
-
-        // Initialize App Correctly
-        window.onload = () => {
-            const nameEl = document.getElementById('userName');
-            if (nameEl) nameEl.innerText = user.first_name || "Player";
-
-            const avatarEl = document.getElementById('userAvatar');
-            if (avatarEl && avatarEl.childNodes[0]) {
-                avatarEl.childNodes[0].nodeValue = (user.first_name || "P").charAt(0).toUpperCase();
-            }
-
-            syncData();
-            updateUI();
-            drawWheel();
-            autoRepairApp();
-        };
-    </script>
-</body>
-</html>
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=PORT)
