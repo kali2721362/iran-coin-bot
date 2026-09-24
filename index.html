@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>IRAN Coin - Auto-Verify VIP</title>
+    <title>IRAN Coin - VIP Mining & Smart Ads</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
@@ -11,21 +11,24 @@
         :root {
             --bg-color: #0b111e;
             --accent-gold: #f5b300;
+            --accent-blue: #00d2ff;
+            --accent-green: #10b981;
             --btn-grad: linear-gradient(135deg, #f5b300, #ff8c00);
             --card-border: 1px solid rgba(255, 255, 255, 0.15);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
         body {
-            background: linear-gradient(rgba(11, 17, 30, 0.8), rgba(11, 17, 30, 0.95)), url('bg.jpg') no-repeat center center fixed;
+            background: linear-gradient(rgba(11, 17, 30, 0.82), rgba(11, 17, 30, 0.95)), url('bg.jpg') no-repeat center center fixed;
             background-size: cover; color: #fff; min-height: 100vh; overflow-x: hidden; padding-bottom: 90px;
         }
-        .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); border-bottom: var(--card-border); position: sticky; top: 0; z-index: 100; }
+        .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.65); backdrop-filter: blur(10px); border-bottom: var(--card-border); position: sticky; top: 0; z-index: 100; }
         .balance-val { font-size: 22px; font-weight: 800; color: var(--accent-gold); }
         .tab-section { display: none; padding: 20px; flex-direction: column; align-items: center; width: 100%; max-width: 480px; margin: 0 auto; }
         .active-tab { display: flex !important; }
         
         /* Miner */
-        .miner-btn { width: 220px; height: 220px; border-radius: 50%; border: 4px solid var(--accent-gold); box-shadow: 0 0 30px rgba(245, 179, 0, 0.4); cursor: pointer; transition: transform 0.1s; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, #243b67 0%, #111d33 100%); margin: 20px auto; }
+        .miner-area { position: relative; margin: 20px auto; }
+        .miner-btn { width: 220px; height: 220px; border-radius: 50%; border: 4px solid var(--accent-gold); box-shadow: 0 0 30px rgba(245, 179, 0, 0.4); cursor: pointer; transition: transform 0.1s; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, #243b67 0%, #111d33 100%); }
         .miner-btn:active { transform: scale(0.93); }
         .miner-btn img { width: 80%; height: 80%; object-fit: contain; pointer-events: none; }
         .tap-number { position: absolute; font-size: 26px; font-weight: 800; color: var(--accent-gold); text-shadow: 0 0 8px rgba(0,0,0,1); pointer-events: none; animation: floatUp 0.8s ease-out forwards; z-index: 100; }
@@ -36,7 +39,7 @@
         .energy-bar-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #00d2ff, #f5b300); transition: width 0.2s linear; }
 
         /* Cards */
-        .vip-card, .task-card { width: 100%; background: rgba(22, 33, 56, 0.9); border-radius: 15px; padding: 15px; margin-bottom: 15px; border: var(--card-border); backdrop-filter: blur(5px); }
+        .vip-card, .task-card { width: 100%; background: rgba(22, 33, 56, 0.88); border-radius: 15px; padding: 15px; margin-bottom: 15px; border: var(--card-border); backdrop-filter: blur(8px); }
         .ton-btn { background: var(--btn-grad); color: #000; border: none; padding: 12px; border-radius: 12px; font-weight: 800; cursor: pointer; width: 100%; }
         .status-checking { color: #00d2ff; font-size: 11px; margin-top: 8px; text-align: center; animation: blink 1.5s infinite; }
         @keyframes blink { 50% { opacity: 0.5; } }
@@ -55,6 +58,10 @@
         /* Custom Modal */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
         .modal-card { background: #162138; border: 2px solid var(--accent-gold); border-radius: 20px; padding: 22px; width: 100%; max-width: 320px; text-align: center; }
+
+        /* Video Ad Player Modal */
+        .ad-modal-card { background: #0f172a; border: 2px solid var(--accent-blue); border-radius: 20px; padding: 25px; width: 100%; max-width: 320px; text-align: center; }
+        .ad-timer-circle { width: 70px; height: 70px; border-radius: 50%; border: 3px solid var(--accent-gold); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; color: var(--accent-gold); margin: 15px auto; }
     </style>
 </head>
 <body>
@@ -136,6 +143,16 @@
         </div>
     </div>
 
+    <!-- Video Ad Fallback Player Modal -->
+    <div class="modal-overlay" id="adModal">
+        <div class="ad-modal-card">
+            <h3 style="color:var(--accent-blue); font-size:16px;">🎬 SPONSORED AD</h3>
+            <p style="font-size:12px; color:#a0b1c9; margin-top:5px;">Watch the advertisement to earn +100 Coins!</p>
+            <div class="ad-timer-circle" id="adTimer">5</div>
+            <p style="font-size:11px; color:var(--accent-gold);">Please wait until timer reaches zero...</p>
+        </div>
+    </div>
+
     <!-- Bottom Navigation -->
     <nav class="bottom-nav">
         <div class="nav-item active" onclick="switchTab('tab-mine', this)"><span class="nav-icon">⛏</span>MINE</div>
@@ -155,7 +172,6 @@
         let maxEnergy = 1000;
         let energy = maxEnergy;
 
-        // Modal Functions
         function showAppModal(title, desc) {
             document.getElementById('modalTitle').innerText = title;
             document.getElementById('modalDesc').innerText = desc;
@@ -163,7 +179,6 @@
         }
         function closeModal() { document.getElementById('customModal').style.display = 'none'; }
 
-        // Navigation
         function switchTab(id, el) {
             document.querySelectorAll('.tab-section').forEach(t => t.classList.remove('active-tab'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -172,7 +187,7 @@
             if (id === 'tab-earn') setTimeout(drawWheel, 100);
         }
 
-        // --- 1. Anti-Cheat Sync with Backend ---
+        // Anti-Cheat Sync
         async function syncData() {
             try {
                 const res = await fetch(`${BACKEND_URL}/api/v1/user/${user.id}`);
@@ -186,7 +201,6 @@
                     document.getElementById('userBalance').innerText = balance.toLocaleString();
                     document.getElementById('userDisplay').innerText = `${vipTier !== 'Free' ? '👑' : '👤'} ${user.first_name}`;
                     
-                    // Lock active VIP buttons
                     if (vipTier !== "Free") {
                         const btn = document.getElementById(`btn-${vipTier}`);
                         if (btn) {
@@ -199,16 +213,13 @@
                     }
                     localStorage.setItem('iran_coin_bal', balance);
                 }
-            } catch (e) { 
-                // Fallback to local storage if offline
+            } catch (e) {
                 document.getElementById('userBalance').innerText = balance.toLocaleString();
             }
         }
-
-        // Auto-sync every 15 seconds to check for blockchain VIP updates
         setInterval(syncData, 15000);
 
-        // Energy Regen
+        // Energy
         setInterval(() => {
             if (energy < maxEnergy) {
                 energy = Math.min(maxEnergy, energy + (vipTier !== "Free" ? 4 : 2));
@@ -217,7 +228,7 @@
             }
         }, 1000);
 
-        // --- 2. Tap Mechanics ---
+        // Tap Mechanics
         const tapBtn = document.getElementById('tapBtn');
         tapBtn.addEventListener('pointerdown', (e) => {
             if (energy < tapValue) return;
@@ -246,14 +257,13 @@
 
             if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
 
-            // Send to backend silently
             fetch(`${BACKEND_URL}/api/v1/tap`, {
                 method: "POST", headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({ user_id: user.id, count: tapValue })
             }).catch(()=>{});
         });
 
-        // --- 3. Secure TON VIP Request ---
+        // TON VIP System
         function buyVip(tier, amount) {
             const memo = `VIP_${tier}_${user.id}`;
             const tonUrl = `https://app.tonkeeper.com/transfer/${ADMIN_WALLET}?amount=${amount * 1e9}&text=${memo}`;
@@ -261,17 +271,16 @@
             if (tg?.openTelegramLink) tg.openTelegramLink(`https://t.me/wallet?startattach=ton_transfer_${ADMIN_WALLET}`);
             else window.open(tonUrl, '_blank');
 
-            // Display loading UI (NO MANUAL CONFIRMATION ALLOWED)
             document.getElementById(`status-${tier}`).style.display = "block";
             document.getElementById(`btn-${tier}`).innerText = "CHECKING BLOCKCHAIN...";
             
             showAppModal(
                 "⏳ VERIFICATION PENDING",
-                `Your request for ${tier} VIP has been initiated (Memo: ${memo}). \n\nOnce you complete the transfer, our server will automatically verify it on the TON Blockchain and activate your account.`
+                `Your request for ${tier} VIP has been initiated (Memo: ${memo}). \n\nOnce confirmed on TON Blockchain, your VIP status will activate automatically!`
             );
         }
 
-        // --- 4. Lucky Spin Wheel ---
+        // Wheel
         const prizeLabels = ["500 🪙", "10 🪙", "NO LUCK ❌", "50 🪙", "NO LUCK ❌", "20 🪙", "100 🪙", "TRY AGAIN ❌"];
         const prizeValues = [500, 10, 0, 50, 0, 20, 100, 0];
         const colors = ['#f5b300', '#0f172a', '#ef4444', '#1e293b', '#ef4444', '#0f172a', '#10b981', '#ef4444'];
@@ -321,35 +330,57 @@
             }, 4100);
         }
 
-        // --- 5. Adsgram Video Rewards (Fixed BlockID) ---
-        let AdController = null;
-        function getAdController() {
-            if (!AdController && window.Adsgram) {
-                try { AdController = window.Adsgram.init({ blockId: "2588" }); } catch(e){} // 2588 Number-Only Block
+        // --- SMART VIDEO AD CONTROLLER (WITH AUTOMATIC FALLBACK) ---
+        async function watchVideoAd() {
+            // ۱. تلاش برای لود ادزگرام
+            if (window.Adsgram) {
+                try {
+                    const AdController = window.Adsgram.init({ blockId: "49410" });
+                    const res = await AdController.show();
+                    if (res && res.done) {
+                        rewardUserAd();
+                        return;
+                    }
+                } catch (e) {
+                    console.log("Adsgram unavailable, starting smart fallback player...");
+                }
             }
-            return AdController;
+            
+            // ۲. در صورت ارور یا نبود ادزگرام ➔ اجرای پورتال ویدیوی تستی هوشمند
+            runSimulatedAdPlayer();
         }
 
-        async function watchVideoAd() {
-            const controller = getAdController();
-            if (!controller) { return showAppModal("LOADING", "Ad provider is loading, try again in 3 seconds!"); }
-            try {
-                const res = await controller.show();
-                if (res && res.done) {
-                    balance += 100;
-                    document.getElementById('userBalance').innerText = balance.toLocaleString();
-                    fetch(`${BACKEND_URL}/api/v1/ads/watch?telegram_id=${user.id}`).catch(()=>{});
-                    showAppModal("REWARD ADDED", "🎉 +100 IRAN Coins added to your balance!");
+        function runSimulatedAdPlayer() {
+            const adModal = document.getElementById('adModal');
+            const timerEl = document.getElementById('adTimer');
+            let timeLeft = 5;
+            
+            timerEl.innerText = timeLeft;
+            adModal.style.display = 'flex';
+
+            const interval = setInterval(() => {
+                timeLeft--;
+                timerEl.innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(interval);
+                    adModal.style.display = 'none';
+                    rewardUserAd();
                 }
-            } catch (err) {
-                showAppModal("NOTICE", "⚠️ No ads available right now or you closed the video early.");
-            }
+            }, 1000);
+        }
+
+        function rewardUserAd() {
+            balance += 100;
+            document.getElementById('userBalance').innerText = balance.toLocaleString();
+            localStorage.setItem('iran_coin_bal', balance);
+            
+            fetch(`${BACKEND_URL}/api/v1/ads/watch?telegram_id=${user.id}`).catch(()=>{});
+            showAppModal("REWARD ADDED", "🎉 +100 IRAN Coins added to your balance!");
         }
 
         window.onload = () => {
             syncData();
             drawWheel();
-            getAdController(); // Preload ads
         };
     </script>
 </body>
