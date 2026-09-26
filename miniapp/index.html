@@ -4,12 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, 
           maximum-scale=1.0, user-scalable=no">
-    <title>IRAN Coin - Master Build v13.0</title>
+    <title>IRAN Coin - Master Build v14.0</title>
     
-    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <!-- Monetag SDK -->
     <script src='//libtl.com/sdk.js' 
             data-zone='11894107' 
             data-sdk='show_11894107'>
@@ -141,36 +138,46 @@
             100% { opacity: 0; transform: translateY(-70px) scale(1.3); }
         }
 
+        /* ── A-Ads کلیکی ── */
         .aads-container {
             width: 100%;
-            background: var(--card-bg);
-            border: var(--card-border);
+            background: linear-gradient(135deg,
+                rgba(22,33,56,0.95),
+                rgba(15,23,42,0.95));
+            border: 1px solid rgba(245,179,0,0.3);
             border-radius: 16px;
-            padding: 12px;
+            padding: 14px;
             margin-bottom: 15px;
-            text-align: center;
+            cursor: pointer;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             backdrop-filter: blur(8px);
-            min-height: 90px;
-            overflow: visible;
+            transition: all 0.3s ease;
+        }
+        .aads-container:active {
+            transform: scale(0.98);
+            border-color: var(--accent-gold);
         }
         .aads-label {
             font-size: 10px; color: var(--accent-gold);
             text-transform: uppercase; letter-spacing: 1px;
-            margin-bottom: 8px; font-weight: 700;
+            margin-bottom: 8px; font-weight: 700; text-align: center;
         }
-        .aads-iframe {
-            width: 100% !important;
-            height: 60px !important;
-            border: 0 !important;
-            display: block !important;
-            margin: auto !important;
+        .aads-content {
+            display: flex; align-items: center;
+            justify-content: center; gap: 12px;
+        }
+        .aads-reward {
+            background: linear-gradient(135deg, #f7931a, #ff6b00);
+            color: #000; font-weight: 800;
+            font-size: 12px; padding: 4px 10px;
+            border-radius: 20px; white-space: nowrap;
         }
 
+        /* ── Monetag Banner ── */
         .monetag-banner {
             width: 100%;
-            background: linear-gradient(135deg, 
-                rgba(0,136,204,0.15), 
+            background: linear-gradient(135deg,
+                rgba(0,136,204,0.15),
                 rgba(0,210,255,0.1));
             border: 1px solid rgba(0,210,255,0.3);
             border-radius: 16px;
@@ -201,7 +208,7 @@
             border-radius: 20px;
         }
 
-        /* CPX Banner */
+        /* ── CPX Banner ── */
         .cpx-banner {
             width: 100%;
             background: linear-gradient(135deg,
@@ -483,17 +490,27 @@
     </p>
 </div>
 
-<!-- TAB 1: MINE -->
+<!-- ═══ TAB 1: MINE ═══ -->
 <div class="tab-section active-tab" id="tab-mine">
 
-    <div class="aads-container">
-        <div class="aads-label">📢 Crypto Sponsor</div>
-        <iframe id="aads-mine" class="aads-iframe"
-            src="https://acceptable.a-ads.com/2456226?size=468x60"
-            scrolling="no" frameborder="0" style="height:60px;">
-        </iframe>
+    <!-- A-Ads کلیکی (به جای iframe) -->
+    <div class="aads-container" onclick="openAadsLink()">
+        <div class="aads-label">₿ Bitcoin Crypto Sponsor</div>
+        <div class="aads-content">
+            <span style="font-size:28px;">₿</span>
+            <div style="text-align:left; flex:1;">
+                <div style="font-size:13px; font-weight:700; color:#f7931a;">
+                    Crypto Advertisement
+                </div>
+                <div style="font-size:11px; color:var(--text-muted);">
+                    Tap to visit our crypto sponsor
+                </div>
+            </div>
+            <div class="aads-reward">Visit ➜</div>
+        </div>
     </div>
 
+    <!-- Monetag -->
     <div class="monetag-banner" onclick="showMonetagRewardedPopup('mine')">
         <div class="monetag-label">🎁 Sponsored Offer</div>
         <div class="monetag-content">
@@ -540,13 +557,13 @@
         </button>
     </div>
 
-    <div class="version-tag">IRAN Coin v13.0 — Live</div>
+    <div class="version-tag">IRAN Coin v14.0 — A-Ads + Monetag Live</div>
 </div>
 
-<!-- TAB 2: VIP -->
+<!-- ═══ TAB 2: VIP ═══ -->
 <div class="tab-section" id="tab-vip">
     <div class="section-title">👑 VIP Passes (TON Crypto)</div>
-    <p style="font-size:12px; color:var(--text-muted); 
+    <p style="font-size:12px; color:var(--text-muted);
        text-align:center; margin-bottom:15px;">
         Upgrade using TON. Benefits activate automatically!
     </p>
@@ -622,18 +639,27 @@
     </div>
 </div>
 
-<!-- TAB 3: EARN -->
+<!-- ═══ TAB 3: EARN ═══ -->
 <div class="tab-section" id="tab-earn">
 
-    <div class="aads-container">
-        <div class="aads-label">📢 Crypto Sponsor</div>
-        <iframe id="aads-earn" class="aads-iframe"
-            src="https://acceptable.a-ads.com/2456226?size=468x60"
-            scrolling="no" frameborder="0" style="height:60px;">
-        </iframe>
+    <!-- A-Ads کلیکی -->
+    <div class="aads-container" onclick="openAadsLink()">
+        <div class="aads-label">₿ Bitcoin Crypto Sponsor</div>
+        <div class="aads-content">
+            <span style="font-size:28px;">₿</span>
+            <div style="text-align:left; flex:1;">
+                <div style="font-size:13px; font-weight:700; color:#f7931a;">
+                    Crypto Advertisement
+                </div>
+                <div style="font-size:11px; color:var(--text-muted);">
+                    Tap to visit our crypto sponsor
+                </div>
+            </div>
+            <div class="aads-reward">Visit ➜</div>
+        </div>
     </div>
 
-    <!-- Monetag Banner -->
+    <!-- Monetag -->
     <div class="monetag-banner"
          onclick="showMonetagRewardedPopup('earn')"
          style="border-color:rgba(245,179,0,0.4);">
@@ -654,12 +680,12 @@
         </div>
     </div>
 
-    <!-- CPX Research Banner - FIX -->
+    <!-- CPX Research -->
     <div class="cpx-banner" onclick="openCPX()">
         <div class="cpx-label">💵 Paid Surveys — Real Money</div>
         <div class="cpx-content">
             <span style="font-size:24px;">📋</span>
-            <div style="text-align:left;">
+            <div style="text-align:left; flex:1;">
                 <div style="font-size:13px; font-weight:700; color:#fff;">
                     CPX Research Surveys
                 </div>
@@ -698,7 +724,7 @@
         </button>
     </div>
 
-    <!-- VIP Daily Bonus -->
+    <!-- VIP Daily -->
     <div class="section-title">👑 Active VIP Daily Bonus</div>
     <div class="task-card">
         <div style="display:flex; align-items:center; gap:12px;">
@@ -719,7 +745,7 @@
 
     <div class="section-title">🎬 Sponsored Tasks</div>
 
-    <!-- Watch Ad Task -->
+    <!-- Watch Ad -->
     <div class="task-card">
         <div style="display:flex; align-items:center; gap:12px;">
             <span style="font-size:24px;">🎬</span>
@@ -774,10 +800,10 @@
                 )">Join</button>
     </div>
 
-    <div class="version-tag">IRAN Coin v13.0 — Live</div>
+    <div class="version-tag">IRAN Coin v14.0 — A-Ads + Monetag Live</div>
 </div>
 
-<!-- TAB 4: FRIENDS -->
+<!-- ═══ TAB 4: FRIENDS ═══ -->
 <div class="tab-section" id="tab-friends">
     <div class="section-title">👥 Invite Friends</div>
 
@@ -812,7 +838,7 @@
     </button>
 </div>
 
-<!-- TAB 5: WALLET -->
+<!-- ═══ TAB 5: WALLET ═══ -->
 <div class="tab-section" id="tab-wallet">
     <div class="section-title">💼 Withdrawal Hub</div>
     <div class="task-card"
@@ -849,7 +875,7 @@
     </div>
 </div>
 
-<!-- MODALS -->
+<!-- MODAL -->
 <div class="modal-overlay" id="customModal">
     <div class="modal-card">
         <h3 id="modalTitle"
@@ -888,14 +914,13 @@
 <script>
 "use strict";
 
-/* ─── Constants ─── */
-const ADMIN_WALLET  = "UQCcUO7XRuLyf46obnkSUrec5L00yng7sw8Jut04rlLKCSjB";
-const BACKEND_URL   = "https://iran-coin-bot-production.up.railway.app";
-const MONETAG_ZONE  = "11894107";
-const CPX_APP_ID    = "36350";
-const AD_COOLDOWN   = 30 * 60 * 1000;
+const ADMIN_WALLET = "UQCcUO7XRuLyf46obnkSUrec5L00yng7sw8Jut04rlLKCSjB";
+const BACKEND_URL  = "https://iran-coin-bot-production.up.railway.app";
+const MONETAG_ZONE = "11894107";
+const CPX_APP_ID   = "36350";
+const AD_COOLDOWN  = 30 * 60 * 1000;
 
-/* ─── Telegram Init ─── */
+/* ─── Telegram ─── */
 const tg   = window.Telegram?.WebApp;
 if (tg) { try { tg.ready(); tg.expand(); } catch(e){} }
 const user = tg?.initDataUnsafe?.user
@@ -910,45 +935,38 @@ let energy        = 1000;
 let vipDailyBonus = 0;
 let refCount      = 0;
 let isSpinning    = false;
+let wheelDeg      = 0;
 
 /* ─── LocalStorage ─── */
 function lsGet(k, def = '') {
-    try {
-        const v = localStorage.getItem(k);
-        return v !== null ? v : def;
-    } catch(e) { return def; }
+    try { const v = localStorage.getItem(k); return v !== null ? v : def; }
+    catch(e) { return def; }
 }
 function lsSet(k, v) {
     try { localStorage.setItem(k, String(v)); } catch(e) {}
 }
 
 function loadLocal() {
-    // سکه‌ها هیچ‌وقت ریست نمیشن
     const savedBal = parseInt(lsGet('irc_bal', '0'));
-    balance       = isNaN(savedBal) ? 0 : Math.max(0, savedBal);
-    vipTier       = lsGet('irc_vip',    'Free');
-    tapValue      = parseInt(lsGet('irc_tap',   '1'))    || 1;
-    maxEnergy     = parseInt(lsGet('irc_maxen', '1000')) || 1000;
-    vipDailyBonus = parseInt(lsGet('irc_vdaily','0'))    || 0;
-    refCount      = parseInt(lsGet('irc_refs',  '0'))    || 0;
-    energy        = maxEnergy;
+    balance        = isNaN(savedBal) ? 0 : Math.max(0, savedBal);
+    vipTier        = lsGet('irc_vip',    'Free');
+    tapValue       = parseInt(lsGet('irc_tap',   '1'))    || 1;
+    maxEnergy      = parseInt(lsGet('irc_maxen', '1000')) || 1000;
+    vipDailyBonus  = parseInt(lsGet('irc_vdaily','0'))    || 0;
+    refCount       = parseInt(lsGet('irc_refs',  '0'))    || 0;
+    energy         = maxEnergy;
 }
 
 function saveBalance(val) {
-    // محافظت از ریست شدن
     const newBal = Math.max(0, Math.floor(val) || 0);
-    // فقط اگه بزرگتر یا مساوی صفر بود و منطقی بود ذخیره کن
-    if (newBal >= 0) {
-        balance = newBal;
-        lsSet('irc_bal', balance);
-        updateUI();
-    }
+    balance = newBal;
+    lsSet('irc_bal', balance);
+    updateUI();
 }
 
 function addCoins(amount) {
-    // همیشه اضافه کن، هیچ‌وقت کم نکن (مگر برداشت)
     const amt = Math.max(0, Math.floor(amount) || 0);
-    saveBalance(balance + amt);
+    if (amt > 0) saveBalance(balance + amt);
 }
 
 /* ─── Toast ─── */
@@ -970,92 +988,76 @@ function closeModal() {
     document.getElementById('customModal').style.display = 'none';
 }
 
-/* ─── UI Update ─── */
+/* ─── UI ─── */
 function updateUI() {
     const balEl = document.getElementById('userBalance');
     if (balEl) balEl.innerText = balance.toLocaleString();
-
     const wBal = document.getElementById('walletBalance');
     if (wBal) wBal.innerText = balance.toLocaleString() + ' 🪙';
-
     const enText = document.getElementById('energyText');
     if (enText) enText.innerText = `${energy} / ${maxEnergy}`;
-
     const enFill = document.getElementById('energyFill');
-    if (enFill) enFill.style.width = `${Math.min(100,(energy/maxEnergy)*100)}%`;
-
+    if (enFill) enFill.style.width =
+        `${Math.min(100,(energy/maxEnergy)*100)}%`;
     if (vipTier !== "Free") {
         const crown = document.getElementById('vipCrown');
         if (crown) crown.style.display = 'block';
         const tag = document.getElementById('userLevelTag');
         if (tag) tag.innerText = `👑 ${vipTier} VIP`;
         const desc = document.getElementById('vipDailyDesc');
-        if (desc) desc.innerText = `+${vipDailyBonus.toLocaleString()} Coins / 24h`;
+        if (desc) desc.innerText =
+            `+${vipDailyBonus.toLocaleString()} Coins / 24h`;
     }
-
     ['Bronze','Silver','Gold','Diamond'].forEach(t => {
         const btn = document.getElementById(`btn-${t}`);
         if (btn && vipTier === t) {
-            btn.innerText   = "ACTIVE TIER ✓";
-            btn.className   = "ton-btn active-tier-btn";
-            btn.onclick     = null;
+            btn.innerText = "ACTIVE TIER ✓";
+            btn.className = "ton-btn active-tier-btn";
+            btn.onclick   = null;
         }
     });
-
     const rcEl = document.getElementById('refCount');
     if (rcEl) rcEl.innerText = refCount;
     const reEl = document.getElementById('refEarned');
     if (reEl) reEl.innerText = (refCount * 50).toLocaleString();
-
     const nameEl = document.getElementById('userName');
     if (nameEl) nameEl.innerText = user.first_name || "Player";
-
     const avatarEl = document.getElementById('userAvatar');
     if (avatarEl) {
         const txt = avatarEl.childNodes[0];
-        if (txt && txt.nodeType === 3) {
-            txt.nodeValue = (user.first_name || "P").charAt(0).toUpperCase();
-        }
+        if (txt && txt.nodeType === 3)
+            txt.nodeValue = (user.first_name||"P").charAt(0).toUpperCase();
     }
 }
 
-/* ─── Backend Sync ─── */
+/* ─── Sync ─── */
 async function syncData() {
     try {
         const res = await fetch(`${BACKEND_URL}/api/v1/user/${user.id}`);
         if (!res.ok) return;
         const data = await res.json();
-
-        // سکه‌ها فقط اگه سرور بیشتر داشت آپدیت میشن
         if (typeof data.balance === 'number' && data.balance > balance) {
             balance = data.balance;
             lsSet('irc_bal', balance);
         }
-
         if (data.vip_tier && data.vip_tier !== 'Free') {
-            vipTier = data.vip_tier;
-            lsSet('irc_vip', vipTier);
+            vipTier = data.vip_tier; lsSet('irc_vip', vipTier);
         }
-        if (data.tap_value  && data.tap_value > tapValue) {
-            tapValue = data.tap_value;
-            lsSet('irc_tap', tapValue);
+        if (data.tap_value  && data.tap_value  > tapValue) {
+            tapValue  = data.tap_value;  lsSet('irc_tap',   tapValue);
         }
         if (data.max_energy && data.max_energy > maxEnergy) {
-            maxEnergy = data.max_energy;
-            lsSet('irc_maxen', maxEnergy);
+            maxEnergy = data.max_energy; lsSet('irc_maxen', maxEnergy);
         }
-        if (data.referrals)  {
-            refCount = data.referrals;
-            lsSet('irc_refs', refCount);
+        if (data.referrals) {
+            refCount = data.referrals; lsSet('irc_refs', refCount);
         }
-        if (data.vip_daily)  {
-            vipDailyBonus = data.vip_daily;
-            lsSet('irc_vdaily', vipDailyBonus);
+        if (data.vip_daily) {
+            vipDailyBonus = data.vip_daily; lsSet('irc_vdaily', vipDailyBonus);
         }
         if (Array.isArray(data.tasks)) renderSponsorTasks(data.tasks);
-
         updateUI();
-    } catch(e) { /* offline - سکه‌ها دست نمیخوره */ }
+    } catch(e) {}
 }
 
 /* ─── Tab Switch ─── */
@@ -1064,48 +1066,35 @@ function switchTab(tabId, el) {
             .forEach(t => t.classList.remove('active-tab'));
     const target = document.getElementById(tabId);
     if (target) target.classList.add('active-tab');
-
     document.querySelectorAll('.nav-item')
             .forEach(n => n.classList.remove('active'));
     if (el) el.classList.add('active');
-
     if (tabId === 'tab-earn') setTimeout(drawWheel, 80);
-    if (tabId === 'tab-mine') lazyLoadIframe('aads-mine');
-    if (tabId === 'tab-earn') lazyLoadIframe('aads-earn');
 }
 
-function lazyLoadIframe(id) {
-    const iframe = document.getElementById(id);
-    if (!iframe || iframe.dataset.loaded) return;
-    const src = iframe.src;
-    iframe.src = '';
-    setTimeout(() => { iframe.src = src; iframe.dataset.loaded = "1"; }, 150);
-}
-
-/* ─── Energy Recharge ─── */
+/* ─── Energy ─── */
 setInterval(() => {
     if (energy < maxEnergy) {
-        energy = Math.min(maxEnergy, energy + (vipTier !== "Free" ? 4 : 2));
+        energy = Math.min(maxEnergy,
+            energy + (vipTier !== "Free" ? 4 : 2));
         updateUI();
     }
 }, 1000);
 
 /* ─── Tap ─── */
-const tapBtn = document.getElementById('tapBtn');
-let lastTapTime  = 0;
-let pendingTaps  = 0;
+const tapBtn    = document.getElementById('tapBtn');
+let lastTapTime = 0;
+let pendingTaps = 0;
 
 if (tapBtn) {
     tapBtn.addEventListener('pointerdown', (e) => {
         const now = Date.now();
         if (now - lastTapTime < 100) return;
         lastTapTime = now;
-
         if (energy < tapValue) {
             showToast('⚡ Out of energy! Recharging...');
             return;
         }
-
         energy -= tapValue;
         pendingTaps += tapValue;
         addCoins(tapValue);
@@ -1114,11 +1103,10 @@ if (tapBtn) {
         num.className = 'tap-number';
         num.innerText = `+${tapValue}`;
         const rect = tapBtn.getBoundingClientRect();
-        num.style.left = `${(e.clientX || 110) - rect.left}px`;
-        num.style.top  = `${(e.clientY || 110) - rect.top}px`;
+        num.style.left = `${(e.clientX||110) - rect.left}px`;
+        num.style.top  = `${(e.clientY||110) - rect.top}px`;
         tapBtn.parentElement.appendChild(num);
         setTimeout(() => num.remove(), 800);
-
         try { tg?.HapticFeedback?.impactOccurred('light'); } catch(e) {}
 
         clearTimeout(tapBtn._syncTimer);
@@ -1127,7 +1115,9 @@ if (tapBtn) {
                 fetch(`${BACKEND_URL}/api/v1/tap`, {
                     method: "POST",
                     headers: {"Content-Type":"application/json"},
-                    body: JSON.stringify({ user_id: user.id, count: pendingTaps })
+                    body: JSON.stringify({
+                        user_id: user.id, count: pendingTaps
+                    })
                 }).catch(()=>{});
                 pendingTaps = 0;
             }
@@ -1142,24 +1132,31 @@ function openTgLink(url) {
     else window.open(url, '_blank');
 }
 
+/* ─── A-Ads کلیکی - درآمد واقعی ─── */
+function openAadsLink() {
+    // این لینک کلیک واقعی ثبت میکنه و درآمد میده
+    const url = `https://a-ads.com/?partner=2456226`;
+    openTgLink(url);
+    showToast('₿ Opening crypto sponsor...');
+}
+
 /* ─── Monetag ─── */
 function showMonetagRewardedPopup(source) {
     const overlay = document.getElementById('adLoadingOverlay');
     if (overlay) overlay.style.display = 'flex';
-
     const showFn = window[`show_${MONETAG_ZONE}`];
     if (typeof showFn !== 'function') {
         if (overlay) overlay.style.display = 'none';
         showToast('⚠️ Ad not available right now');
         return;
     }
-
     showFn('pop')
         .then(() => {
             if (overlay) overlay.style.display = 'none';
             addCoins(50);
             showToast('🎉 +50 Coins earned!');
-            fetch(`${BACKEND_URL}/api/v1/ads/monetag?telegram_id=${user.id}&source=${source}&reward=50`)
+            fetch(`${BACKEND_URL}/api/v1/ads/monetag` +
+                  `?telegram_id=${user.id}&source=${source}&reward=50`)
                 .catch(()=>{});
         })
         .catch(() => {
@@ -1168,24 +1165,20 @@ function showMonetagRewardedPopup(source) {
         });
 }
 
-/* ─── Watch Video Ad ─── */
+/* ─── Watch Video ─── */
 function watchVideoAd() {
     const now      = Date.now();
-    const lastAd   = parseInt(lsGet('irc_last_ad', '0')) || 0;
+    const lastAd   = parseInt(lsGet('irc_last_ad','0')) || 0;
     const btnWatch = document.getElementById('btnWatchVideo');
-
     if (now - lastAd < AD_COOLDOWN) {
-        const wait = Math.ceil((AD_COOLDOWN - (now - lastAd)) / 60000);
+        const wait = Math.ceil((AD_COOLDOWN-(now-lastAd))/60000);
         return showAppModal("PLEASE WAIT",
             `⏳ Next ad available in ~${wait} minute(s).`);
     }
-
     const overlay = document.getElementById('adLoadingOverlay');
     if (overlay) overlay.style.display = 'flex';
     if (btnWatch) btnWatch.disabled = true;
-
     const showFn = window[`show_${MONETAG_ZONE}`];
-
     if (typeof showFn === 'function') {
         showFn('pop')
             .then(() => {
@@ -1195,7 +1188,7 @@ function watchVideoAd() {
                 addCoins(100);
                 fetch(`${BACKEND_URL}/api/v1/ads/watch?telegram_id=${user.id}`)
                     .catch(()=>{});
-                showAppModal("REWARD ADDED", "🎉 +100 IRAN Coins added!");
+                showAppModal("REWARD ADDED","🎉 +100 IRAN Coins added!");
             })
             .catch(() => {
                 if (overlay) overlay.style.display = 'none';
@@ -1226,7 +1219,7 @@ function simulateFallbackAd() {
             addCoins(100);
             fetch(`${BACKEND_URL}/api/v1/ads/watch?telegram_id=${user.id}`)
                 .catch(()=>{});
-            showAppModal("REWARD ADDED", "🎉 +100 IRAN Coins added!");
+            showAppModal("REWARD ADDED","🎉 +100 IRAN Coins added!");
         }
     }, 1000);
 }
@@ -1246,28 +1239,22 @@ function startInAppInterstitial() {
     } catch(e) {}
 }
 
-/* ─── CPX Research - FIXED ─── */
+/* ─── CPX Research ─── */
 function openCPX() {
-    // URL صحیح CPX Research با app_id=36350
-    const cpxUrl = `https://offers.cpx-research.com/index.html` +
-                   `?app_id=${CPX_APP_ID}` +
-                   `&ext_user_id=${user.id}` +
-                   `&username=${encodeURIComponent(user.first_name || 'Player')}` +
-                   `&email=${user.id}@irancoin.app` +
-                   `&subid_1=irancoin` +
-                   `&subid_2=${user.id}`;
-
-    // باز کردن در تلگرام
-    if (tg?.openLink) {
-        tg.openLink(cpxUrl);
-    } else {
-        window.open(cpxUrl, '_blank');
-    }
-
+    const cpxUrl =
+        `https://offers.cpx-research.com/index.html` +
+        `?app_id=${CPX_APP_ID}` +
+        `&ext_user_id=${user.id}` +
+        `&username=${encodeURIComponent(user.first_name||'Player')}` +
+        `&email=${user.id}@irancoin.app` +
+        `&subid_1=irancoin` +
+        `&subid_2=${user.id}`;
+    if (tg?.openLink) tg.openLink(cpxUrl);
+    else window.open(cpxUrl, '_blank');
     showToast('📋 Opening CPX Surveys...');
 }
 
-/* ─── VIP Purchase ─── */
+/* ─── VIP ─── */
 function buyVip(tier, amount) {
     const nanoTon = Math.round(amount * 1_000_000_000);
     const memo    = `VIP_${tier}_${user.id}`;
@@ -1276,14 +1263,11 @@ function buyVip(tier, amount) {
     window.open(tonUrl, '_blank');
     const statusEl = document.getElementById(`status-${tier}`);
     if (statusEl) statusEl.style.display = "block";
-    showAppModal(
-        "⏳ VERIFICATION PENDING",
+    showAppModal("⏳ VERIFICATION PENDING",
         `TON Wallet opened for ${amount} TON (${tier} VIP).\n\n` +
-        `Memo: ${memo}\n\nVIP activates after blockchain confirmation!`
-    );
+        `Memo: ${memo}\n\nVIP activates after blockchain confirmation!`);
 }
 
-/* ─── VIP Daily Claim ─── */
 function claimVipDaily() {
     if (vipTier === "Free" || vipDailyBonus <= 0) {
         return showAppModal("VIP REQUIRED",
@@ -1291,7 +1275,7 @@ function claimVipDaily() {
     }
     const today = new Date().toDateString();
     if (lsGet('irc_vip_claim_date') === today) {
-        return showAppModal("CLAIMED TODAY", "⚠️ Come back tomorrow!");
+        return showAppModal("CLAIMED TODAY","⚠️ Come back tomorrow!");
     }
     addCoins(vipDailyBonus);
     lsSet('irc_vip_claim_date', today);
@@ -1299,152 +1283,125 @@ function claimVipDaily() {
         `🎉 +${vipDailyBonus.toLocaleString()} VIP Coins!`);
 }
 
-/* ─── Daily Streak - FIXED ─── */
+/* ─── Streak ─── */
 const STREAK_REWARDS = [50, 100, 150, 200, 250, 300, 500];
 
 function buildStreakGrid() {
     const grid = document.getElementById('streakGrid');
     if (!grid) return;
-    const streak    = parseInt(lsGet('irc_streak', '0')) || 0;
-    const lastClaim = lsGet('irc_streak_date', '');
+    const streak    = parseInt(lsGet('irc_streak','0')) || 0;
+    const lastClaim = lsGet('irc_streak_date','');
     const today     = new Date().toDateString();
     grid.innerHTML  = '';
-
     STREAK_REWARDS.forEach((reward, i) => {
-        const div       = document.createElement('div');
-        div.className   = 'streak-day';
-        div.innerHTML   = `
+        const div     = document.createElement('div');
+        div.className = 'streak-day';
+        div.innerHTML = `
             <div style="font-size:14px;">${i < streak ? '✅' : '🎁'}</div>
             <div style="margin-top:3px; color:var(--accent-gold);
                  font-weight:700;">${reward}</div>
             <div style="color:var(--text-muted); font-size:9px;">
-                Day ${i+1}
-            </div>`;
-        if (i < streak)                        div.classList.add('claimed');
+                Day ${i+1}</div>`;
+        if (i < streak)                          div.classList.add('claimed');
         if (i === streak && lastClaim !== today) div.classList.add('today');
         grid.appendChild(div);
     });
-
     const sc = document.getElementById('streakCount');
     if (sc) sc.innerText = `${streak} / 7 Days`;
 }
 
 function claimStreak() {
     const today     = new Date().toDateString();
-    const lastClaim = lsGet('irc_streak_date', '');
-
+    const lastClaim = lsGet('irc_streak_date','');
     if (lastClaim === today) {
-        return showAppModal("ALREADY CLAIMED", "⚠️ Already claimed today!");
+        return showAppModal("ALREADY CLAIMED","⚠️ Already claimed today!");
     }
-
-    let streak = parseInt(lsGet('irc_streak', '0')) || 0;
-
-    // بررسی دیروز
-    const yesterday = new Date(Date.now() - 86400000).toDateString();
-    if (lastClaim !== yesterday && lastClaim !== '') {
-        // streak شکسته - از اول
-        streak = 0;
-    }
-
-    // پاداش روز فعلی
-    const dayIndex = Math.min(streak, 6);
-    const reward   = STREAK_REWARDS[dayIndex];
-
-    // آپدیت streak
-    streak = streak >= 6 ? 0 : streak + 1;
-
+    let streak    = parseInt(lsGet('irc_streak','0')) || 0;
+    const yesterday = new Date(Date.now()-86400000).toDateString();
+    if (lastClaim !== yesterday && lastClaim !== '') streak = 0;
+    const dayIndex  = Math.min(streak, 6);
+    const reward    = STREAK_REWARDS[dayIndex];
+    streak          = streak >= 6 ? 0 : streak + 1;
     addCoins(reward);
     lsSet('irc_streak',      streak);
     lsSet('irc_streak_date', today);
     buildStreakGrid();
-
     fetch(`${BACKEND_URL}/api/v1/streak`, {
         method: "POST",
         headers: {"Content-Type":"application/json"},
         body: JSON.stringify({ user_id: user.id, day: streak, reward })
     }).catch(()=>{});
-
     showAppModal("STREAK BONUS!",
-        `🔥 Day ${dayIndex + 1} Streak!\n🎉 +${reward} IRAN Coins!`);
+        `🔥 Day ${dayIndex+1} Streak!\n🎉 +${reward} IRAN Coins!`);
 }
 
-/* ─── Lucky Spin ─── */
+/* ─── Spin ─── */
 const prizeLabels = ["500🪙","10🪙","TRY AGAIN❌","50🪙",
                      "NO LUCK❌","20🪙","100🪙","TRY AGAIN❌"];
 const prizeValues = [500, 10, 0, 50, 0, 20, 100, 0];
 const colors      = ['#f5b300','#0f172a','#ef4444','#1e293b',
                      '#ef4444','#0f172a','#10b981','#ef4444'];
-let wheelDeg = 0;
 
 function drawWheel() {
     const canvas = document.getElementById("wheelCanvas");
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
-    const arc = (2 * Math.PI) / 8;
-    ctx.clearRect(0, 0, 260, 260);
+    const arc = (2*Math.PI)/8;
+    ctx.clearRect(0,0,260,260);
     for (let i = 0; i < 8; i++) {
         const angle = i * arc;
         ctx.beginPath();
         ctx.fillStyle = colors[i];
-        ctx.moveTo(130, 130);
-        ctx.arc(130, 130, 125, angle, angle + arc);
-        ctx.lineTo(130, 130);
+        ctx.moveTo(130,130);
+        ctx.arc(130,130,125,angle,angle+arc);
+        ctx.lineTo(130,130);
         ctx.fill();
         ctx.save();
-        ctx.translate(130, 130);
-        ctx.rotate(angle + arc / 2);
-        ctx.textAlign = "right";
-        ctx.fillStyle = "#fff";
-        ctx.font = "bold 11px Poppins";
-        ctx.fillText(prizeLabels[i], 115, 4);
+        ctx.translate(130,130);
+        ctx.rotate(angle+arc/2);
+        ctx.textAlign  = "right";
+        ctx.fillStyle  = "#fff";
+        ctx.font       = "bold 11px Poppins";
+        ctx.fillText(prizeLabels[i],115,4);
         ctx.restore();
     }
 }
 
 function spinWheel() {
     if (isSpinning) return;
-    const today   = new Date().toDateString();
+    const today = new Date().toDateString();
     if (lsGet('irc_spin_date') === today) {
-        return showAppModal("ALREADY SPUN", "⚠️ Try again tomorrow!");
+        return showAppModal("ALREADY SPUN","⚠️ Try again tomorrow!");
     }
-
     isSpinning = true;
     const spinBtn = document.getElementById('spinBtn');
     if (spinBtn) spinBtn.disabled = true;
-
-    // اولین spin همیشه برنده
     let winIdx;
     if (!lsGet('irc_spin_first')) {
-        winIdx = 0; // 500 coins
-        lsSet('irc_spin_first', 'done');
+        winIdx = 0;
+        lsSet('irc_spin_first','done');
     } else {
-        winIdx = Math.floor(Math.random() * 8);
+        winIdx = Math.floor(Math.random()*8);
     }
-
     const canvas = document.getElementById("wheelCanvas");
-    const extra  = 360 * 5;
-    const target = extra + (360 - winIdx * 45 - 22.5);
-    wheelDeg     = wheelDeg + target;
-
+    const extra  = 360*5;
+    const target = extra + (360 - winIdx*45 - 22.5);
+    wheelDeg    += target;
     if (canvas) {
-        canvas.style.transition = "transform 4s cubic-bezier(0.17,0.67,0.12,0.99)";
+        canvas.style.transition =
+            "transform 4s cubic-bezier(0.17,0.67,0.12,0.99)";
         canvas.style.transform  = `rotate(${wheelDeg}deg)`;
     }
-
     setTimeout(() => {
         const prize = prizeValues[winIdx];
         if (prize > 0) addCoins(prize);
         lsSet('irc_spin_date', today);
         isSpinning = false;
         if (spinBtn) spinBtn.disabled = false;
-
-        if (prize > 0) {
-            showAppModal("CONGRATULATIONS!",
-                `🎉 You won ${prize} IRAN Coins!`);
-        } else {
-            showAppModal("NO LUCK TODAY", `❌ Try again tomorrow!`);
-        }
-
+        prize > 0
+            ? showAppModal("CONGRATULATIONS!",
+                `🎉 You won ${prize} IRAN Coins!`)
+            : showAppModal("NO LUCK TODAY",`❌ Try again tomorrow!`);
         fetch(`${BACKEND_URL}/api/v1/spin`, {
             method: "POST",
             headers: {"Content-Type":"application/json"},
@@ -1453,14 +1410,13 @@ function spinWheel() {
     }, 4100);
 }
 
-/* ─── Community Tasks ─── */
+/* ─── Tasks ─── */
 function handleTgTask(link, btnId, reward, channel) {
     const btn = document.getElementById(btnId);
     if (!btn || btn.classList.contains('completed')) return;
-
     if (btn.innerText.trim() === "Join") {
         openTgLink(link);
-        btn.innerText = "✅ Check";
+        btn.innerText        = "✅ Check";
         btn.style.background = "linear-gradient(135deg,#10b981,#059669)";
         btn.style.color      = "#fff";
     } else {
@@ -1490,12 +1446,11 @@ function handleTgTask(link, btnId, reward, channel) {
             btn.classList.add('completed');
             btn.onclick   = null;
             addCoins(reward);
-            showAppModal("TASK COMPLETED", `🎉 +${reward} IRAN Coins!`);
+            showAppModal("TASK COMPLETED",`🎉 +${reward} IRAN Coins!`);
         });
     }
 }
 
-/* ─── Sponsor Tasks ─── */
 function renderSponsorTasks(tasks) {
     const container = document.getElementById('sponsorTasksContainer');
     if (!container) return;
@@ -1510,16 +1465,15 @@ function renderSponsorTasks(tasks) {
                 <div>
                     <h4>${task.title}</h4>
                     <span style="font-size:12px; color:var(--accent-gold);">
-                        +${task.reward} Coins
-                    </span>
+                        +${task.reward} Coins</span>
                 </div>
             </div>
-            <button class="action-btn ${saved ? 'completed' : ''}"
+            <button class="action-btn ${saved?'completed':''}"
                     id="sponsorTask_${task.id}"
-                    ${saved ? 'disabled' : ''}
+                    ${saved?'disabled':''}
                     onclick="handleSponsorTask('${task.id}',
-                             '${task.link}', ${task.reward})">
-                ${saved ? 'Done ✓' : 'Join'}
+                             '${task.link}',${task.reward})">
+                ${saved?'Done ✓':'Join'}
             </button>`;
         container.appendChild(card);
     });
@@ -1530,16 +1484,16 @@ function handleSponsorTask(taskId, link, reward) {
     if (!btn || btn.innerText === 'Done ✓') return;
     if (btn.innerText === 'Join') {
         openTgLink(link);
-        btn.innerText            = '✅ Check';
-        btn.style.background     = "linear-gradient(135deg,#10b981,#059669)";
-        btn.style.color          = "#fff";
+        btn.innerText        = '✅ Check';
+        btn.style.background = "linear-gradient(135deg,#10b981,#059669)";
+        btn.style.color      = "#fff";
     } else {
-        lsSet(`irc_task_${taskId}`, 'done');
+        lsSet(`irc_task_${taskId}`,'done');
         btn.innerText = 'Done ✓';
         btn.classList.add('completed');
         btn.disabled  = true;
         addCoins(reward);
-        showAppModal("TASK DONE", `🎉 +${reward} IRAN Coins!`);
+        showAppModal("TASK DONE",`🎉 +${reward} IRAN Coins!`);
     }
 }
 
@@ -1571,9 +1525,7 @@ function submitWithdrawal() {
             `⚠️ Min 10,000 coins required.\n` +
             `Your balance: ${balance.toLocaleString()}`);
     }
-
     const withdrawAmount = balance;
-
     fetch(`${BACKEND_URL}/api/v1/withdraw`, {
         method: "POST",
         headers: {"Content-Type":"application/json"},
@@ -1587,8 +1539,9 @@ function submitWithdrawal() {
         const hist = document.getElementById('withdrawHistory');
         if (hist) {
             hist.innerHTML = `
-                <div style="background:var(--card-bg); border:var(--card-border);
-                     border-radius:12px; padding:10px; margin-bottom:8px;
+                <div style="background:var(--card-bg);
+                     border:var(--card-border); border-radius:12px;
+                     padding:10px; margin-bottom:8px;
                      font-size:12px; text-align:left;">
                     <span style="color:var(--accent-gold);">
                         ${withdrawAmount.toLocaleString()} Coins
@@ -1601,7 +1554,6 @@ function submitWithdrawal() {
                     </span>
                 </div>` + hist.innerHTML;
         }
-        // بعد از submit موجودی صفر میشه (چون سرور کم کرده)
         saveBalance(0);
         showAppModal("REQUEST SUBMITTED",
             "✅ Withdrawal sent to admin for review!");
@@ -1618,18 +1570,17 @@ window.addEventListener('DOMContentLoaded', () => {
     updateUI();
     drawWheel();
     buildStreakGrid();
-    lazyLoadIframe('aads-mine');
     setTimeout(startInAppInterstitial, 5000);
     syncData();
     setInterval(syncData, 20000);
 
-    // Auto-repair بدون ریست سکه
     setInterval(() => {
         if (isNaN(balance) || balance < 0) {
-            const saved = parseInt(lsGet('irc_bal', '0'));
+            const saved = parseInt(lsGet('irc_bal','0'));
             balance = isNaN(saved) ? 0 : Math.max(0, saved);
         }
-        const active = document.querySelectorAll('.tab-section.active-tab');
+        const active =
+            document.querySelectorAll('.tab-section.active-tab');
         if (active.length === 0) {
             const t = document.getElementById('tab-mine');
             if (t) t.classList.add('active-tab');
