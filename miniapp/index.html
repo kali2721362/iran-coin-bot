@@ -4,10 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, 
           maximum-scale=1.0, user-scalable=no">
-    <title>IRAN Coin - Master Build v12.0</title>
+    <title>IRAN Coin - Master Build v13.0</title>
     
+    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+    
+    <!-- Monetag SDK -->
+    <script src='//libtl.com/sdk.js' 
+            data-zone='11894107' 
+            data-sdk='show_11894107'>
+    </script>
+
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;
           600;700;800&display=swap" rel="stylesheet">
 
@@ -35,8 +42,8 @@
 
         body {
             background: linear-gradient(
-                to bottom, 
-                rgba(11,17,30,0.82), 
+                to bottom,
+                rgba(11,17,30,0.82),
                 rgba(11,17,30,0.95)
             ), url('bg.jpg') no-repeat center center fixed;
             background-size: cover;
@@ -139,7 +146,7 @@
             100% { opacity: 0; transform: translateY(-70px) scale(1.3); }
         }
 
-        /* ── A-Ads Banner (FIXED) ── */
+        /* ── A-Ads Banner ── */
         .aads-container {
             width: 100%;
             background: var(--card-bg);
@@ -150,8 +157,7 @@
             text-align: center;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             backdrop-filter: blur(8px);
-            /* FIX: حداقل ارتفاع مشخص برای نمایش صحیح */
-            min-height: 120px;
+            min-height: 90px;
             overflow: visible;
         }
         .aads-label {
@@ -159,13 +165,47 @@
             text-transform: uppercase; letter-spacing: 1px;
             margin-bottom: 8px; font-weight: 700;
         }
-        /* FIX: iframe با ارتفاع ثابت */
         .aads-iframe {
             width: 100% !important;
-            height: 100px !important;
+            height: 60px !important;
             border: 0 !important;
             display: block !important;
             margin: auto !important;
+        }
+
+        /* ── Monetag Ad Banner ── */
+        .monetag-banner {
+            width: 100%;
+            background: linear-gradient(135deg, 
+                rgba(0,136,204,0.15), 
+                rgba(0,210,255,0.1));
+            border: 1px solid rgba(0,210,255,0.3);
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 15px;
+            text-align: center;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            transition: all 0.3s ease;
+        }
+        .monetag-banner:active {
+            transform: scale(0.98);
+            border-color: var(--accent-gold);
+        }
+        .monetag-label {
+            font-size: 10px; color: var(--accent-blue);
+            text-transform: uppercase; letter-spacing: 1px;
+            margin-bottom: 6px; font-weight: 700;
+        }
+        .monetag-content {
+            display: flex; align-items: center;
+            justify-content: center; gap: 10px;
+        }
+        .monetag-reward {
+            background: var(--btn-grad);
+            color: #000; font-weight: 800;
+            font-size: 12px; padding: 4px 10px;
+            border-radius: 20px;
         }
 
         /* ── Cards & Titles ── */
@@ -193,24 +233,32 @@
             border: none; padding: 10px 18px;
             border-radius: 20px; cursor: pointer;
             touch-action: manipulation;
-            transition: opacity 0.2s;
+            transition: all 0.2s ease;
+            white-space: nowrap;
         }
-        .action-btn:active { opacity: 0.8; }
+        .action-btn:active { transform: scale(0.95); opacity: 0.8; }
         .action-btn.completed {
             background: rgba(255,255,255,0.1);
             color: var(--text-muted); cursor: not-allowed;
+        }
+        .action-btn:disabled {
+            opacity: 0.5; cursor: not-allowed;
         }
         .ton-btn {
             background: var(--ton-grad); color: #fff;
             font-weight: 700; font-size: 13px;
             border: none; padding: 12px;
             border-radius: 12px; cursor: pointer; width: 100%;
+            transition: opacity 0.2s;
         }
         .active-tier-btn {
             background: var(--accent-green) !important;
             color: #fff !important; cursor: default !important;
         }
-        .full-btn { width: 100%; padding: 14px; font-size: 15px; border-radius: 12px; }
+        .full-btn {
+            width: 100%; padding: 14px;
+            font-size: 15px; border-radius: 12px;
+        }
 
         /* ── Sponsor Banner ── */
         .sponsor-banner {
@@ -298,21 +346,6 @@
             box-shadow: 0 0 30px rgba(245,179,0,0.3);
         }
 
-        /* ── Adsgram Ad Modal ── */
-        .ad-modal-card {
-            background: #0f172a;
-            border: 2px solid var(--accent-blue);
-            border-radius: 20px; padding: 25px;
-            width: 100%; max-width: 320px; text-align: center;
-        }
-        .ad-timer-circle {
-            width: 70px; height: 70px; border-radius: 50%;
-            border: 3px solid var(--accent-gold);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 26px; font-weight: 800; color: var(--accent-gold);
-            margin: 15px auto;
-        }
-
         /* ── Daily Streak ── */
         .streak-grid {
             display: grid; grid-template-columns: repeat(7, 1fr);
@@ -353,6 +386,20 @@
             font-size: 11px; color: var(--text-muted);
         }
 
+        /* ── Toast ── */
+        .toast {
+            position: fixed; bottom: 90px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(16,185,129,0.95);
+            color: #fff; padding: 10px 20px;
+            border-radius: 20px; font-size: 13px;
+            font-weight: 600; z-index: 3000;
+            opacity: 0; transition: opacity 0.3s;
+            pointer-events: none; white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .toast.show { opacity: 1; }
+
         /* ── Version Tag ── */
         .version-tag {
             font-size: 10px; color: var(--text-muted);
@@ -378,20 +425,25 @@
         }
         .nav-item * { pointer-events: none; }
         .nav-item.active { color: var(--accent-gold); }
-        .nav-icon { font-size: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .nav-icon { font-size: 20px; }
 
-        /* ── Notification Toast ── */
-        .toast {
-            position: fixed; bottom: 90px; left: 50%;
-            transform: translateX(-50%);
-            background: rgba(16,185,129,0.9);
-            color: #fff; padding: 10px 20px;
-            border-radius: 20px; font-size: 13px;
-            font-weight: 600; z-index: 3000;
-            opacity: 0; transition: opacity 0.3s;
-            pointer-events: none; white-space: nowrap;
+        /* ── Ad Loading Overlay ── */
+        .ad-loading-overlay {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none; justify-content: center;
+            align-items: center; z-index: 5000;
+            flex-direction: column; gap: 15px;
         }
-        .toast.show { opacity: 1; }
+        .ad-loading-spinner {
+            width: 50px; height: 50px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top: 4px solid var(--accent-gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -421,22 +473,48 @@
 <!-- Toast -->
 <div class="toast" id="toastMsg"></div>
 
+<!-- Ad Loading Overlay -->
+<div class="ad-loading-overlay" id="adLoadingOverlay">
+    <div class="ad-loading-spinner"></div>
+    <p style="color:var(--accent-gold); font-weight:700;">Loading Ad...</p>
+    <p style="color:var(--text-muted); font-size:12px;">
+        Please wait to earn your reward
+    </p>
+</div>
+
 <!-- ═══════════════════════════════════════
      TAB 1 : MINE
 ════════════════════════════════════════ -->
 <div class="tab-section active-tab" id="tab-mine">
 
-    <!-- A-Ads Banner #1 (FIXED: unique id + fixed height) -->
-    <div class="aads-container" id="aads-mine-wrap">
-        <div class="aads-label">📢 Crypto Sponsor Ad</div>
-        <iframe 
+    <!-- A-Ads Banner Mine -->
+    <div class="aads-container">
+        <div class="aads-label">📢 Crypto Sponsor</div>
+        <iframe
             id="aads-mine"
             class="aads-iframe"
-            data-aa="2456226"
             src="https://acceptable.a-ads.com/2456226?size=468x60"
             scrolling="no"
-            frameborder="0">
+            frameborder="0"
+            style="height:60px;">
         </iframe>
+    </div>
+
+    <!-- Monetag Rewarded Banner (Mine Tab) -->
+    <div class="monetag-banner" onclick="showMonetagRewardedPopup('mine')">
+        <div class="monetag-label">🎁 Sponsored Offer</div>
+        <div class="monetag-content">
+            <span style="font-size:20px;">🎬</span>
+            <div style="text-align:left;">
+                <div style="font-size:13px; font-weight:700;">
+                    Watch & Earn
+                </div>
+                <div style="font-size:11px; color:var(--text-muted);">
+                    Tap to view sponsored offer
+                </div>
+            </div>
+            <div class="monetag-reward">+50 🪙</div>
+        </div>
     </div>
 
     <div class="miner-area">
@@ -456,20 +534,23 @@
         </div>
     </div>
 
-    <!-- Daily Streak (Mine tab) -->
+    <!-- Daily Streak -->
     <div class="section-title">🔥 Daily Login Streak</div>
     <div class="task-card" style="flex-direction:column; gap:12px;">
         <div style="display:flex; justify-content:space-between; width:100%;">
             <span style="font-size:13px;">Consecutive Days:</span>
-            <strong style="color:var(--accent-gold);" id="streakCount">0 Days</strong>
+            <strong style="color:var(--accent-gold);" id="streakCount">
+                0 Days
+            </strong>
         </div>
         <div class="streak-grid" id="streakGrid"></div>
-        <button class="action-btn full-btn" id="btnStreak" onclick="claimStreak()">
+        <button class="action-btn full-btn" id="btnStreak"
+                onclick="claimStreak()">
             Claim Daily Bonus
         </button>
     </div>
 
-    <div class="version-tag">IRAN Coin v12.0 — A-Ads Fixed Build</div>
+    <div class="version-tag">IRAN Coin v13.0 — Monetag + A-Ads Live</div>
 </div>
 
 <!-- ═══════════════════════════════════════
@@ -477,7 +558,8 @@
 ════════════════════════════════════════ -->
 <div class="tab-section" id="tab-vip">
     <div class="section-title">👑 VIP Passes (TON Crypto)</div>
-    <p style="font-size:12px; color:var(--text-muted); text-align:center; margin-bottom:15px;">
+    <p style="font-size:12px; color:var(--text-muted); 
+       text-align:center; margin-bottom:15px;">
         Upgrade using TON. Benefits activate automatically!
     </p>
 
@@ -490,11 +572,12 @@
         <div style="font-size:12px; color:var(--text-muted);">
             ⚡ +2 Coins/Tap | 🔋 1,500 Max Energy | 🎁 +500 Daily
         </div>
-        <button class="ton-btn" id="btn-Bronze" onclick="buyVip('Bronze',0.1)">
+        <button class="ton-btn" id="btn-Bronze"
+                onclick="buyVip('Bronze',0.1)">
             Buy for 0.1 TON 💎
         </button>
         <div id="status-Bronze" class="status-checking" style="display:none;">
-            Checking blockchain for transaction...
+            Checking blockchain...
         </div>
     </div>
 
@@ -507,16 +590,18 @@
         <div style="font-size:12px; color:var(--text-muted);">
             ⚡ +5 Coins/Tap | 🔋 3,000 Max Energy | 🎁 +2,000 Daily
         </div>
-        <button class="ton-btn" id="btn-Silver" onclick="buyVip('Silver',0.5)">
+        <button class="ton-btn" id="btn-Silver"
+                onclick="buyVip('Silver',0.5)">
             Buy for 0.5 TON 💎
         </button>
         <div id="status-Silver" class="status-checking" style="display:none;">
-            Checking blockchain for transaction...
+            Checking blockchain...
         </div>
     </div>
 
     <!-- Gold -->
-    <div class="vip-tier-card" style="border-color:#ffd700; background:rgba(30,25,10,0.9);">
+    <div class="vip-tier-card"
+         style="border-color:#ffd700; background:rgba(30,25,10,0.9);">
         <div class="vip-tier-header">
             <div class="vip-tier-name">🥇 Gold VIP</div>
             <div style="font-weight:800; color:#00d2ff">1.5 TON</div>
@@ -530,12 +615,13 @@
             Buy for 1.5 TON 👑
         </button>
         <div id="status-Gold" class="status-checking" style="display:none;">
-            Checking blockchain for transaction...
+            Checking blockchain...
         </div>
     </div>
 
     <!-- Diamond -->
-    <div class="vip-tier-card" style="border-color:#00d2ff; background:rgba(10,30,45,0.9);">
+    <div class="vip-tier-card"
+         style="border-color:#00d2ff; background:rgba(10,30,45,0.9);">
         <div class="vip-tier-header">
             <div class="vip-tier-name">💎 Diamond VIP</div>
             <div style="font-weight:800; color:#00d2ff">3.0 TON</div>
@@ -549,7 +635,7 @@
             Buy for 3.0 TON 💎
         </button>
         <div id="status-Diamond" class="status-checking" style="display:none;">
-            Checking blockchain for transaction...
+            Checking blockchain...
         </div>
     </div>
 </div>
@@ -559,17 +645,38 @@
 ════════════════════════════════════════ -->
 <div class="tab-section" id="tab-earn">
 
-    <!-- A-Ads Banner #2 (FIXED: unique id + fixed height) -->
-    <div class="aads-container" id="aads-earn-wrap">
-        <div class="aads-label">📢 Crypto Sponsor Ad</div>
+    <!-- A-Ads Banner Earn -->
+    <div class="aads-container">
+        <div class="aads-label">📢 Crypto Sponsor</div>
         <iframe
             id="aads-earn"
             class="aads-iframe"
-            data-aa="2456226"
             src="https://acceptable.a-ads.com/2456226?size=468x60"
             scrolling="no"
-            frameborder="0">
+            frameborder="0"
+            style="height:60px;">
         </iframe>
+    </div>
+
+    <!-- Monetag Rewarded Interstitial Banner -->
+    <div class="monetag-banner" 
+         onclick="showMonetagRewardedPopup('earn')"
+         style="border-color:rgba(245,179,0,0.4);">
+        <div class="monetag-label" style="color:var(--accent-gold);">
+            💰 Earn More Coins
+        </div>
+        <div class="monetag-content">
+            <span style="font-size:20px;">📱</span>
+            <div style="text-align:left;">
+                <div style="font-size:13px; font-weight:700;">
+                    Sponsored Offer
+                </div>
+                <div style="font-size:11px; color:var(--text-muted);">
+                    View offer & earn bonus coins
+                </div>
+            </div>
+            <div class="monetag-reward">+50 🪙</div>
+        </div>
     </div>
 
     <!-- Sponsor Banner -->
@@ -579,13 +686,14 @@
             📢 Your Banner Here!
         </h4>
         <span style="font-size:12px; color:var(--text-muted);">
-            Click to advertise your Telegram Channel or Bot
+            Contact us to advertise your Telegram Channel or Bot
         </span>
     </div>
 
     <!-- Daily Spin -->
     <div class="section-title">🎡 24h Daily Lucky Spin</div>
-    <div class="task-card" style="flex-direction:column; align-items:center; padding:20px;">
+    <div class="task-card"
+         style="flex-direction:column; align-items:center; padding:20px;">
         <p style="font-size:13px; text-align:center; margin-bottom:15px;">
             Spin once every 24 hours to test your luck!
         </p>
@@ -605,9 +713,13 @@
         <div style="display:flex; align-items:center; gap:12px;">
             <span style="font-size:26px;">🎁</span>
             <div>
-                <h4 style="font-size:14px;" id="vipDailyTitle">VIP Daily Reward</h4>
+                <h4 style="font-size:14px;" id="vipDailyTitle">
+                    VIP Daily Reward
+                </h4>
                 <span style="font-size:12px; color:var(--accent-gold);"
-                      id="vipDailyDesc">Claim active tier bonus</span>
+                      id="vipDailyDesc">
+                    Claim active tier bonus
+                </span>
             </div>
         </div>
         <button class="action-btn" id="btnClaimVipDaily"
@@ -616,13 +728,15 @@
 
     <div class="section-title">🎬 Sponsored Tasks</div>
 
-    <!-- Adsgram Video Ad (REAL) -->
+    <!-- Monetag Rewarded Video Task -->
     <div class="task-card">
         <div style="display:flex; align-items:center; gap:12px;">
             <span style="font-size:24px;">🎬</span>
             <div>
-                <h4>Watch Video Ad</h4>
-                <span style="font-size:12px; color:var(--accent-gold);">+100 Coins</span>
+                <h4>Watch Sponsored Ad</h4>
+                <span style="font-size:12px; color:var(--accent-gold);">
+                    +100 Coins
+                </span>
             </div>
         </div>
         <button class="action-btn" id="btnWatchVideo"
@@ -645,7 +759,7 @@
 
     <div class="section-title">📢 Community Tasks</div>
 
-    <!-- Sponsor Tasks container (dynamic) -->
+    <!-- Dynamic Sponsor Tasks -->
     <div id="sponsorTasksContainer"></div>
 
     <!-- Channel Task -->
@@ -654,7 +768,9 @@
             <span style="font-size:24px;">✈️</span>
             <div>
                 <h4>Join Official Channel</h4>
-                <span style="font-size:12px; color:var(--accent-gold);">+50 Coins</span>
+                <span style="font-size:12px; color:var(--accent-gold);">
+                    +50 Coins
+                </span>
             </div>
         </div>
         <button class="action-btn" id="btnTaskChannel"
@@ -671,7 +787,9 @@
             <span style="font-size:24px;">💬</span>
             <div>
                 <h4>Join Support Group</h4>
-                <span style="font-size:12px; color:var(--accent-gold);">+50 Coins</span>
+                <span style="font-size:12px; color:var(--accent-gold);">
+                    +50 Coins
+                </span>
             </div>
         </div>
         <button class="action-btn" id="btnTaskGroup"
@@ -682,7 +800,7 @@
                 )">Join</button>
     </div>
 
-    <div class="version-tag">IRAN Coin v12.0 — A-Ads Fixed Build</div>
+    <div class="version-tag">IRAN Coin v13.0 — Monetag + A-Ads Live</div>
 </div>
 
 <!-- ═══════════════════════════════════════
@@ -702,11 +820,13 @@
         </div>
     </div>
 
-    <div class="task-card" style="flex-direction:column; align-items:flex-start; gap:8px;">
+    <div class="task-card"
+         style="flex-direction:column; align-items:flex-start; gap:8px;">
         <h4>Invite Friends & Earn</h4>
         <p style="font-size:13px; color:var(--text-muted); line-height:1.5;">
-            Receive <strong style="color:var(--accent-gold);">+50 IRAN Coins</strong>
-            for every friend who joins using your unique invite link.
+            Receive <strong style="color:var(--accent-gold);">
+            +50 IRAN Coins</strong> for every friend who joins using
+            your unique invite link.
         </p>
     </div>
 
@@ -715,7 +835,8 @@
         🔗 Invite a Friend
     </button>
     <button class="action-btn full-btn" onclick="copyReferral()"
-            style="margin-top:10px; background:rgba(255,255,255,0.1); color:#fff;">
+            style="margin-top:10px;
+                   background:rgba(255,255,255,0.1); color:#fff;">
         📋 Copy Referral Link
     </button>
 </div>
@@ -726,16 +847,24 @@
 <div class="tab-section" id="tab-wallet">
     <div class="section-title">💼 Withdrawal Hub</div>
     <div class="task-card"
-         style="flex-direction:column; align-items:stretch; gap:10px; background:rgba(0,0,0,0.5);">
-        <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:10px;">
+         style="flex-direction:column; align-items:stretch;
+                gap:10px; background:rgba(0,0,0,0.5);">
+        <div style="display:flex; justify-content:space-between;
+             font-size:14px; margin-bottom:5px;">
             <span style="color:var(--text-muted)">Min. Withdrawal:</span>
-            <span style="color:var(--accent-gold); font-weight:700;">10,000 Coins</span>
+            <span style="color:var(--accent-gold); font-weight:700;">
+                10,000 Coins
+            </span>
         </div>
-        <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:5px;">
+        <div style="display:flex; justify-content:space-between;
+             font-size:14px; margin-bottom:10px;">
             <span style="color:var(--text-muted)">Your Balance:</span>
-            <span style="color:var(--accent-gold); font-weight:700;" id="walletBalance">0</span>
+            <span style="color:var(--accent-gold); font-weight:700;"
+                  id="walletBalance">0 🪙</span>
         </div>
-        <label style="font-size:12px; color:var(--text-muted);">Your TON Wallet Address:</label>
+        <label style="font-size:12px; color:var(--text-muted);">
+            Your TON Wallet Address:
+        </label>
         <input type="text" id="tonWalletInput" class="wallet-input"
                placeholder="UQ... or EQ... address">
         <button class="action-btn full-btn" onclick="submitWithdrawal()">
@@ -743,10 +872,10 @@
         </button>
     </div>
 
-    <!-- Withdrawal History placeholder -->
     <div class="section-title">📋 Recent Requests</div>
-    <div id="withdrawHistory" style="width:100%; color:var(--text-muted);
-         font-size:13px; text-align:center; padding:10px;">
+    <div id="withdrawHistory"
+         style="width:100%; color:var(--text-muted);
+                font-size:13px; text-align:center; padding:10px;">
         No recent withdrawal requests.
     </div>
 </div>
@@ -754,28 +883,19 @@
 <!-- ═══════════════════════════════════════
      MODALS
 ════════════════════════════════════════ -->
-<!-- General Modal -->
 <div class="modal-overlay" id="customModal">
     <div class="modal-card">
         <h3 id="modalTitle"
-            style="color:var(--accent-gold); margin-bottom:10px; font-size:18px;">
+            style="color:var(--accent-gold);
+                   margin-bottom:10px; font-size:18px;">
             NOTIFICATION
         </h3>
         <p id="modalDesc"
-           style="font-size:13px; color:#fff; margin-bottom:20px; line-height:1.5;">
-        </p>
-        <button class="action-btn full-btn" onclick="closeModal()">OK, UNDERSTOOD</button>
-    </div>
-</div>
-
-<!-- Ad Loading Modal -->
-<div class="modal-overlay" id="adModal">
-    <div class="ad-modal-card">
-        <h3 style="color:var(--accent-blue); font-size:16px;">🎬 Loading Ad...</h3>
-        <p style="font-size:12px; color:#a0b1c9; margin-top:5px;">
-            Please wait while the ad loads
-        </p>
-        <div class="ad-timer-circle" id="adTimer">⏳</div>
+           style="font-size:13px; color:#fff;
+                  margin-bottom:20px; line-height:1.5;"></p>
+        <button class="action-btn full-btn" onclick="closeModal()">
+            OK, UNDERSTOOD
+        </button>
     </div>
 </div>
 
@@ -801,48 +921,47 @@
 </nav>
 
 <!-- ═══════════════════════════════════════
-     JAVASCRIPT MASTER CONTROLLER v12.0
+     JAVASCRIPT v13.0
 ════════════════════════════════════════ -->
 <script>
 "use strict";
 
 /* ─── Constants ─── */
-const ADMIN_WALLET  = "UQCcUO7XRuLyf46obnkSUrec5L00yng7sw8Jut04rlLKCSjB";
-const BACKEND_URL   = "https://iran-coin-bot-production.up.railway.app";
-const ADSGRAM_ID    = "9251";   // ← آیدی Adsgram خود را اینجا وارد کنید
-const AD_COOLDOWN   = 30 * 60 * 1000; // 30 min between ads
+const ADMIN_WALLET = "UQCcUO7XRuLyf46obnkSUrec5L00yng7sw8Jut04rlLKCSjB";
+const BACKEND_URL  = "https://iran-coin-bot-production.up.railway.app";
+const MONETAG_ZONE = "11894107";
+const AD_COOLDOWN  = 30 * 60 * 1000; // 30 minutes
 
 /* ─── Telegram Init ─── */
-const tg   = window.Telegram?.WebApp;
+const tg = window.Telegram?.WebApp;
 if (tg) { try { tg.ready(); tg.expand(); } catch(e){} }
-
-const user = tg?.initDataUnsafe?.user 
+const user = tg?.initDataUnsafe?.user
           || { id: 979411415, first_name: "Player" };
 
 /* ─── State ─── */
-let balance      = 0;
-let vipTier      = "Free";
-let tapValue     = 1;
-let maxEnergy    = 1000;
-let energy       = 1000;
-let vipDailyBonus= 0;
-let refCount     = 0;
-let isSpinning   = false;
+let balance       = 0;
+let vipTier       = "Free";
+let tapValue      = 1;
+let maxEnergy     = 1000;
+let energy        = 1000;
+let vipDailyBonus = 0;
+let refCount      = 0;
+let isSpinning    = false;
 
-/* ─── Local Storage Helpers ─── */
-function lsGet(k, def = 0) {
+/* ─── LocalStorage Helpers ─── */
+function lsGet(k, def = '') {
     const v = localStorage.getItem(k);
     return v !== null ? v : def;
 }
 function lsSet(k, v) { localStorage.setItem(k, String(v)); }
 
 function loadLocal() {
-    balance       = parseInt(lsGet('irc_bal',  0)) || 0;
-    vipTier       = lsGet('irc_vip',     'Free');
-    tapValue      = parseInt(lsGet('irc_tap',  1)) || 1;
-    maxEnergy     = parseInt(lsGet('irc_maxen',1000)) || 1000;
-    vipDailyBonus = parseInt(lsGet('irc_vdaily',0)) || 0;
-    refCount      = parseInt(lsGet('irc_refs',  0)) || 0;
+    balance       = parseInt(lsGet('irc_bal',  '0'))    || 0;
+    vipTier       = lsGet('irc_vip',           'Free');
+    tapValue      = parseInt(lsGet('irc_tap',  '1'))    || 1;
+    maxEnergy     = parseInt(lsGet('irc_maxen','1000')) || 1000;
+    vipDailyBonus = parseInt(lsGet('irc_vdaily','0'))   || 0;
+    refCount      = parseInt(lsGet('irc_refs', '0'))    || 0;
     energy        = maxEnergy;
 }
 
@@ -852,7 +971,7 @@ function saveBalance(val) {
     updateUI();
 }
 
-/* ─── Toast Notification ─── */
+/* ─── Toast ─── */
 function showToast(msg, duration = 2500) {
     const t = document.getElementById('toastMsg');
     if (!t) return;
@@ -863,14 +982,12 @@ function showToast(msg, duration = 2500) {
 
 /* ─── Modal ─── */
 function showAppModal(title, desc) {
-    const m = document.getElementById('customModal');
     document.getElementById('modalTitle').innerText = title;
     document.getElementById('modalDesc').innerText  = desc;
-    if (m) m.style.display = 'flex';
+    document.getElementById('customModal').style.display = 'flex';
 }
 function closeModal() {
-    const m = document.getElementById('customModal');
-    if (m) m.style.display = 'none';
+    document.getElementById('customModal').style.display = 'none';
 }
 
 /* ─── UI Update ─── */
@@ -878,7 +995,6 @@ function updateUI() {
     /* Balance */
     const balEl = document.getElementById('userBalance');
     if (balEl) balEl.innerText = balance.toLocaleString();
-
     const wBal = document.getElementById('walletBalance');
     if (wBal) wBal.innerText = balance.toLocaleString() + ' 🪙';
 
@@ -888,7 +1004,7 @@ function updateUI() {
     const enFill = document.getElementById('energyFill');
     if (enFill) enFill.style.width = `${(energy / maxEnergy) * 100}%`;
 
-    /* VIP UI */
+    /* VIP */
     if (vipTier !== "Free") {
         const crown = document.getElementById('vipCrown');
         if (crown) crown.style.display = 'block';
@@ -902,9 +1018,9 @@ function updateUI() {
     ['Bronze','Silver','Gold','Diamond'].forEach(t => {
         const btn = document.getElementById(`btn-${t}`);
         if (btn && vipTier === t) {
-            btn.innerText  = "ACTIVE TIER ✓";
-            btn.className  = "ton-btn active-tier-btn";
-            btn.onclick    = null;
+            btn.innerText = "ACTIVE TIER ✓";
+            btn.className = "ton-btn active-tier-btn";
+            btn.onclick   = null;
         }
     });
 
@@ -914,38 +1030,36 @@ function updateUI() {
     const reEl = document.getElementById('refEarned');
     if (reEl) reEl.innerText = (refCount * 50).toLocaleString();
 
-    /* Name & Avatar */
+    /* User info */
     const nameEl = document.getElementById('userName');
     if (nameEl) nameEl.innerText = user.first_name || "Player";
     const avatarEl = document.getElementById('userAvatar');
-    if (avatarEl) {
+    if (avatarEl && avatarEl.childNodes[0]) {
         avatarEl.childNodes[0].nodeValue =
             (user.first_name || "P").charAt(0).toUpperCase();
     }
 }
 
-/* ─── Sync with Backend ─── */
+/* ─── Backend Sync ─── */
 async function syncData() {
     try {
-        const res  = await fetch(`${BACKEND_URL}/api/v1/user/${user.id}`);
+        const res = await fetch(`${BACKEND_URL}/api/v1/user/${user.id}`);
         if (!res.ok) return;
         const data = await res.json();
 
         if (typeof data.balance === 'number') {
-            balance  = Math.max(balance, data.balance);
+            balance = Math.max(balance, data.balance);
             lsSet('irc_bal', balance);
         }
-        if (data.vip_tier)    { vipTier = data.vip_tier; lsSet('irc_vip', vipTier); }
-        if (data.tap_value)   { tapValue = data.tap_value; lsSet('irc_tap', tapValue); }
-        if (data.max_energy)  { maxEnergy = data.max_energy; lsSet('irc_maxen', maxEnergy); }
-        if (data.referrals)   { refCount = data.referrals; lsSet('irc_refs', refCount); }
-        if (data.vip_daily)   { vipDailyBonus = data.vip_daily; lsSet('irc_vdaily', vipDailyBonus); }
-
-        /* Sponsor tasks from backend */
+        if (data.vip_tier)   { vipTier = data.vip_tier; lsSet('irc_vip', vipTier); }
+        if (data.tap_value)  { tapValue = data.tap_value; lsSet('irc_tap', tapValue); }
+        if (data.max_energy) { maxEnergy = data.max_energy; lsSet('irc_maxen', maxEnergy); }
+        if (data.referrals)  { refCount = data.referrals; lsSet('irc_refs', refCount); }
+        if (data.vip_daily)  { vipDailyBonus = data.vip_daily; lsSet('irc_vdaily', vipDailyBonus); }
         if (Array.isArray(data.tasks)) renderSponsorTasks(data.tasks);
 
         updateUI();
-    } catch(e) { /* offline fallback */ }
+    } catch(e) { /* offline */ }
 }
 
 /* ─── Tab Switch ─── */
@@ -960,6 +1074,18 @@ function switchTab(tabId, el) {
     if (el) el.classList.add('active');
 
     if (tabId === 'tab-earn') setTimeout(drawWheel, 80);
+
+    /* Lazy load A-Ads */
+    if (tabId === 'tab-mine')  lazyLoadIframe('aads-mine');
+    if (tabId === 'tab-earn')  lazyLoadIframe('aads-earn');
+}
+
+function lazyLoadIframe(id) {
+    const iframe = document.getElementById(id);
+    if (!iframe || iframe.dataset.loaded) return;
+    const src = iframe.src;
+    iframe.src = '';
+    setTimeout(() => { iframe.src = src; iframe.dataset.loaded = "1"; }, 150);
 }
 
 /* ─── Energy Recharge ─── */
@@ -972,25 +1098,24 @@ setInterval(() => {
 
 /* ─── Tap Mechanics ─── */
 const tapBtn = document.getElementById('tapBtn');
-let   lastTapTime = 0;
+let lastTapTime = 0;
 
 if (tapBtn) {
     tapBtn.addEventListener('pointerdown', (e) => {
         const now = Date.now();
-        /* Anti-spam: max 10 taps/second */
-        if (now - lastTapTime < 100) return;
+        if (now - lastTapTime < 100) return; // max 10 taps/sec
         lastTapTime = now;
 
         if (energy < tapValue) {
-            showToast('⚡ Out of energy! Wait for recharge...');
+            showToast('⚡ Out of energy! Recharging...');
             return;
         }
 
-        energy  -= tapValue;
+        energy -= tapValue;
         saveBalance(balance + tapValue);
 
-        /* Float animation */
-        const num  = document.createElement('div');
+        /* Float number */
+        const num = document.createElement('div');
         num.className = 'tap-number';
         num.innerText = `+${tapValue}`;
         const rect = tapBtn.getBoundingClientRect();
@@ -999,10 +1124,9 @@ if (tapBtn) {
         tapBtn.parentElement.appendChild(num);
         setTimeout(() => num.remove(), 800);
 
-        /* Haptic */
         try { tg?.HapticFeedback?.impactOccurred('light'); } catch(e) {}
 
-        /* Backend sync (debounced) */
+        /* Debounced backend sync */
         clearTimeout(tapBtn._syncTimer);
         tapBtn._syncTimer = setTimeout(() => {
             fetch(`${BACKEND_URL}/api/v1/tap`, {
@@ -1014,10 +1138,126 @@ if (tapBtn) {
     });
 }
 
-/* ─── Open TG Link Helper ─── */
+/* ─── Open TG Link ─── */
 function openTgLink(url) {
     if (tg?.openTelegramLink) tg.openTelegramLink(url);
     else if (tg?.openLink)    tg.openLink(url);
+    else window.open(url, '_blank');
+}
+
+/* ─── Monetag Rewarded Popup ─── */
+function showMonetagRewardedPopup(source) {
+    const overlay = document.getElementById('adLoadingOverlay');
+    if (overlay) overlay.style.display = 'flex';
+
+    const showFn = window[`show_${MONETAG_ZONE}`];
+    if (typeof showFn !== 'function') {
+        if (overlay) overlay.style.display = 'none';
+        showToast('⚠️ Ad not available right now');
+        return;
+    }
+
+    showFn('pop')
+        .then(() => {
+            if (overlay) overlay.style.display = 'none';
+            saveBalance(balance + 50);
+            showToast('🎉 +50 Coins earned!');
+            fetch(`${BACKEND_URL}/api/v1/ads/monetag?telegram_id=${user.id}&source=${source}&reward=50`)
+                .catch(()=>{});
+        })
+        .catch(() => {
+            if (overlay) overlay.style.display = 'none';
+            showToast('⚠️ Ad not available. Try again later.');
+        });
+}
+
+/* ─── Watch Video Ad (Monetag Rewarded) ─── */
+function watchVideoAd() {
+    const now     = Date.now();
+    const lastAd  = parseInt(lsGet('irc_last_ad', '0')) || 0;
+    const btnWatch = document.getElementById('btnWatchVideo');
+
+    if (now - lastAd < AD_COOLDOWN) {
+        const wait = Math.ceil((AD_COOLDOWN - (now - lastAd)) / 60000);
+        return showAppModal(
+            "PLEASE WAIT",
+            `⏳ Next ad available in ~${wait} minute(s).`
+        );
+    }
+
+    const overlay = document.getElementById('adLoadingOverlay');
+    if (overlay) overlay.style.display = 'flex';
+    if (btnWatch) btnWatch.disabled = true;
+
+    const showFn = window[`show_${MONETAG_ZONE}`];
+
+    if (typeof showFn === 'function') {
+        showFn('pop')
+            .then(() => {
+                if (overlay) overlay.style.display = 'none';
+                if (btnWatch) btnWatch.disabled = false;
+                lsSet('irc_last_ad', Date.now());
+                saveBalance(balance + 100);
+                fetch(`${BACKEND_URL}/api/v1/ads/watch?telegram_id=${user.id}`)
+                    .catch(()=>{});
+                showAppModal("REWARD ADDED", "🎉 +100 IRAN Coins added!");
+            })
+            .catch((e) => {
+                if (overlay) overlay.style.display = 'none';
+                if (btnWatch) btnWatch.disabled = false;
+                showAppModal("AD SKIPPED", "⚠️ Please watch the full ad to earn coins.");
+            });
+    } else {
+        /* Fallback 5s */
+        if (overlay) overlay.style.display = 'none';
+        if (btnWatch) btnWatch.disabled = false;
+        simulateFallbackAd();
+    }
+}
+
+function simulateFallbackAd() {
+    const overlay  = document.getElementById('adLoadingOverlay');
+    const btnWatch = document.getElementById('btnWatchVideo');
+    if (overlay) overlay.style.display = 'flex';
+    if (btnWatch) btnWatch.disabled = true;
+    let t = 5;
+    const iv = setInterval(() => {
+        t--;
+        if (t <= 0) {
+            clearInterval(iv);
+            if (overlay) overlay.style.display = 'none';
+            if (btnWatch) btnWatch.disabled = false;
+            lsSet('irc_last_ad', Date.now());
+            saveBalance(balance + 100);
+            fetch(`${BACKEND_URL}/api/v1/ads/watch?telegram_id=${user.id}`).catch(()=>{});
+            showAppModal("REWARD ADDED", "🎉 +100 IRAN Coins added!");
+        }
+    }, 1000);
+}
+
+/* ─── In-App Interstitial (Auto) ─── */
+function startInAppInterstitial() {
+    const showFn = window[`show_${MONETAG_ZONE}`];
+    if (typeof showFn !== 'function') return;
+    try {
+        showFn({
+            type: 'inApp',
+            inAppSettings: {
+                frequency: 2,
+                capping: 0.1,
+                interval: 30,
+                timeout: 5,
+                everyPage: false
+            }
+        });
+    } catch(e) {}
+}
+
+/* ─── CPX Surveys ─── */
+function openCPX() {
+    const url = `https://offers.cpx-research.com/index.html?app_id=24785` +
+                `&ext_user_id=${user.id}`;
+    if (tg?.openLink) tg.openLink(url);
     else window.open(url, '_blank');
 }
 
@@ -1027,17 +1267,13 @@ function buyVip(tier, amount) {
     const memo    = `VIP_${tier}_${user.id}`;
     const tonUrl  = `https://app.tonkeeper.com/transfer/${ADMIN_WALLET}` +
                     `?amount=${nanoTon}&text=${encodeURIComponent(memo)}`;
-
     window.open(tonUrl, '_blank');
-
     const statusEl = document.getElementById(`status-${tier}`);
     if (statusEl) statusEl.style.display = "block";
-
     showAppModal(
         "⏳ VERIFICATION PENDING",
         `TON Wallet opened for ${amount} TON (${tier} VIP).\n\n` +
-        `Memo Code: ${memo}\n\n` +
-        `After blockchain confirmation, your VIP activates automatically!`
+        `Memo: ${memo}\n\nVIP activates after blockchain confirmation!`
     );
 }
 
@@ -1046,77 +1282,67 @@ function claimVipDaily() {
     if (vipTier === "Free" || vipDailyBonus <= 0) {
         return showAppModal(
             "VIP REQUIRED",
-            "⚠️ You must hold an active TON VIP Pass to claim daily bonuses!"
+            "⚠️ Active VIP Pass required to claim daily bonuses!"
         );
     }
     const today = new Date().toDateString();
-    if (lsGet('irc_vip_claim_date','') === today) {
-        return showAppModal(
-            "CLAIMED TODAY",
-            "⚠️ Already claimed today. Come back tomorrow!"
-        );
+    if (lsGet('irc_vip_claim_date') === today) {
+        return showAppModal("CLAIMED TODAY", "⚠️ Come back tomorrow!");
     }
     saveBalance(balance + vipDailyBonus);
     lsSet('irc_vip_claim_date', today);
-    showAppModal("BONUS CLAIMED", `🎉 +${vipDailyBonus.toLocaleString()} VIP Daily Coins!`);
+    showAppModal("BONUS CLAIMED", `🎉 +${vipDailyBonus.toLocaleString()} VIP Coins!`);
 }
 
 /* ─── Daily Streak ─── */
 const STREAK_REWARDS = [50, 100, 150, 200, 250, 300, 500];
 
 function buildStreakGrid() {
-    const grid       = document.getElementById('streakGrid');
+    const grid = document.getElementById('streakGrid');
     if (!grid) return;
-    const streak     = parseInt(lsGet('irc_streak', 0)) || 0;
-    const lastClaim  = lsGet('irc_streak_date', '');
-    const today      = new Date().toDateString();
-    grid.innerHTML   = '';
-
+    const streak    = parseInt(lsGet('irc_streak', '0')) || 0;
+    const lastClaim = lsGet('irc_streak_date', '');
+    const today     = new Date().toDateString();
+    grid.innerHTML  = '';
     STREAK_REWARDS.forEach((reward, i) => {
         const div = document.createElement('div');
         div.className = 'streak-day';
         div.innerHTML = `
             <div style="font-size:14px;">${i < streak ? '✅' : '🎁'}</div>
-            <div style="margin-top:3px; color:var(--accent-gold); 
+            <div style="margin-top:3px; color:var(--accent-gold);
                  font-weight:700;">${reward}</div>
-            <div style="color:var(--text-muted);">Day ${i+1}</div>`;
+            <div style="color:var(--text-muted); font-size:9px;">
+                Day ${i+1}
+            </div>`;
         if (i < streak) div.classList.add('claimed');
         if (i === streak && lastClaim !== today) div.classList.add('today');
         grid.appendChild(div);
     });
-
     const sc = document.getElementById('streakCount');
     if (sc) sc.innerText = `${streak} / 7 Days`;
 }
 
 function claimStreak() {
-    const today      = new Date().toDateString();
-    const lastClaim  = lsGet('irc_streak_date', '');
-    const yesterday  = new Date(Date.now() - 86400000).toDateString();
-
+    const today     = new Date().toDateString();
+    const lastClaim = lsGet('irc_streak_date', '');
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
     if (lastClaim === today) {
-        return showAppModal("ALREADY CLAIMED", "⚠️ You already claimed today's bonus!");
+        return showAppModal("ALREADY CLAIMED", "⚠️ Already claimed today!");
     }
-
-    let streak = parseInt(lsGet('irc_streak', 0)) || 0;
-    if (lastClaim !== yesterday && lastClaim !== '') streak = 0; // reset if missed
-
+    let streak = parseInt(lsGet('irc_streak', '0')) || 0;
+    if (lastClaim !== yesterday && lastClaim !== '') streak = 0;
     const reward = STREAK_REWARDS[streak] || STREAK_REWARDS[6];
-    streak = Math.min(streak + 1, 7);
-    if (streak >= 7) streak = 0; // reset after full week
-
+    streak = streak >= 6 ? 0 : streak + 1;
     saveBalance(balance + reward);
     lsSet('irc_streak', streak);
     lsSet('irc_streak_date', today);
     buildStreakGrid();
-
     fetch(`${BACKEND_URL}/api/v1/streak`, {
         method: "POST",
         headers: {"Content-Type":"application/json"},
         body: JSON.stringify({ user_id: user.id, day: streak, reward })
     }).catch(()=>{});
-
-    showAppModal("STREAK BONUS!", `🔥 Day ${streak} Streak!\n🎉 +${reward} IRAN Coins earned!`);
+    showAppModal("STREAK BONUS!", `🔥 Streak Day!\n🎉 +${reward} IRAN Coins!`);
 }
 
 /* ─── Lucky Spin ─── */
@@ -1143,9 +1369,9 @@ function drawWheel() {
         ctx.save();
         ctx.translate(130, 130);
         ctx.rotate(angle + arc / 2);
-        ctx.textAlign  = "right";
-        ctx.fillStyle  = "#fff";
-        ctx.font       = "bold 11px Poppins";
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 11px Poppins";
         ctx.fillText(prizeLabels[i], 115, 4);
         ctx.restore();
     }
@@ -1154,17 +1380,17 @@ function drawWheel() {
 function spinWheel() {
     if (isSpinning) return;
     const today = new Date().toDateString();
-    if (lsGet('irc_spin_date','') === today) {
-        return showAppModal("ALREADY SPUN","⚠️ Already spun today. Try again tomorrow!");
+    if (lsGet('irc_spin_date') === today) {
+        return showAppModal("ALREADY SPUN", "⚠️ Try again tomorrow!");
     }
-
     isSpinning = true;
     const spinBtn = document.getElementById('spinBtn');
     if (spinBtn) spinBtn.disabled = true;
 
     let winIdx;
-    if (!lsGet('irc_spin_first', '')) {
-        winIdx = 0; lsSet('irc_spin_first', 'done'); // Guaranteed 500 first time
+    if (!lsGet('irc_spin_first')) {
+        winIdx = 0;
+        lsSet('irc_spin_first', 'done');
     } else {
         winIdx = Math.floor(Math.random() * 8);
     }
@@ -1189,9 +1415,8 @@ function spinWheel() {
         if (prize > 0) {
             showAppModal("CONGRATULATIONS!", `🎉 You won ${prize} IRAN Coins!`);
         } else {
-            showAppModal("NO LUCK TODAY", `❌ ${prizeLabels[winIdx]}. Try again tomorrow!`);
+            showAppModal("NO LUCK TODAY", `❌ Try again tomorrow!`);
         }
-
         fetch(`${BACKEND_URL}/api/v1/spin`, {
             method: "POST",
             headers: {"Content-Type":"application/json"},
@@ -1200,94 +1425,7 @@ function spinWheel() {
     }, 4100);
 }
 
-/* ─── Adsgram Video Ad (REAL) ─── */
-function watchVideoAd() {
-    const now      = Date.now();
-    const lastAd   = parseInt(lsGet('irc_last_ad', 0)) || 0;
-    const btnWatch = document.getElementById('btnWatchVideo');
-
-    if (now - lastAd < AD_COOLDOWN) {
-        const wait = Math.ceil((AD_COOLDOWN - (now - lastAd)) / 60000);
-        return showAppModal(
-            "PLEASE WAIT",
-            `⏳ Next ad available in ~${wait} minute(s).`
-        );
-    }
-
-    /* Show loading modal */
-    const adModal = document.getElementById('adModal');
-    if (adModal) adModal.style.display = 'flex';
-    if (btnWatch) btnWatch.disabled = true;
-
-    try {
-        /* Adsgram SDK */
-        const AdController = window.Adsgram?.init({ blockId: ADSGRAM_ID });
-        if (!AdController) throw new Error("Adsgram not loaded");
-
-        AdController.show()
-            .then(() => {
-                /* Ad watched successfully */
-                if (adModal) adModal.style.display = 'none';
-                if (btnWatch) btnWatch.disabled = false;
-                lsSet('irc_last_ad', Date.now());
-                saveBalance(balance + 100);
-                fetch(`${BACKEND_URL}/api/v1/ads/watch?telegram_id=${user.id}`)
-                    .catch(()=>{});
-                showAppModal("REWARD ADDED", "🎉 +100 IRAN Coins added for watching!");
-            })
-            .catch((e) => {
-                /* Ad skipped or failed */
-                if (adModal) adModal.style.display = 'none';
-                if (btnWatch) btnWatch.disabled = false;
-                if (e?.done === false) {
-                    showAppModal("AD SKIPPED", "⚠️ Watch the full ad to earn coins.");
-                } else {
-                    /* Fallback: 5s simulated */
-                    simulateFallbackAd();
-                }
-            });
-    } catch(err) {
-        /* Adsgram SDK not available → fallback */
-        if (adModal) adModal.style.display = 'none';
-        if (btnWatch) btnWatch.disabled = false;
-        simulateFallbackAd();
-    }
-}
-
-function simulateFallbackAd() {
-    const adModal  = document.getElementById('adModal');
-    const timerEl  = document.getElementById('adTimer');
-    const btnWatch = document.getElementById('btnWatchVideo');
-    let   timeLeft = 5;
-
-    if (timerEl) timerEl.innerText = timeLeft;
-    if (adModal) adModal.style.display = 'flex';
-    if (btnWatch) btnWatch.disabled = true;
-
-    const interval = setInterval(() => {
-        timeLeft--;
-        if (timerEl) timerEl.innerText = timeLeft;
-        if (timeLeft <= 0) {
-            clearInterval(interval);
-            if (adModal) adModal.style.display = 'none';
-            if (btnWatch) btnWatch.disabled = false;
-            lsSet('irc_last_ad', Date.now());
-            saveBalance(balance + 100);
-            fetch(`${BACKEND_URL}/api/v1/ads/watch?telegram_id=${user.id}`).catch(()=>{});
-            showAppModal("REWARD ADDED", "🎉 +100 IRAN Coins added!");
-        }
-    }, 1000);
-}
-
-/* ─── CPX Surveys ─── */
-function openCPX() {
-    const url = `https://offers.cpx-research.com/index.html?app_id=24785` +
-                `&ext_user_id=${user.id}`;
-    if (tg?.openLink) tg.openLink(url);
-    else window.open(url, '_blank');
-}
-
-/* ─── Community Tasks (2-step Join → Check) ─── */
+/* ─── Community Tasks ─── */
 function handleTgTask(link, btnId, reward, channel) {
     const btn = document.getElementById(btnId);
     if (!btn || btn.classList.contains('completed')) return;
@@ -1298,15 +1436,11 @@ function handleTgTask(link, btnId, reward, channel) {
         btn.style.background = "linear-gradient(135deg,#10b981,#059669)";
         btn.style.color = "#fff";
     } else {
-        /* Verify via backend */
         fetch(`${BACKEND_URL}/api/v1/check_member`, {
             method: "POST",
             headers: {"Content-Type":"application/json"},
             body: JSON.stringify({
-                user_id: user.id,
-                channel: channel,
-                reward,
-                task_id: btnId
+                user_id: user.id, channel, reward, task_id: btnId
             })
         })
         .then(r => r.json())
@@ -1316,38 +1450,30 @@ function handleTgTask(link, btnId, reward, channel) {
                 btn.classList.add('completed');
                 btn.onclick = null;
                 saveBalance(balance + reward);
-                showAppModal(
-                    "TASK COMPLETED",
-                    `🎉 Verified! +${reward} IRAN Coins added.`
-                );
+                showAppModal("TASK COMPLETED",
+                    `🎉 Verified! +${reward} IRAN Coins added.`);
             } else {
-                showAppModal(
-                    "NOT JOINED YET",
-                    `⚠️ Please join ${channel} first, then tap Check again.`
-                );
+                showAppModal("NOT JOINED YET",
+                    `⚠️ Join ${channel} first, then tap Check again.`);
             }
         })
         .catch(() => {
-            /* Offline fallback */
             btn.innerText = "Claimed ✓";
             btn.classList.add('completed');
             btn.onclick = null;
             saveBalance(balance + reward);
-            showAppModal(
-                "TASK COMPLETED",
-                `🎉 +${reward} IRAN Coins added!`
-            );
+            showAppModal("TASK COMPLETED", `🎉 +${reward} IRAN Coins!`);
         });
     }
 }
 
-/* ─── Sponsor Tasks (from /admin addtask) ─── */
+/* ─── Sponsor Tasks ─── */
 function renderSponsorTasks(tasks) {
     const container = document.getElementById('sponsorTasksContainer');
     if (!container) return;
     container.innerHTML = '';
     tasks.forEach(task => {
-        const saved = lsGet(`irc_task_${task.id}`, '');
+        const saved = lsGet(`irc_task_${task.id}`);
         const card  = document.createElement('div');
         card.className = 'task-card';
         card.innerHTML = `
@@ -1385,15 +1511,14 @@ function handleSponsorTask(taskId, link, reward) {
         btn.classList.add('completed');
         btn.disabled  = true;
         saveBalance(balance + reward);
-        showAppModal("TASK DONE", `🎉 +${reward} IRAN Coins added!`);
+        showAppModal("TASK DONE", `🎉 +${reward} IRAN Coins!`);
     }
 }
 
 /* ─── Referral ─── */
 function shareReferral() {
     const refLink = `https://t.me/IranCoinEarnBot?start=ref_${user.id}`;
-    const text    = `🚀 Join IRAN Coin & mine crypto today! ` +
-                    `Get bonus coins instantly: ${refLink}`;
+    const text    = `🚀 Join IRAN Coin & mine crypto! Bonus coins: ${refLink}`;
     openTgLink(`https://t.me/share/url?url=${encodeURIComponent(refLink)}` +
                `&text=${encodeURIComponent(text)}`);
 }
@@ -1409,17 +1534,12 @@ function copyReferral() {
 function submitWithdrawal() {
     const wallet = document.getElementById('tonWalletInput').value.trim();
     if (!wallet || wallet.length < 24) {
-        return showAppModal(
-            "INVALID ADDRESS",
-            "⚠️ Please enter a valid TON wallet address (UQ... or EQ...)."
-        );
+        return showAppModal("INVALID ADDRESS",
+            "⚠️ Enter a valid TON wallet (UQ... or EQ...).");
     }
     if (balance < 10000) {
-        return showAppModal(
-            "MINIMUM LIMIT",
-            `⚠️ Minimum withdrawal is 10,000 coins.\n` +
-            `Your balance: ${balance.toLocaleString()} coins.`
-        );
+        return showAppModal("MINIMUM LIMIT",
+            `⚠️ Min 10,000 coins required.\nYour balance: ${balance.toLocaleString()}`);
     }
     fetch(`${BACKEND_URL}/api/v1/withdraw`, {
         method: "POST",
@@ -1430,13 +1550,7 @@ function submitWithdrawal() {
             amount: balance
         })
     })
-    .then(r => r.json())
     .then(() => {
-        showAppModal(
-            "REQUEST SUBMITTED",
-            "✅ Your withdrawal request has been sent to admin for review!"
-        );
-        /* Add to history */
         const hist = document.getElementById('withdrawHistory');
         if (hist) {
             hist.innerHTML = `
@@ -1445,33 +1559,24 @@ function submitWithdrawal() {
                      font-size:12px; text-align:left;">
                     <span style="color:var(--accent-gold);">
                         ${balance.toLocaleString()} Coins
-                    </span> → 
+                    </span> →
                     <span style="color:var(--text-muted);">
                         ${wallet.slice(0,8)}...${wallet.slice(-6)}
+                    </span><br>
+                    <span style="color:#f59e0b; font-size:11px;">
+                        ⏳ Pending review
                     </span>
-                    <br>
-                    <span style="color:#f59e0b; font-size:11px;">⏳ Pending review</span>
                 </div>` + hist.innerHTML;
         }
         saveBalance(0);
+        showAppModal("REQUEST SUBMITTED",
+            "✅ Withdrawal sent to admin for review!");
     })
     .catch(() => {
-        showAppModal(
-            "REQUEST SUBMITTED",
-            "✅ Withdrawal request submitted. Admin will process it soon!"
-        );
         saveBalance(0);
+        showAppModal("REQUEST SUBMITTED",
+            "✅ Withdrawal request submitted!");
     });
-}
-
-/* ─── A-Ads: lazy load iframes when tab becomes visible ─── */
-function loadAadsIframe(iframeId) {
-    const iframe = document.getElementById(iframeId);
-    if (!iframe || iframe.dataset.loaded) return;
-    /* Re-set src to trigger fresh load */
-    const src = iframe.src;
-    iframe.src = '';
-    setTimeout(() => { iframe.src = src; iframe.dataset.loaded = "1"; }, 100);
 }
 
 /* ─── Init ─── */
@@ -1481,33 +1586,29 @@ window.addEventListener('DOMContentLoaded', () => {
     drawWheel();
     buildStreakGrid();
 
-    /* Load Mine tab ad immediately */
-    loadAadsIframe('aads-mine');
+    /* Load Mine tab A-Ads */
+    lazyLoadIframe('aads-mine');
 
-    /* Sync backend */
+    /* Start Monetag In-App Interstitial after 5s */
+    setTimeout(startInAppInterstitial, 5000);
+
+    /* Backend sync */
     syncData();
     setInterval(syncData, 20000);
 
-    /* Auto-repair every 5s */
+    /* Auto-repair */
     setInterval(() => {
         if (isNaN(balance) || balance < 0) {
-            balance = parseInt(lsGet('irc_bal', 0)) || 0;
+            balance = parseInt(lsGet('irc_bal', '0')) || 0;
         }
-        const activeTabs = document.querySelectorAll('.tab-section.active-tab');
-        if (activeTabs.length === 0) {
+        const active = document.querySelectorAll('.tab-section.active-tab');
+        if (active.length === 0) {
             const t = document.getElementById('tab-mine');
             if (t) t.classList.add('active-tab');
         }
         updateUI();
     }, 5000);
 });
-
-/* Load Earn tab ad when switching */
-const origSwitch = switchTab;
-window.switchTab = function(tabId, el) {
-    origSwitch(tabId, el);
-    if (tabId === 'tab-earn') loadAadsIframe('aads-earn');
-};
 </script>
 </body>
 </html>
