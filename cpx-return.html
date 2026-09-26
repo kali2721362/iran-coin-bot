@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Survey Complete - IRAN Coin</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            background: #0b111e;
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center;
+            padding: 20px;
+        }
+        .card {
+            background: rgba(22,33,56,0.9);
+            border: 2px solid #f5b300;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 320px;
+        }
+        .icon { font-size: 60px; margin-bottom: 15px; }
+        h2 { color: #f5b300; margin-bottom: 10px; }
+        p { color: #a0b1c9; font-size: 13px; line-height: 1.6; }
+        .btn {
+            background: linear-gradient(135deg, #f5b300, #ff8c00);
+            color: #000; font-weight: 700;
+            border: none; padding: 14px;
+            border-radius: 12px; width: 100%;
+            font-size: 15px; cursor: pointer;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon" id="statusIcon">⏳</div>
+        <h2 id="statusTitle">Processing...</h2>
+        <p id="statusDesc">Please wait while we process your reward.</p>
+        <button class="btn" onclick="goBack()">Back to IRAN Coin</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram?.WebApp;
+        if (tg) { try { tg.ready(); tg.expand(); } catch(e){} }
+
+        const params = new URLSearchParams(window.location.search);
+        const status = params.get('status');
+        const transId = params.get('trans_id');
+
+        const iconEl = document.getElementById('statusIcon');
+        const titleEl = document.getElementById('statusTitle');
+        const descEl = document.getElementById('statusDesc');
+
+        if (status === '1') {
+            iconEl.innerText = '🎉';
+            titleEl.innerText = 'Survey Complete!';
+            titleEl.style.color = '#10b981';
+            descEl.innerText = 'Your coins have been added to your IRAN Coin balance!';
+        } else if (status === '2') {
+            iconEl.innerText = '⚠️';
+            titleEl.innerText = 'Survey Incomplete';
+            titleEl.style.color = '#f59e0b';
+            descEl.innerText = 'You did not qualify for this survey. Try another one!';
+        } else {
+            iconEl.innerText = '❌';
+            titleEl.innerText = 'Survey Failed';
+            titleEl.style.color = '#ef4444';
+            descEl.innerText = 'Something went wrong. Please try again.';
+        }
+
+        function goBack() {
+            if (tg?.close) tg.close();
+            else window.location.href = 
+                'https://kali2721362.github.io/iran-coin-bot/';
+        }
+
+        /* Auto close after 3s if successful */
+        if (status === '1') {
+            setTimeout(() => {
+                if (tg?.close) tg.close();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
