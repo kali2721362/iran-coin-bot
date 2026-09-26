@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, 
           maximum-scale=1.0, user-scalable=no">
-    <title>IRAN Coin - Master Build v15.0</title>
+    <title>IRAN Coin - Master Build v16.0</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src='//libtl.com/sdk.js' 
@@ -83,90 +83,98 @@
         }
         .tab-section.active-tab { display: flex !important; }
 
+        /* ══════════════════════════════
+           MINER AREA - طراحی جدید
+        ══════════════════════════════ */
         .miner-area {
-            position: relative; margin: 10px auto;
-            width: 240px; height: 240px;
+            position: relative; margin: 15px auto;
+            width: 260px; height: 260px;
             display: flex; justify-content: center; align-items: center;
         }
+
+        /* دایره پیشرفت ماین */
+        .mine-ring-svg {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            transform: rotate(-90deg);
+        }
+        .mine-ring-bg {
+            fill: none;
+            stroke: rgba(255,255,255,0.08);
+            stroke-width: 8;
+        }
+        .mine-ring-fill {
+            fill: none;
+            stroke: url(#ringGrad);
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-dasharray: 754;
+            stroke-dashoffset: 0;
+            transition: stroke-dashoffset 1s linear;
+        }
+        .mine-ring-fill.mining {
+            stroke: url(#ringGradMining);
+        }
+        .mine-ring-fill.ready {
+            stroke: url(#ringGradReady);
+            filter: drop-shadow(0 0 8px rgba(245,179,0,0.8));
+        }
+
+        /* دکمه تپ تپ */
         .miner-btn {
-            width: 220px; height: 220px; border-radius: 50%;
+            width: 210px; height: 210px; border-radius: 50%;
             background: radial-gradient(circle, #243b67 0%, #111d33 100%);
-            border: 4px solid var(--accent-gold);
-            box-shadow: 0 0 30px rgba(245,179,0,0.4),
-                        inset 0 0 20px rgba(0,210,255,0.3);
-            display: flex; align-items: center; justify-content: center;
+            border: 3px solid rgba(245,179,0,0.3);
+            box-shadow: 0 0 25px rgba(245,179,0,0.2),
+                        inset 0 0 20px rgba(0,210,255,0.1);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
             cursor: pointer; transition: transform 0.08s ease;
-            touch-action: manipulation;
+            touch-action: manipulation; position: relative;
+            z-index: 2;
         }
         .miner-btn:active { transform: scale(0.93); }
-        .miner-btn img {
-            width: 80%; height: 80%;
-            object-fit: contain; pointer-events: none;
+        .miner-btn.ready-to-collect {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 35px rgba(245,179,0,0.6),
+                        inset 0 0 20px rgba(245,179,0,0.2);
+            animation: readyPulse 1.5s infinite;
+        }
+        .miner-btn.mining-active {
+            border-color: rgba(0,210,255,0.5);
+            box-shadow: 0 0 25px rgba(0,210,255,0.3),
+                        inset 0 0 20px rgba(0,210,255,0.1);
+        }
+        @keyframes readyPulse {
+            0%,100% { box-shadow: 0 0 35px rgba(245,179,0,0.6),
+                       inset 0 0 20px rgba(245,179,0,0.2); }
+            50%      { box-shadow: 0 0 55px rgba(245,179,0,0.9),
+                       inset 0 0 30px rgba(245,179,0,0.3); }
         }
 
-        .miner-card {
-            width: 100%;
-            background: linear-gradient(135deg,
-                rgba(0,210,255,0.1), rgba(245,179,0,0.1));
-            border: 1px solid rgba(245,179,0,0.4);
-            border-radius: 18px; padding: 16px;
-            margin-bottom: 15px; backdrop-filter: blur(10px);
+        .miner-btn img {
+            width: 65%; height: 65%;
+            object-fit: contain; pointer-events: none;
+            transition: opacity 0.3s;
         }
-        .miner-card-header {
-            display: flex; justify-content: space-between;
-            align-items: center; margin-bottom: 12px;
+        .miner-status-text {
+            font-size: 11px; font-weight: 700;
+            margin-top: 6px; text-align: center;
+            pointer-events: none; line-height: 1.3;
         }
-        .miner-card-title {
-            font-size: 15px; font-weight: 700;
-            color: var(--accent-gold);
-        }
-        .mine-timer {
-            font-size: 22px; font-weight: 800;
+        .miner-timer-text {
+            font-size: 16px; font-weight: 800;
             color: var(--accent-blue);
-            text-align: center; margin: 8px 0;
+            pointer-events: none;
             font-variant-numeric: tabular-nums;
         }
-        .mine-progress-bg {
-            width: 100%; height: 10px;
-            background: rgba(0,0,0,0.4);
-            border-radius: 10px; overflow: hidden;
-            margin-bottom: 12px;
-        }
-        .mine-progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #00d2ff, #f5b300);
-            border-radius: 10px; transition: width 1s linear;
-        }
-        .mine-btn {
-            width: 100%; padding: 12px;
-            background: var(--btn-grad); color: #000;
-            font-weight: 800; font-size: 14px;
-            border: none; border-radius: 12px;
-            cursor: pointer; transition: all 0.2s;
-        }
-        .mine-btn:disabled {
-            background: rgba(255,255,255,0.1);
-            color: var(--text-muted); cursor: not-allowed;
-        }
-        .mine-btn:active:not(:disabled) { transform: scale(0.97); }
-
-        .energy-box { width: 100%; max-width: 320px; margin-top: 8px; }
-        .energy-info {
-            display: flex; justify-content: space-between;
-            font-size: 13px; font-weight: 600; margin-bottom: 6px;
-        }
-        .energy-bar-bg {
-            width: 100%; height: 12px;
-            background: rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 10px; overflow: hidden;
-        }
-        .energy-bar-fill {
-            height: 100%; width: 100%;
-            background: linear-gradient(90deg, #00d2ff, #f5b300);
-            border-radius: 10px; transition: width 0.2s linear;
+        .miner-coins-text {
+            font-size: 13px; font-weight: 700;
+            color: var(--accent-gold);
+            pointer-events: none;
         }
 
+        /* Tap Float */
         .tap-number {
             position: absolute; font-size: 26px; font-weight: 800;
             color: var(--accent-gold);
@@ -179,6 +187,65 @@
             100% { opacity: 0; transform: translateY(-70px) scale(1.3); }
         }
 
+        /* Mine Info Bar */
+        .mine-info-bar {
+            width: 100%; max-width: 280px;
+            display: flex; justify-content: space-between;
+            align-items: center; margin-top: 5px;
+            background: rgba(0,0,0,0.3);
+            border: var(--card-border);
+            border-radius: 12px; padding: 8px 14px;
+        }
+        .mine-info-item {
+            text-align: center;
+        }
+        .mine-info-val {
+            font-size: 13px; font-weight: 800;
+            color: var(--accent-gold);
+        }
+        .mine-info-lbl {
+            font-size: 9px; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        /* Energy */
+        .energy-box { width: 100%; max-width: 280px; margin-top: 10px; }
+        .energy-info {
+            display: flex; justify-content: space-between;
+            font-size: 12px; font-weight: 600; margin-bottom: 5px;
+        }
+        .energy-bar-bg {
+            width: 100%; height: 10px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px; overflow: hidden;
+        }
+        .energy-bar-fill {
+            height: 100%; width: 100%;
+            background: linear-gradient(90deg, #00d2ff, #f5b300);
+            border-radius: 10px; transition: width 0.2s linear;
+        }
+
+        /* Mode Toggle */
+        .mode-toggle {
+            display: flex; gap: 8px; margin-top: 12px;
+            width: 100%; max-width: 280px;
+        }
+        .mode-btn {
+            flex: 1; padding: 8px;
+            border-radius: 10px; border: none;
+            font-size: 12px; font-weight: 700;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .mode-btn.active-mode {
+            background: var(--btn-grad); color: #000;
+        }
+        .mode-btn.inactive-mode {
+            background: rgba(255,255,255,0.08);
+            color: var(--text-muted);
+        }
+
+        /* Ads */
         .aads-container {
             width: 100%;
             background: linear-gradient(135deg,
@@ -186,12 +253,9 @@
             border: 1px solid rgba(245,179,0,0.3);
             border-radius: 16px; padding: 14px;
             margin-bottom: 15px; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             backdrop-filter: blur(8px); transition: all 0.3s ease;
         }
-        .aads-container:active {
-            transform: scale(0.98); border-color: var(--accent-gold);
-        }
+        .aads-container:active { transform: scale(0.98); }
         .aads-label {
             font-size: 10px; color: var(--accent-gold);
             text-transform: uppercase; letter-spacing: 1px;
@@ -206,7 +270,6 @@
             color: #000; font-weight: 800; font-size: 12px;
             padding: 4px 10px; border-radius: 20px; white-space: nowrap;
         }
-
         .monetag-banner {
             width: 100%;
             background: linear-gradient(135deg,
@@ -216,9 +279,7 @@
             margin-bottom: 15px; cursor: pointer;
             backdrop-filter: blur(8px); transition: all 0.3s ease;
         }
-        .monetag-banner:active {
-            transform: scale(0.98); border-color: var(--accent-gold);
-        }
+        .monetag-banner:active { transform: scale(0.98); }
         .monetag-label {
             font-size: 10px; color: var(--accent-blue);
             text-transform: uppercase; letter-spacing: 1px;
@@ -233,7 +294,6 @@
             font-weight: 800; font-size: 12px;
             padding: 4px 10px; border-radius: 20px;
         }
-
         .cpx-banner {
             width: 100%;
             background: linear-gradient(135deg,
@@ -258,7 +318,6 @@
             color: #fff; font-weight: 800; font-size: 12px;
             padding: 4px 10px; border-radius: 20px;
         }
-
         .section-title {
             width: 100%; font-size: 17px; font-weight: 700;
             margin: 15px 0 10px 0;
@@ -350,7 +409,6 @@
             border-right: 15px solid transparent;
             border-top: 25px solid var(--accent-gold);
             z-index: 10;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
         }
         .wallet-input {
             width: 100%; background: rgba(0,0,0,0.5);
@@ -417,7 +475,6 @@
             font-weight: 600; z-index: 3000;
             opacity: 0; transition: opacity 0.3s;
             pointer-events: none; white-space: nowrap;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
         .toast.show { opacity: 1; }
         .version-tag {
@@ -486,9 +543,7 @@
 <div class="ad-loading-overlay" id="adLoadingOverlay">
     <div class="ad-loading-spinner"></div>
     <p style="color:var(--accent-gold); font-weight:700;">Loading Ad...</p>
-    <p style="color:var(--text-muted); font-size:12px;">
-        Please wait to earn your reward
-    </p>
+    <p style="color:var(--text-muted); font-size:12px;">Please wait...</p>
 </div>
 
 <!-- ═══ TAB 1: MINE ═══ -->
@@ -524,35 +579,71 @@
         </div>
     </div>
 
-    <!-- Auto Miner -->
-    <div class="section-title">⛏ Auto Miner</div>
-    <div class="miner-card">
-        <div class="miner-card-header">
-            <div class="miner-card-title">⛏ Mining Rate</div>
-            <div style="font-size:13px; color:var(--accent-blue); font-weight:700;">
-                <span id="mineRateDisplay">10</span> coins/24h
+    <!-- ══ MINER با دایره پیشرفت ══ -->
+    <div class="miner-area" id="minerArea">
+
+        <!-- SVG دایره پیشرفت -->
+        <svg class="mine-ring-svg" viewBox="0 0 260 260">
+            <defs>
+                <linearGradient id="ringGradMining" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style="stop-color:#00d2ff"/>
+                    <stop offset="100%" style="stop-color:#0088cc"/>
+                </linearGradient>
+                <linearGradient id="ringGradReady" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style="stop-color:#f5b300"/>
+                    <stop offset="100%" style="stop-color:#ff8c00"/>
+                </linearGradient>
+            </defs>
+            <!-- پس‌زمینه دایره -->
+            <circle class="mine-ring-bg" cx="130" cy="130" r="120"/>
+            <!-- دایره پیشرفت -->
+            <circle class="mine-ring-fill" id="mineRingFill"
+                    cx="130" cy="130" r="120"/>
+        </svg>
+
+        <!-- دکمه اصلی -->
+        <div class="miner-btn" id="tapBtn" onclick="handleMinerClick()">
+            <img src="miner.jpg" alt="Miner" id="minerImg"
+                 onerror="this.src='https://cdn-icons-png.flaticon.com/512/6009/6009864.png'">
+            <div class="miner-timer-text" id="mineTimerText"
+                 style="display:none;">00:00:00</div>
+            <div class="miner-status-text" id="mineStatusText"
+                 style="color:var(--accent-gold);">
+                Tap to Start Mining
             </div>
         </div>
-        <div class="mine-timer" id="mineTimer">⛏ Ready to Mine!</div>
-        <div class="mine-progress-bg">
-            <div class="mine-progress-fill" id="mineProgressFill"
-                 style="width:100%"></div>
+    </div>
+
+    <!-- Mine Info -->
+    <div class="mine-info-bar">
+        <div class="mine-info-item">
+            <div class="mine-info-val" id="mineRateVal">10 🪙</div>
+            <div class="mine-info-lbl">Per Cycle</div>
         </div>
-        <button class="mine-btn" id="mineBtn" onclick="collectMine()">
-            ⛏ Collect Mining Rewards
+        <div class="mine-info-item">
+            <div class="mine-info-val">24h</div>
+            <div class="mine-info-lbl">Duration</div>
+        </div>
+        <div class="mine-info-item">
+            <div class="mine-info-val" id="mineModeVal">Tap</div>
+            <div class="mine-info-lbl">Mode</div>
+        </div>
+    </div>
+
+    <!-- Mode Toggle: Tap یا Mine -->
+    <div class="mode-toggle">
+        <button class="mode-btn active-mode" id="modeTapBtn"
+                onclick="setMode('tap')">
+            👆 Tap Mode
+        </button>
+        <button class="mode-btn inactive-mode" id="modeMineBtn"
+                onclick="setMode('mine')">
+            ⛏ Mine Mode
         </button>
     </div>
 
-    <!-- Tap-Tap -->
-    <div class="section-title">👆 Tap-Tap Miner</div>
-    <div class="miner-area">
-        <div class="miner-btn" id="tapBtn">
-            <img src="miner.jpg" alt="Miner"
-                 onerror="this.src='https://cdn-icons-png.flaticon.com/512/6009/6009864.png'">
-        </div>
-    </div>
-
-    <div class="energy-box">
+    <!-- Energy (فقط در Tap Mode) -->
+    <div class="energy-box" id="energyBox">
         <div class="energy-info">
             <span>⚡ Energy</span>
             <span id="energyText">1000 / 1000</span>
@@ -578,7 +669,7 @@
         </button>
     </div>
 
-    <div class="version-tag">IRAN Coin v15.0 — Auto Miner 24h</div>
+    <div class="version-tag">IRAN Coin v16.0 — Smart Miner</div>
 </div>
 
 <!-- ═══ TAB 2: VIP ═══ -->
@@ -721,7 +812,7 @@
             📢 Your Banner Here!
         </h4>
         <span style="font-size:12px; color:var(--text-muted);">
-            Contact us to advertise your Telegram Channel or Bot
+            Contact us to advertise
         </span>
     </div>
 
@@ -729,7 +820,7 @@
     <div class="task-card"
          style="flex-direction:column; align-items:center; padding:20px;">
         <p style="font-size:13px; text-align:center; margin-bottom:15px;">
-            Spin once every 24 hours to test your luck!
+            Spin once every 24 hours!
         </p>
         <div class="wheel-container">
             <div class="wheel-pointer"></div>
@@ -746,17 +837,14 @@
         <div style="display:flex; align-items:center; gap:12px;">
             <span style="font-size:26px;">🎁</span>
             <div>
-                <h4 style="font-size:14px;" id="vipDailyTitle">
-                    VIP Daily Reward
-                </h4>
+                <h4 style="font-size:14px;">VIP Daily Reward</h4>
                 <span style="font-size:12px; color:var(--accent-gold);"
                       id="vipDailyDesc">
                     Claim active tier bonus
                 </span>
             </div>
         </div>
-        <button class="action-btn" id="btnClaimVipDaily"
-                onclick="claimVipDaily()">Claim</button>
+        <button class="action-btn" onclick="claimVipDaily()">Claim</button>
     </div>
 
     <div class="section-title">🎬 Sponsored Tasks</div>
@@ -813,7 +901,7 @@
                 )">Join</button>
     </div>
 
-    <div class="version-tag">IRAN Coin v15.0 — Auto Miner 24h</div>
+    <div class="version-tag">IRAN Coin v16.0 — Smart Miner</div>
 </div>
 
 <!-- ═══ TAB 4: FRIENDS ═══ -->
@@ -854,15 +942,11 @@
     <div class="task-card"
          style="flex-direction:column; align-items:stretch;
                 gap:10px; background:rgba(0,0,0,0.5);">
-        <div style="display:flex; justify-content:space-between;
-             font-size:14px; margin-bottom:5px;">
+        <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:5px;">
             <span style="color:var(--text-muted)">Min. Withdrawal:</span>
-            <span style="color:var(--accent-gold); font-weight:700;">
-                10,000 Coins
-            </span>
+            <span style="color:var(--accent-gold); font-weight:700;">10,000 Coins</span>
         </div>
-        <div style="display:flex; justify-content:space-between;
-             font-size:14px; margin-bottom:10px;">
+        <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:10px;">
             <span style="color:var(--text-muted)">Your Balance:</span>
             <span style="color:var(--accent-gold); font-weight:700;"
                   id="walletBalance">0 🪙</span>
@@ -888,13 +972,11 @@
 <div class="modal-overlay" id="customModal">
     <div class="modal-card">
         <h3 id="modalTitle"
-            style="color:var(--accent-gold);
-                   margin-bottom:10px; font-size:18px;">
+            style="color:var(--accent-gold); margin-bottom:10px; font-size:18px;">
             NOTIFICATION
         </h3>
         <p id="modalDesc"
-           style="font-size:13px; color:#fff;
-                  margin-bottom:20px; line-height:1.5;"></p>
+           style="font-size:13px; color:#fff; margin-bottom:20px; line-height:1.5;"></p>
         <button class="action-btn full-btn" onclick="closeModal()">
             OK, UNDERSTOOD
         </button>
@@ -928,11 +1010,11 @@ const BACKEND_URL   = "https://iran-coin-bot-production.up.railway.app";
 const MONETAG_ZONE  = "11894107";
 const CPX_APP_ID    = "36350";
 const AD_COOLDOWN   = 30 * 60 * 1000;
-const MINE_INTERVAL = 24 * 60 * 60 * 1000; // 24 ساعت
+const MINE_INTERVAL = 24 * 60 * 60 * 1000;
+const RING_CIRCUMF  = 2 * Math.PI * 120; // 754
 
 const MINE_AMOUNTS = {
-    'Free': 10, 'Bronze': 25,
-    'Silver': 60, 'Gold': 150, 'Diamond': 400
+    'Free':7, 'Bronze':25, 'Silver':60, 'Gold':150, 'Diamond':400
 };
 
 const tg   = window.Telegram?.WebApp;
@@ -949,8 +1031,10 @@ let vipDailyBonus = 0;
 let refCount      = 0;
 let isSpinning    = false;
 let wheelDeg      = 0;
-let mineCoins     = 10;
-let mineTimerInterval = null;
+let currentMode   = 'tap'; // 'tap' یا 'mine'
+let mineInterval  = null;
+let lastTapTime   = 0;
+let pendingTaps   = 0;
 
 function lsGet(k, def = '') {
     try { const v = localStorage.getItem(k); return v !== null ? v : def; }
@@ -961,15 +1045,15 @@ function lsSet(k, v) {
 }
 
 function loadLocal() {
-    const savedBal = parseInt(lsGet('irc_bal', '0'));
+    const savedBal = parseInt(lsGet('irc_bal','0'));
     balance        = isNaN(savedBal) ? 0 : Math.max(0, savedBal);
     vipTier        = lsGet('irc_vip',    'Free');
     tapValue       = parseInt(lsGet('irc_tap',   '1'))    || 1;
     maxEnergy      = parseInt(lsGet('irc_maxen', '1000')) || 1000;
     vipDailyBonus  = parseInt(lsGet('irc_vdaily','0'))    || 0;
     refCount       = parseInt(lsGet('irc_refs',  '0'))    || 0;
+    currentMode    = lsGet('irc_mode', 'tap');
     energy         = maxEnergy;
-    mineCoins      = MINE_AMOUNTS[vipTier] || 10;
 }
 
 function saveBalance(val) {
@@ -978,7 +1062,6 @@ function saveBalance(val) {
     lsSet('irc_bal', balance);
     updateUI();
 }
-
 function addCoins(amount) {
     const amt = Math.max(0, Math.floor(amount) || 0);
     if (amt > 0) saveBalance(balance + amt);
@@ -991,7 +1074,6 @@ function showToast(msg, duration = 2500) {
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), duration);
 }
-
 function showAppModal(title, desc) {
     document.getElementById('modalTitle').innerText = title;
     document.getElementById('modalDesc').innerText  = desc;
@@ -1009,16 +1091,15 @@ function updateUI() {
     const enText = document.getElementById('energyText');
     if (enText) enText.innerText = `${energy} / ${maxEnergy}`;
     const enFill = document.getElementById('energyFill');
-    if (enFill) enFill.style.width =
-        `${Math.min(100,(energy/maxEnergy)*100)}%`;
+    if (enFill) enFill.style.width = `${Math.min(100,(energy/maxEnergy)*100)}%`;
+
     if (vipTier !== "Free") {
         const crown = document.getElementById('vipCrown');
         if (crown) crown.style.display = 'block';
         const tag = document.getElementById('userLevelTag');
         if (tag) tag.innerText = `👑 ${vipTier} VIP`;
         const desc = document.getElementById('vipDailyDesc');
-        if (desc) desc.innerText =
-            `+${vipDailyBonus.toLocaleString()} Coins / 24h`;
+        if (desc) desc.innerText = `+${vipDailyBonus.toLocaleString()} Coins / 24h`;
     }
     ['Bronze','Silver','Gold','Diamond'].forEach(t => {
         const btn = document.getElementById(`btn-${t}`);
@@ -1040,79 +1121,126 @@ function updateUI() {
         if (txt && txt.nodeType === 3)
             txt.nodeValue = (user.first_name||"P").charAt(0).toUpperCase();
     }
-    const rateEl = document.getElementById('mineRateDisplay');
-    if (rateEl) rateEl.innerText = MINE_AMOUNTS[vipTier] || 10;
+    const rateEl = document.getElementById('mineRateVal');
+    if (rateEl) rateEl.innerText = `${MINE_AMOUNTS[vipTier]||10} 🪙`;
 }
 
-/* ═══ AUTO MINER ═══ */
-function updateMineUI() {
-    const btn     = document.getElementById('mineBtn');
-    const timerEl = document.getElementById('mineTimer');
-    const fillEl  = document.getElementById('mineProgressFill');
-    const rateEl  = document.getElementById('mineRateDisplay');
+/* ═══════════════════════════════════
+   SMART MINER SYSTEM
+═══════════════════════════════════ */
 
-    const currentRate = MINE_AMOUNTS[vipTier] || 10;
-    if (rateEl) rateEl.innerText = currentRate;
+// تنظیم Mode
+function setMode(mode) {
+    currentMode = mode;
+    lsSet('irc_mode', mode);
 
-    const lastMine = parseInt(lsGet('irc_last_mine', '0')) || 0;
+    const tapBtn  = document.getElementById('modeTapBtn');
+    const mineBtn = document.getElementById('modeMineBtn');
+    const energyBox = document.getElementById('energyBox');
+    const modeVal   = document.getElementById('mineModeVal');
+
+    if (mode === 'tap') {
+        if (tapBtn)  { tapBtn.className  = 'mode-btn active-mode'; }
+        if (mineBtn) { mineBtn.className = 'mode-btn inactive-mode'; }
+        if (energyBox) energyBox.style.display = 'block';
+        if (modeVal) modeVal.innerText = 'Tap';
+    } else {
+        if (tapBtn)  { tapBtn.className  = 'mode-btn inactive-mode'; }
+        if (mineBtn) { mineBtn.className = 'mode-btn active-mode'; }
+        if (energyBox) energyBox.style.display = 'none';
+        if (modeVal) modeVal.innerText = 'Mine';
+    }
+    updateMinerVisual();
+}
+
+// کلیک روی دکمه اصلی
+function handleMinerClick(e) {
+    if (currentMode === 'tap') {
+        handleTap(e);
+    } else {
+        handleMineClick();
+    }
+}
+
+// ── TAP MODE ──
+function handleTap(e) {
+    const now = Date.now();
+    if (now - lastTapTime < 100) return;
+    lastTapTime = now;
+
+    if (energy < tapValue) {
+        showToast('⚡ Out of energy! Recharging...');
+        return;
+    }
+    energy -= tapValue;
+    pendingTaps += tapValue;
+    addCoins(tapValue);
+
+    // انیمیشن float
+    const btn  = document.getElementById('tapBtn');
+    const num  = document.createElement('div');
+    num.className = 'tap-number';
+    num.innerText = `+${tapValue}`;
+    const rect = btn.getBoundingClientRect();
+    const clientX = e?.clientX || rect.left + rect.width/2;
+    const clientY = e?.clientY || rect.top + rect.height/2;
+    num.style.left = `${clientX - rect.left}px`;
+    num.style.top  = `${clientY - rect.top}px`;
+    document.getElementById('minerArea').appendChild(num);
+    setTimeout(() => num.remove(), 800);
+
+    try { tg?.HapticFeedback?.impactOccurred('light'); } catch(e) {}
+
+    // sync به backend
+    clearTimeout(window._tapSyncTimer);
+    window._tapSyncTimer = setTimeout(() => {
+        if (pendingTaps > 0) {
+            fetch(`${BACKEND_URL}/api/v1/tap`, {
+                method: "POST",
+                headers: {"Content-Type":"application/json"},
+                body: JSON.stringify({ user_id: user.id, count: pendingTaps })
+            }).catch(()=>{});
+            pendingTaps = 0;
+        }
+    }, 500);
+
+    updateUI();
+}
+
+// ── MINE MODE ──
+function handleMineClick() {
+    const lastMine = parseInt(lsGet('irc_last_mine','0')) || 0;
     const now      = Date.now();
 
     if (lastMine === 0 || now - lastMine >= MINE_INTERVAL) {
-        if (fillEl) fillEl.style.width = '100%';
-        if (timerEl) {
-            timerEl.innerText   = "⛏ Ready to Mine!";
-            timerEl.style.color = "var(--accent-gold)";
+        // شروع ماین جدید
+        startMining();
+    } else {
+        // در حال ماین - چک کن آیا تموم شده
+        if (now - lastMine >= MINE_INTERVAL) {
+            collectMineReward();
+        } else {
+            const remaining = MINE_INTERVAL - (now - lastMine);
+            const h = Math.floor(remaining / 3600000);
+            const m = Math.floor((remaining % 3600000) / 60000);
+            showToast(`⏳ Mining in progress... ${h}h ${m}m left`);
         }
-        if (btn) {
-            btn.disabled  = false;
-            btn.innerText = `⛏ Collect ${currentRate} Coins`;
-        }
-        return;
-    }
-
-    const elapsed   = now - lastMine;
-    const progress  = elapsed / MINE_INTERVAL;
-    const remaining = MINE_INTERVAL - elapsed;
-    const hours     = Math.floor(remaining / 3600000);
-    const mins      = Math.floor((remaining % 3600000) / 60000);
-    const secs      = Math.floor((remaining % 60000) / 1000);
-
-    if (fillEl) fillEl.style.width = `${progress * 100}%`;
-    if (timerEl) {
-        timerEl.innerText   =
-            `⏳ ${String(hours).padStart(2,'0')}:` +
-            `${String(mins).padStart(2,'0')}:` +
-            `${String(secs).padStart(2,'0')}`;
-        timerEl.style.color = "var(--accent-blue)";
-    }
-    if (btn) {
-        btn.disabled  = true;
-        btn.innerText = "⛏ Mining in progress...";
     }
 }
 
-function startMineTimer() {
-    updateMineUI();
-    if (mineTimerInterval) clearInterval(mineTimerInterval);
-    mineTimerInterval = setInterval(updateMineUI, 1000);
+function startMining() {
+    lsSet('irc_last_mine', Date.now());
+    showToast('⛏ Mining started! Come back in 24h');
+    try { tg?.HapticFeedback?.impactOccurred('medium'); } catch(e) {}
+    updateMinerVisual();
+    startMineTimer();
 }
 
-async function collectMine() {
-    const lastMine = parseInt(lsGet('irc_last_mine', '0')) || 0;
-    const now      = Date.now();
+async function collectMineReward() {
+    const coins = MINE_AMOUNTS[vipTier] || 10;
+    const btn   = document.getElementById('tapBtn');
 
-    if (lastMine !== 0 && now - lastMine < MINE_INTERVAL) {
-        const remaining = MINE_INTERVAL - (now - lastMine);
-        const hours = Math.floor(remaining / 3600000);
-        const mins  = Math.floor((remaining % 3600000) / 60000);
-        showToast(`⏳ Mine ready in ${hours}h ${mins}m`);
-        return;
-    }
-
-    const btn = document.getElementById('mineBtn');
-    if (btn) btn.disabled = true;
-
-    const localCoins = MINE_AMOUNTS[vipTier] || 10;
+    if (btn) btn.style.opacity = '0.7';
 
     try {
         const controller = new AbortController();
@@ -1125,35 +1253,142 @@ async function collectMine() {
         });
         clearTimeout(timeout);
         const data = await res.json();
-
-        if (data.status === "success") {
-            const coins = data.coins_added || localCoins;
-            lsSet('irc_last_mine', Date.now());
-            addCoins(coins);
-            showAppModal("⛏ MINING COMPLETE!",
-                `🎉 You collected ${coins} IRAN Coins!\n\n` +
-                `Next mining in 24 hours.\nCome back tomorrow!`);
-        } else if (data.status === "not_ready") {
-            showToast(`⏳ Mine ready in ${data.hours_left}h`);
-            if (btn) btn.disabled = false;
-            return;
-        } else {
-            throw new Error('server error');
-        }
-    } catch(e) {
-        // Offline fallback - همیشه کار میکنه
-        lsSet('irc_last_mine', Date.now());
-        addCoins(localCoins);
+        const earned = data.coins_added || coins;
+        lsSet('irc_last_mine', '0');
+        addCoins(earned);
         showAppModal("⛏ MINING COMPLETE!",
-            `🎉 You collected ${localCoins} IRAN Coins!\n\n` +
-            `Next mining in 24 hours.\nCome back tomorrow!`);
+            `🎉 You collected ${earned} IRAN Coins!\n\nTap Mine button to start a new cycle!`);
+    } catch(e) {
+        lsSet('irc_last_mine', '0');
+        addCoins(coins);
+        showAppModal("⛏ MINING COMPLETE!",
+            `🎉 You collected ${coins} IRAN Coins!\n\nTap Mine button to start a new cycle!`);
     }
 
-    updateMineUI();
-    if (btn) btn.disabled = false;
+    if (btn) btn.style.opacity = '1';
+    updateMinerVisual();
 }
 
-/* ═══ SYNC ═══ */
+// آپدیت visual ماینر
+function updateMinerVisual() {
+    const btn        = document.getElementById('tapBtn');
+    const ring       = document.getElementById('mineRingFill');
+    const timerText  = document.getElementById('mineTimerText');
+    const statusText = document.getElementById('mineStatusText');
+    const minerImg   = document.getElementById('minerImg');
+
+    if (currentMode === 'tap') {
+        // حالت Tap
+        if (btn) {
+            btn.className = 'miner-btn';
+            btn.onclick   = (e) => handleTap(e);
+        }
+        if (ring) {
+            ring.style.strokeDashoffset = '0';
+            ring.className = 'mine-ring-fill';
+            ring.style.stroke = 'rgba(245,179,0,0.3)';
+        }
+        if (timerText)  timerText.style.display  = 'none';
+        if (minerImg)   minerImg.style.display    = 'block';
+        if (statusText) {
+            statusText.innerText   = 'Tap to Mine';
+            statusText.style.color = 'var(--accent-gold)';
+        }
+        return;
+    }
+
+    // حالت Mine
+    const lastMine = parseInt(lsGet('irc_last_mine','0')) || 0;
+    const now      = Date.now();
+
+    if (lastMine === 0 || now - lastMine >= MINE_INTERVAL) {
+        // آماده شروع یا collect
+        if (lastMine !== 0 && now - lastMine >= MINE_INTERVAL) {
+            // آماده collect
+            if (btn) {
+                btn.className = 'miner-btn ready-to-collect';
+                btn.onclick   = () => collectMineReward();
+            }
+            if (ring) {
+                ring.style.strokeDashoffset = '0';
+                ring.className = 'mine-ring-fill ready';
+            }
+            if (timerText)  timerText.style.display  = 'none';
+            if (minerImg)   minerImg.style.display    = 'block';
+            if (statusText) {
+                statusText.innerText   = '✅ Tap to Collect!';
+                statusText.style.color = 'var(--accent-gold)';
+            }
+        } else {
+            // آماده شروع
+            if (btn) {
+                btn.className = 'miner-btn';
+                btn.onclick   = () => startMining();
+            }
+            if (ring) {
+                ring.style.strokeDashoffset = RING_CIRCUMF.toString();
+                ring.className = 'mine-ring-fill';
+                ring.style.stroke = 'rgba(0,210,255,0.3)';
+            }
+            if (timerText)  timerText.style.display  = 'none';
+            if (minerImg)   minerImg.style.display    = 'block';
+            if (statusText) {
+                statusText.innerText   = 'Tap to Start Mining';
+                statusText.style.color = 'var(--accent-blue)';
+            }
+        }
+    } else {
+        // در حال ماین
+        const elapsed   = now - lastMine;
+        const progress  = elapsed / MINE_INTERVAL;
+        const remaining = MINE_INTERVAL - elapsed;
+        const h = Math.floor(remaining / 3600000);
+        const m = Math.floor((remaining % 3600000) / 60000);
+        const s = Math.floor((remaining % 60000) / 1000);
+
+        // دایره برعکس کم میشه
+        const offset = RING_CIRCUMF * (1 - progress);
+        if (ring) {
+            ring.style.strokeDashoffset = offset.toString();
+            ring.className = 'mine-ring-fill mining';
+        }
+        if (btn) {
+            btn.className = 'miner-btn mining-active';
+            btn.onclick   = () => showToast(`⏳ ${h}h ${m}m ${s}s remaining`);
+        }
+        if (minerImg)  minerImg.style.display   = 'block';
+        if (timerText) {
+            timerText.style.display = 'block';
+            timerText.innerText =
+                `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        }
+        if (statusText) {
+            statusText.innerText   = '⛏ Mining...';
+            statusText.style.color = 'var(--accent-blue)';
+        }
+    }
+}
+
+// تایمر ماین
+function startMineTimer() {
+    if (mineInterval) clearInterval(mineInterval);
+    mineInterval = setInterval(() => {
+        if (currentMode === 'mine') {
+            updateMinerVisual();
+            const lastMine = parseInt(lsGet('irc_last_mine','0')) || 0;
+            const now      = Date.now();
+            if (lastMine !== 0 && now - lastMine >= MINE_INTERVAL) {
+                clearInterval(mineInterval);
+                // اتوماتیک collect
+                collectMineReward();
+            }
+        }
+    }, 1000);
+}
+
+/* ═══════════════════════════════════
+   SYNC
+═══════════════════════════════════ */
 async function syncData() {
     try {
         const res = await fetch(`${BACKEND_URL}/api/v1/user/${user.id}`);
@@ -1171,13 +1406,8 @@ async function syncData() {
         if (data.max_energy && data.max_energy > maxEnergy) {
             maxEnergy = data.max_energy; lsSet('irc_maxen', maxEnergy);
         }
-        if (data.referrals) {
-            refCount = data.referrals; lsSet('irc_refs', refCount);
-        }
-        if (data.vip_daily) {
-            vipDailyBonus = data.vip_daily; lsSet('irc_vdaily', vipDailyBonus);
-        }
-        if (data.mine_coins) mineCoins = data.mine_coins;
+        if (data.referrals) { refCount = data.referrals; lsSet('irc_refs', refCount); }
+        if (data.vip_daily) { vipDailyBonus = data.vip_daily; lsSet('irc_vdaily', vipDailyBonus); }
         if (Array.isArray(data.tasks)) renderSponsorTasks(data.tasks);
         updateUI();
     } catch(e) {}
@@ -1194,56 +1424,13 @@ function switchTab(tabId, el) {
     if (tabId === 'tab-earn') setTimeout(drawWheel, 80);
 }
 
+// Energy recharge
 setInterval(() => {
     if (energy < maxEnergy) {
-        energy = Math.min(maxEnergy,
-            energy + (vipTier !== "Free" ? 4 : 2));
+        energy = Math.min(maxEnergy, energy + (vipTier !== "Free" ? 4 : 2));
         updateUI();
     }
 }, 1000);
-
-const tapBtn    = document.getElementById('tapBtn');
-let lastTapTime = 0;
-let pendingTaps = 0;
-
-if (tapBtn) {
-    tapBtn.addEventListener('pointerdown', (e) => {
-        const now = Date.now();
-        if (now - lastTapTime < 100) return;
-        lastTapTime = now;
-        if (energy < tapValue) {
-            showToast('⚡ Out of energy! Recharging...');
-            return;
-        }
-        energy -= tapValue;
-        pendingTaps += tapValue;
-        addCoins(tapValue);
-
-        const num = document.createElement('div');
-        num.className = 'tap-number';
-        num.innerText = `+${tapValue}`;
-        const rect = tapBtn.getBoundingClientRect();
-        num.style.left = `${(e.clientX||110) - rect.left}px`;
-        num.style.top  = `${(e.clientY||110) - rect.top}px`;
-        tapBtn.parentElement.appendChild(num);
-        setTimeout(() => num.remove(), 800);
-        try { tg?.HapticFeedback?.impactOccurred('light'); } catch(e) {}
-
-        clearTimeout(tapBtn._syncTimer);
-        tapBtn._syncTimer = setTimeout(() => {
-            if (pendingTaps > 0) {
-                fetch(`${BACKEND_URL}/api/v1/tap`, {
-                    method: "POST",
-                    headers: {"Content-Type":"application/json"},
-                    body: JSON.stringify({
-                        user_id: user.id, count: pendingTaps
-                    })
-                }).catch(()=>{});
-                pendingTaps = 0;
-            }
-        }, 500);
-    });
-}
 
 function openTgLink(url) {
     if (tg?.openTelegramLink) tg.openTelegramLink(url);
@@ -1270,8 +1457,7 @@ function showMonetagRewardedPopup(source) {
             if (overlay) overlay.style.display = 'none';
             addCoins(25);
             showToast('🎉 +25 Coins earned!');
-            fetch(`${BACKEND_URL}/api/v1/ads/monetag` +
-                  `?telegram_id=${user.id}&source=${source}&reward=25`)
+            fetch(`${BACKEND_URL}/api/v1/ads/monetag?telegram_id=${user.id}&source=${source}&reward=25`)
                 .catch(()=>{});
         })
         .catch(() => {
@@ -1286,8 +1472,7 @@ function watchVideoAd() {
     const btnWatch = document.getElementById('btnWatchVideo');
     if (now - lastAd < AD_COOLDOWN) {
         const wait = Math.ceil((AD_COOLDOWN-(now-lastAd))/60000);
-        return showAppModal("PLEASE WAIT",
-            `⏳ Next ad available in ~${wait} minute(s).`);
+        return showAppModal("PLEASE WAIT", `⏳ Next ad in ~${wait} min.`);
     }
     const overlay = document.getElementById('adLoadingOverlay');
     if (overlay) overlay.style.display = 'flex';
@@ -1300,15 +1485,13 @@ function watchVideoAd() {
                 if (btnWatch) btnWatch.disabled = false;
                 lsSet('irc_last_ad', Date.now());
                 addCoins(50);
-                fetch(`${BACKEND_URL}/api/v1/ads/watch?telegram_id=${user.id}`)
-                    .catch(()=>{});
+                fetch(`${BACKEND_URL}/api/v1/ads/watch?telegram_id=${user.id}`).catch(()=>{});
                 showAppModal("REWARD ADDED","🎉 +50 IRAN Coins added!");
             })
             .catch(() => {
                 if (overlay) overlay.style.display = 'none';
                 if (btnWatch) btnWatch.disabled = false;
-                showAppModal("AD SKIPPED",
-                    "⚠️ Please watch the full ad to earn coins.");
+                showAppModal("AD SKIPPED","⚠️ Watch full ad to earn.");
             });
     } else {
         if (overlay) overlay.style.display = 'none';
@@ -1330,8 +1513,7 @@ function simulateFallbackAd() {
             if (btnWatch) btnWatch.disabled = false;
             lsSet('irc_last_ad', Date.now());
             addCoins(50);
-            fetch(`${BACKEND_URL}/api/v1/ads/watch?telegram_id=${user.id}`)
-                .catch(()=>{});
+            fetch(`${BACKEND_URL}/api/v1/ads/watch?telegram_id=${user.id}`).catch(()=>{});
             showAppModal("REWARD ADDED","🎉 +50 IRAN Coins added!");
         }
     }, 1000);
@@ -1341,24 +1523,17 @@ function startInAppInterstitial() {
     const showFn = window[`show_${MONETAG_ZONE}`];
     if (typeof showFn !== 'function') return;
     try {
-        showFn({
-            type: 'inApp',
-            inAppSettings: {
-                frequency: 2, capping: 0.1,
-                interval: 30, timeout: 5, everyPage: false
-            }
-        });
+        showFn({ type:'inApp', inAppSettings:{
+            frequency:2, capping:0.1, interval:30, timeout:5, everyPage:false
+        }});
     } catch(e) {}
 }
 
 function openCPX() {
-    const cpxUrl =
-        `https://offers.cpx-research.com/index.html` +
-        `?app_id=${CPX_APP_ID}` +
-        `&ext_user_id=${user.id}` +
+    const cpxUrl = `https://offers.cpx-research.com/index.html` +
+        `?app_id=${CPX_APP_ID}&ext_user_id=${user.id}` +
         `&username=${encodeURIComponent(user.first_name||'Player')}` +
-        `&email=${user.id}@irancoin.app` +
-        `&subid_1=irancoin&subid_2=${user.id}`;
+        `&email=${user.id}@irancoin.app&subid_1=irancoin&subid_2=${user.id}`;
     if (tg?.openLink) tg.openLink(cpxUrl);
     else window.open(cpxUrl, '_blank');
     showToast('📋 Opening CPX Surveys...');
@@ -1373,14 +1548,12 @@ function buyVip(tier, amount) {
     const statusEl = document.getElementById(`status-${tier}`);
     if (statusEl) statusEl.style.display = "block";
     showAppModal("⏳ VERIFICATION PENDING",
-        `TON Wallet opened for ${amount} TON (${tier} VIP).\n\n` +
-        `Memo: ${memo}\n\nVIP activates after blockchain confirmation!`);
+        `TON Wallet opened for ${amount} TON (${tier} VIP).\nMemo: ${memo}\n\nVIP activates after confirmation!`);
 }
 
 function claimVipDaily() {
     if (vipTier === "Free" || vipDailyBonus <= 0) {
-        return showAppModal("VIP REQUIRED",
-            "⚠️ Active VIP Pass required!");
+        return showAppModal("VIP REQUIRED","⚠️ Active VIP Pass required!");
     }
     const today = new Date().toDateString();
     if (lsGet('irc_vip_claim_date') === today) {
@@ -1388,8 +1561,7 @@ function claimVipDaily() {
     }
     addCoins(vipDailyBonus);
     lsSet('irc_vip_claim_date', today);
-    showAppModal("BONUS CLAIMED",
-        `🎉 +${vipDailyBonus.toLocaleString()} VIP Coins!`);
+    showAppModal("BONUS CLAIMED",`🎉 +${vipDailyBonus.toLocaleString()} VIP Coins!`);
 }
 
 const STREAK_REWARDS = [10, 20, 30, 40, 50, 75, 100];
@@ -1402,14 +1574,12 @@ function buildStreakGrid() {
     const today     = new Date().toDateString();
     grid.innerHTML  = '';
     STREAK_REWARDS.forEach((reward, i) => {
-        const div     = document.createElement('div');
+        const div = document.createElement('div');
         div.className = 'streak-day';
         div.innerHTML = `
-            <div style="font-size:14px;">${i < streak ? '✅' : '🎁'}</div>
-            <div style="margin-top:3px; color:var(--accent-gold);
-                 font-weight:700;">${reward}</div>
-            <div style="color:var(--text-muted); font-size:9px;">
-                Day ${i+1}</div>`;
+            <div style="font-size:14px;">${i < streak ? '✅':'🎁'}</div>
+            <div style="margin-top:3px; color:var(--accent-gold); font-weight:700;">${reward}</div>
+            <div style="color:var(--text-muted); font-size:9px;">Day ${i+1}</div>`;
         if (i < streak)                          div.classList.add('claimed');
         if (i === streak && lastClaim !== today) div.classList.add('today');
         grid.appendChild(div);
@@ -1421,9 +1591,7 @@ function buildStreakGrid() {
 function claimStreak() {
     const today     = new Date().toDateString();
     const lastClaim = lsGet('irc_streak_date','');
-    if (lastClaim === today) {
-        return showAppModal("ALREADY CLAIMED","⚠️ Already claimed today!");
-    }
+    if (lastClaim === today) return showAppModal("ALREADY CLAIMED","⚠️ Already claimed today!");
     let streak      = parseInt(lsGet('irc_streak','0')) || 0;
     const yesterday = new Date(Date.now()-86400000).toDateString();
     if (lastClaim !== yesterday && lastClaim !== '') streak = 0;
@@ -1435,19 +1603,15 @@ function claimStreak() {
     lsSet('irc_streak_date', today);
     buildStreakGrid();
     fetch(`${BACKEND_URL}/api/v1/streak`, {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
+        method:"POST", headers:{"Content-Type":"application/json"},
         body: JSON.stringify({ user_id: user.id, day: streak, reward })
     }).catch(()=>{});
-    showAppModal("STREAK BONUS!",
-        `🔥 Day ${dayIndex+1}!\n🎉 +${reward} IRAN Coins!`);
+    showAppModal("STREAK BONUS!",`🔥 Day ${dayIndex+1}!\n🎉 +${reward} IRAN Coins!`);
 }
 
-const prizeLabels = ["100🪙","5🪙","TRY AGAIN❌","20🪙",
-                     "NO LUCK❌","10🪙","50🪙","TRY AGAIN❌"];
+const prizeLabels = ["100🪙","5🪙","TRY AGAIN❌","20🪙","NO LUCK❌","10🪙","50🪙","TRY AGAIN❌"];
 const prizeValues = [100, 5, 0, 20, 0, 10, 50, 0];
-const colors      = ['#f5b300','#0f172a','#ef4444','#1e293b',
-                     '#ef4444','#0f172a','#10b981','#ef4444'];
+const colors      = ['#f5b300','#0f172a','#ef4444','#1e293b','#ef4444','#0f172a','#10b981','#ef4444'];
 
 function drawWheel() {
     const canvas = document.getElementById("wheelCanvas");
@@ -1457,44 +1621,28 @@ function drawWheel() {
     ctx.clearRect(0,0,260,260);
     for (let i = 0; i < 8; i++) {
         const angle = i * arc;
-        ctx.beginPath();
-        ctx.fillStyle = colors[i];
-        ctx.moveTo(130,130);
-        ctx.arc(130,130,125,angle,angle+arc);
-        ctx.lineTo(130,130);
-        ctx.fill();
-        ctx.save();
-        ctx.translate(130,130);
-        ctx.rotate(angle+arc/2);
-        ctx.textAlign  = "right";
-        ctx.fillStyle  = "#fff";
-        ctx.font       = "bold 11px Poppins";
-        ctx.fillText(prizeLabels[i],115,4);
-        ctx.restore();
+        ctx.beginPath(); ctx.fillStyle = colors[i];
+        ctx.moveTo(130,130); ctx.arc(130,130,125,angle,angle+arc);
+        ctx.lineTo(130,130); ctx.fill();
+        ctx.save(); ctx.translate(130,130); ctx.rotate(angle+arc/2);
+        ctx.textAlign="right"; ctx.fillStyle="#fff"; ctx.font="bold 11px Poppins";
+        ctx.fillText(prizeLabels[i],115,4); ctx.restore();
     }
 }
 
 function spinWheel() {
     if (isSpinning) return;
     const today = new Date().toDateString();
-    if (lsGet('irc_spin_date') === today) {
-        return showAppModal("ALREADY SPUN","⚠️ Try again tomorrow!");
-    }
+    if (lsGet('irc_spin_date') === today) return showAppModal("ALREADY SPUN","⚠️ Try again tomorrow!");
     isSpinning = true;
     const spinBtn = document.getElementById('spinBtn');
     if (spinBtn) spinBtn.disabled = true;
-    let winIdx;
-    if (!lsGet('irc_spin_first')) {
-        winIdx = 0; lsSet('irc_spin_first','done');
-    } else {
-        winIdx = Math.floor(Math.random()*8);
-    }
+    let winIdx = !lsGet('irc_spin_first') ? (lsSet('irc_spin_first','done'), 0) : Math.floor(Math.random()*8);
     const canvas = document.getElementById("wheelCanvas");
-    wheelDeg    += 360*5 + (360 - winIdx*45 - 22.5);
+    wheelDeg += 360*5 + (360 - winIdx*45 - 22.5);
     if (canvas) {
-        canvas.style.transition =
-            "transform 4s cubic-bezier(0.17,0.67,0.12,0.99)";
-        canvas.style.transform = `rotate(${wheelDeg}deg)`;
+        canvas.style.transition = "transform 4s cubic-bezier(0.17,0.67,0.12,0.99)";
+        canvas.style.transform  = `rotate(${wheelDeg}deg)`;
     }
     setTimeout(() => {
         const prize = prizeValues[winIdx];
@@ -1503,12 +1651,10 @@ function spinWheel() {
         isSpinning = false;
         if (spinBtn) spinBtn.disabled = false;
         prize > 0
-            ? showAppModal("CONGRATULATIONS!",
-                `🎉 You won ${prize} IRAN Coins!`)
+            ? showAppModal("CONGRATULATIONS!",`🎉 You won ${prize} IRAN Coins!`)
             : showAppModal("NO LUCK TODAY",`❌ Try again tomorrow!`);
         fetch(`${BACKEND_URL}/api/v1/spin`, {
-            method: "POST",
-            headers: {"Content-Type":"application/json"},
+            method:"POST", headers:{"Content-Type":"application/json"},
             body: JSON.stringify({ user_id: user.id, prize })
         }).catch(()=>{});
     }, 4100);
@@ -1519,35 +1665,26 @@ function handleTgTask(link, btnId, reward, channel) {
     if (!btn || btn.classList.contains('completed')) return;
     if (btn.innerText.trim() === "Join") {
         openTgLink(link);
-        btn.innerText        = "✅ Check";
+        btn.innerText = "✅ Check";
         btn.style.background = "linear-gradient(135deg,#10b981,#059669)";
-        btn.style.color      = "#fff";
+        btn.style.color = "#fff";
     } else {
         fetch(`${BACKEND_URL}/api/v1/check_member`, {
-            method: "POST",
-            headers: {"Content-Type":"application/json"},
-            body: JSON.stringify({
-                user_id: user.id, channel, reward, task_id: btnId
-            })
+            method:"POST", headers:{"Content-Type":"application/json"},
+            body: JSON.stringify({ user_id: user.id, channel, reward, task_id: btnId })
         })
         .then(r => r.json())
         .then(data => {
             if (data.success) {
-                btn.innerText = "Claimed ✓";
-                btn.classList.add('completed');
-                btn.onclick   = null;
+                btn.innerText = "Claimed ✓"; btn.classList.add('completed'); btn.onclick = null;
                 addCoins(reward);
-                showAppModal("TASK COMPLETED",
-                    `🎉 Verified! +${reward} IRAN Coins added.`);
+                showAppModal("TASK COMPLETED",`🎉 Verified! +${reward} IRAN Coins added.`);
             } else {
-                showAppModal("NOT JOINED YET",
-                    `⚠️ Join ${channel} first, then tap Check again.`);
+                showAppModal("NOT JOINED YET",`⚠️ Join ${channel} first, then tap Check again.`);
             }
         })
         .catch(() => {
-            btn.innerText = "Claimed ✓";
-            btn.classList.add('completed');
-            btn.onclick   = null;
+            btn.innerText = "Claimed ✓"; btn.classList.add('completed'); btn.onclick = null;
             addCoins(reward);
             showAppModal("TASK COMPLETED",`🎉 +${reward} IRAN Coins!`);
         });
@@ -1567,15 +1704,12 @@ function renderSponsorTasks(tasks) {
                 <span style="font-size:24px;">📣</span>
                 <div>
                     <h4>${task.title}</h4>
-                    <span style="font-size:12px; color:var(--accent-gold);">
-                        +${task.reward} Coins</span>
+                    <span style="font-size:12px; color:var(--accent-gold);">+${task.reward} Coins</span>
                 </div>
             </div>
             <button class="action-btn ${saved?'completed':''}"
-                    id="sponsorTask_${task.id}"
-                    ${saved?'disabled':''}
-                    onclick="handleSponsorTask('${task.id}',
-                             '${task.link}',${task.reward})">
+                    id="sponsorTask_${task.id}" ${saved?'disabled':''}
+                    onclick="handleSponsorTask('${task.id}','${task.link}',${task.reward})">
                 ${saved?'Done ✓':'Join'}
             </button>`;
         container.appendChild(card);
@@ -1587,14 +1721,12 @@ function handleSponsorTask(taskId, link, reward) {
     if (!btn || btn.innerText === 'Done ✓') return;
     if (btn.innerText === 'Join') {
         openTgLink(link);
-        btn.innerText        = '✅ Check';
+        btn.innerText = '✅ Check';
         btn.style.background = "linear-gradient(135deg,#10b981,#059669)";
-        btn.style.color      = "#fff";
+        btn.style.color = "#fff";
     } else {
         lsSet(`irc_task_${taskId}`,'done');
-        btn.innerText = 'Done ✓';
-        btn.classList.add('completed');
-        btn.disabled  = true;
+        btn.innerText = 'Done ✓'; btn.classList.add('completed'); btn.disabled = true;
         addCoins(reward);
         showAppModal("TASK DONE",`🎉 +${reward} IRAN Coins!`);
     }
@@ -1602,75 +1734,60 @@ function handleSponsorTask(taskId, link, reward) {
 
 function shareReferral() {
     const refLink = `https://t.me/IranCoinEarnBot?start=ref_${user.id}`;
-    const text    = `🚀 Join IRAN Coin & mine crypto!\n` +
-                    `Use my invite link: ${refLink}`;
-    openTgLink(`https://t.me/share/url?url=${encodeURIComponent(refLink)}` +
-               `&text=${encodeURIComponent(text)}`);
+    const text    = `🚀 Join IRAN Coin & mine crypto!\nUse my invite link: ${refLink}`;
+    openTgLink(`https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(text)}`);
 }
 
 function copyReferral() {
     const link = `https://t.me/IranCoinEarnBot?start=ref_${user.id}`;
     navigator.clipboard.writeText(link)
-        .then(()  => showToast('📋 Referral link copied!'))
-        .catch(()  => showAppModal("COPY LINK", link));
+        .then(() => showToast('📋 Referral link copied!'))
+        .catch(() => showAppModal("COPY LINK", link));
 }
 
 function submitWithdrawal() {
     const wallet = document.getElementById('tonWalletInput').value.trim();
-    if (!wallet || wallet.length < 24) {
-        return showAppModal("INVALID ADDRESS",
-            "⚠️ Enter a valid TON wallet (UQ... or EQ...).");
-    }
-    if (balance < 10000) {
-        return showAppModal("MINIMUM LIMIT",
-            `⚠️ Min 10,000 coins required.\n` +
-            `Your balance: ${balance.toLocaleString()}`);
-    }
+    if (!wallet || wallet.length < 24)
+        return showAppModal("INVALID ADDRESS","⚠️ Enter a valid TON wallet (UQ... or EQ...).");
+    if (balance < 10000)
+        return showAppModal("MINIMUM LIMIT",`⚠️ Min 10,000 coins required.\nYour balance: ${balance.toLocaleString()}`);
     const withdrawAmount = balance;
     fetch(`${BACKEND_URL}/api/v1/withdraw`, {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({
-            telegram_id:    user.id,
-            wallet_address: wallet,
-            amount:         withdrawAmount
-        })
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ telegram_id: user.id, wallet_address: wallet, amount: withdrawAmount })
     })
     .then(() => {
         const hist = document.getElementById('withdrawHistory');
         if (hist) {
             hist.innerHTML = `
-                <div style="background:var(--card-bg);
-                     border:var(--card-border); border-radius:12px;
-                     padding:10px; margin-bottom:8px;
-                     font-size:12px; text-align:left;">
-                    <span style="color:var(--accent-gold);">
-                        ${withdrawAmount.toLocaleString()} Coins
-                    </span> →
-                    <span style="color:var(--text-muted);">
-                        ${wallet.slice(0,8)}...${wallet.slice(-6)}
-                    </span><br>
-                    <span style="color:#f59e0b; font-size:11px;">
-                        ⏳ Pending review
-                    </span>
+                <div style="background:var(--card-bg); border:var(--card-border);
+                     border-radius:12px; padding:10px; margin-bottom:8px; font-size:12px; text-align:left;">
+                    <span style="color:var(--accent-gold);">${withdrawAmount.toLocaleString()} Coins</span> →
+                    <span style="color:var(--text-muted);">${wallet.slice(0,8)}...${wallet.slice(-6)}</span><br>
+                    <span style="color:#f59e0b; font-size:11px;">⏳ Pending review</span>
                 </div>` + hist.innerHTML;
         }
         saveBalance(0);
-        showAppModal("REQUEST SUBMITTED",
-            "✅ Withdrawal sent to admin for review!");
+        showAppModal("REQUEST SUBMITTED","✅ Withdrawal sent to admin for review!");
     })
-    .catch(() => {
-        showAppModal("REQUEST SUBMITTED",
-            "✅ Withdrawal request submitted!");
-    });
+    .catch(() => showAppModal("REQUEST SUBMITTED","✅ Withdrawal request submitted!"));
 }
 
+/* ═══ INIT ═══ */
 window.addEventListener('DOMContentLoaded', () => {
     loadLocal();
     updateUI();
     drawWheel();
     buildStreakGrid();
-    startMineTimer();
+    setMode(currentMode);
+    updateMinerVisual();
+
+    // اگه Mine mode بود و در حال ماین بود تایمر رو شروع کن
+    const lastMine = parseInt(lsGet('irc_last_mine','0')) || 0;
+    if (lastMine !== 0 && currentMode === 'mine') {
+        startMineTimer();
+    }
+
     setTimeout(startInAppInterstitial, 5000);
     syncData();
     setInterval(syncData, 20000);
@@ -1680,8 +1797,7 @@ window.addEventListener('DOMContentLoaded', () => {
             const saved = parseInt(lsGet('irc_bal','0'));
             balance = isNaN(saved) ? 0 : Math.max(0, saved);
         }
-        const active =
-            document.querySelectorAll('.tab-section.active-tab');
+        const active = document.querySelectorAll('.tab-section.active-tab');
         if (active.length === 0) {
             const t = document.getElementById('tab-mine');
             if (t) t.classList.add('active-tab');
